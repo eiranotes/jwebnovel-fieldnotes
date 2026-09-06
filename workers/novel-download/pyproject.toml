@@ -1,0 +1,14 @@
+[project]
+name = "novel-daily-pipeline"
+version = "0.1.0"
+description = "Daily Narou/Kakuyomu discovery, download, chunked translation, and reporting pipeline"
+requires-python = ">=3.11"
+dependencies = [
+  "beautifulsoup4>=4.12,<5",
+]
+
+[project.scripts]
+novel-pipeline = "novelpipeline.cli:main"
+
+[tool.setuptools]
+packages = ["novelpipeline", "novelpipeline.sites"]

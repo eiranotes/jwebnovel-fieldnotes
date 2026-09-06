@@ -1,0 +1,47 @@
+[pipeline]
+data_dir = "data"
+site_dir = "site"
+log_dir = "logs"
+episodes_per_work = 5
+max_new_works_per_run = 10
+request_delay_seconds = 1.5
+request_timeout_seconds = 30
+user_agent = "novel-daily-pipeline/0.1 (personal automation)"
+
+[translation]
+enabled = false
+provider = "openai_compatible"
+model_env = "OPENAI_MODEL"
+api_key_env = "OPENAI_API_KEY"
+base_url_env = "OPENAI_BASE_URL"
+chunk_chars = 6500
+previous_context_chars = 1200
+temperature = 0.2
+
+# Narou uses the official Novel API. Add several [[discovery.narou]] blocks if needed.
+[[discovery.narou]]
+name = "narou-main"
+enabled = false
+word = ""
+notword = ""
+order = "weeklypoint"
+limit = 50
+min_episodes = 5
+min_total_points = 0
+min_bookmarks = 0
+genre = 0
+
+# Kakuyomu discovery uses public search/result pages and then validates work metadata.
+# query is URL-encoded automatically.
+[[discovery.kakuyomu]]
+name = "kakuyomu-main"
+enabled = false
+query = ""
+max_pages = 1
+min_episodes = 5
+include_terms = []
+exclude_terms = []
+
+# Optional exact work URLs. Useful for smoke tests and manual seeding.
+[seeds]
+urls = []

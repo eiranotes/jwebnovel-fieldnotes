@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T07:30:16.841994+00:00",
+  "updated_at": "2026-09-06T07:30:48.884814+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -12,7 +12,7 @@
     "status": "awaiting_user_answers",
     "default_min_chars": 300000,
     "length_exception": "high_fit_only",
-    "profile_count": 1
+    "profile_count": 0
   },
   "discovery": {
     "narou": "official_api_only",

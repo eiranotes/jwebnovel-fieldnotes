@@ -16,7 +16,8 @@ for state_path in (ROOT/'workspace').glob('*/*/*/state.json'):
 for meta in (ROOT/'workspace').glob('*/*/*/metadata.json'):
     if not meta.parent.joinpath('translation/manifest.json').exists(): waiting += 1
 status['updated_at']=datetime.now(timezone.utc).isoformat(); status['schedule'].update({'time':cfg.get('time'),'status':'ready' if cfg.get('time') and cfg.get('enabled') else 'awaiting_user_time'})
-status['criteria'].update({'status':'ready' if profiles.get('criteria_ready') else 'awaiting_user_answers','profile_count':len(profiles.get('profiles',[]))})
+enabled_profiles=[x for x in profiles.get('profiles',[]) if x.get('enabled')]
+status['criteria'].update({'status':'ready' if profiles.get('criteria_ready') and enabled_profiles else 'awaiting_user_answers','profile_count':len(enabled_profiles)})
 status['translation'].update({'pending_chunks':pending,'completed_chunks':done,'works_waiting_for_source':waiting,'works_ready':ready})
 status['phase']='ready_for_schedule' if cfg.get('time') and profiles.get('criteria_ready') else 'pipeline_ready_configuration_pending'
 status['next_action']='enable daily schedule' if status['phase']=='ready_for_schedule' else 'collect search criteria and exact daily time'

@@ -86,9 +86,10 @@ function renderProfiles() {
   const selection = config.selection || {};
   const selected = new Set(selection.selected_profile_ids || []);
   $('#fallback-mode').value = selection.when_none || 'round_robin';
+  $('#explicit-mode').value = selection.explicit_selection_mode || 'once';
   $('#rotation-batch').value = selection.rotation_batch_size || 1;
   $('#profile-list').innerHTML = (config.profiles||[]).map(p=>profileCard(p,selected.has(p.profile_id))).join('') || '<div class="archive-state">조건 그룹이 없다.</div>';
-  $$('#profile-list input, #profile-list textarea, #profile-list button, #fallback-mode, #rotation-batch, #save-selection, #save-profiles, #add-profile').forEach(el=>{ el.disabled=!writable; });
+  $$('#profile-list input, #profile-list textarea, #profile-list button, #fallback-mode, #explicit-mode, #rotation-batch, #save-selection, #save-profiles, #add-profile').forEach(el=>{ el.disabled=!writable; });
 }
 
 function collectProfiles() {
@@ -177,7 +178,7 @@ $('#save-selection').addEventListener('click',async()=>{
     const config=collectProfiles();
     state.profiles=await api('api/profiles',{method:'POST',body:JSON.stringify(config)});
     const selected=$$('.profile-card').filter(c=>c.querySelector('[data-role="selected"]').checked).map(c=>c.querySelector('[data-field="profile_id"]').value.trim());
-    await api('api/selection',{method:'POST',body:JSON.stringify({selected_profile_ids:selected,when_none:$('#fallback-mode').value,rotation_batch_size:Number($('#rotation-batch').value||1)})});
+    await api('api/selection',{method:'POST',body:JSON.stringify({selected_profile_ids:selected,explicit_selection_mode:$('#explicit-mode').value,when_none:$('#fallback-mode').value,rotation_batch_size:Number($('#rotation-batch').value||1)})});
     toast(`다음 탐색 선택 저장: ${selected.length?selected.length+'개':'fallback'}`);
     await loadState();
   } catch(error){ toast(error.message,true); }

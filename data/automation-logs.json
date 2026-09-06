@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T08:24:55.763771+00:00",
+  "updated_at": "2026-09-06T08:31:45.993633+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -23,6 +23,45 @@
       "details": {
         "selected": 0,
         "fallback": "round_robin"
+      }
+    },
+    {
+      "timestamp": "2026-09-06T08:28:52.363042+00:00",
+      "run_id": "translate-next-20260906T082852-bd81a0de",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 紅さんはデスゲーマー / 0001",
+      "details": {
+        "title": "紅さんはデスゲーマー",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-06T08:31:03.442809+00:00",
+      "run_id": "private-console-20260906T083103-b7c5d59d",
+      "task": "private_console",
+      "action": "save_selection",
+      "status": "done",
+      "message": "Search profile selection updated",
+      "details": {
+        "selected": 0,
+        "fallback": "round_robin"
+      }
+    },
+    {
+      "timestamp": "2026-09-06T08:31:45.993633+00:00",
+      "run_id": "operations-console-20260906T083145-4a89d9bc",
+      "task": "operations_console",
+      "action": "verification",
+      "status": "done",
+      "message": "Search profiles, dedupe index, full-translation routing, logs, and tailnet downloads verified",
+      "details": {
+        "indexed_works": 19,
+        "worker_tests": "6/6",
+        "tailnet_download": "sha256_match",
+        "full_download_smoke": "3/3",
+        "full_priority_router": true
       }
     }
   ]

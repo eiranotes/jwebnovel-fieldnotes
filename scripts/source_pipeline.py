@@ -329,11 +329,44 @@ def build_parallel(args):
     out=wdir/'translation/parallel'; out.mkdir(parents=True, exist_ok=True); path=out/'index.html'; path.write_text(doc, encoding='utf-8'); print(path)
 
 
+def build_output(args):
+    wdir = resolve_work_dir(args)
+    manifest = json.loads((wdir/'translation/manifest.json').read_text(encoding='utf-8'))
+    ko_parts, bilingual = [], []
+    for c in manifest.get('chunks', []):
+        cdir = wdir/'translation/chunks'/c['chunk_id']
+        ja_path, ko_path = cdir/'ja.txt', cdir/'ko.txt'
+        if not ko_path.exists():
+            print(json.dumps({'status':'translation_pending','missing_chunk':c['chunk_id']}, ensure_ascii=False))
+            return
+        ja = ja_path.read_text(encoding='utf-8').rstrip()
+        ko = ko_path.read_text(encoding='utf-8').rstrip()
+        ko_parts.append(ko)
+        bilingual.append(f"## Chunk {c['chunk_id']}\n\n### 원문\n\n{ja}\n\n### 번역\n\n{ko}")
+    out = wdir/'translation/output'
+    out.mkdir(parents=True, exist_ok=True)
+    ko_file, bi_file = out/'ko.txt', out/'ja-ko.md'
+    ko_file.write_text('\n\n'.join(ko_parts).rstrip()+'\n', encoding='utf-8')
+    bi_file.write_text('\n\n---\n\n'.join(bilingual).rstrip()+'\n', encoding='utf-8')
+    metadata_path = wdir/'metadata.json'
+    metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
+    work_id = safe_id(getattr(args, 'work', None) or metadata.get('work_id') or wdir.name)
+    zip_file = out/f'{work_id}-translation.zip'
+    with zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.write(ko_file, 'ko.txt')
+        zf.write(bi_file, 'ja-ko.md')
+        glossary = wdir/'glossary.json'
+        if glossary.exists(): zf.write(glossary, 'glossary.json')
+    artifacts = [ko_file, bi_file, zip_file]
+    print(json.dumps({'status':'complete','artifacts':[str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p) for p in artifacts]}, ensure_ascii=False, indent=2))
+
+
 def main():
     p=argparse.ArgumentParser(); sp=p.add_subparsers(dest='cmd', required=True)
     q=sp.add_parser('prepare'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--title'); q.add_argument('--platform'); q.add_argument('--target',type=int,default=9000); q.add_argument('--hard-max',type=int,default=12000); q.set_defaults(fn=prepare)
     q=sp.add_parser('next-task'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--context-tail',type=int,default=700); q.add_argument('--context-head',type=int,default=500); q.set_defaults(fn=next_task)
     q=sp.add_parser('complete'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--chunk',required=True); q.add_argument('--result',required=True); q.set_defaults(fn=complete)
     q=sp.add_parser('build-parallel'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.set_defaults(fn=build_parallel)
+    q=sp.add_parser('build-output'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.set_defaults(fn=build_output)
     args=p.parse_args(); args.fn(args)
 if __name__=='__main__': main()

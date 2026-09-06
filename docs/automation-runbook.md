@@ -74,7 +74,7 @@ Across all works, use the global queue:
 python3 scripts/translation_queue.py next
 ```
 
-It selects the oldest pending work/chunk and emits the full translation task JSON, including source, neighboring context, glossary, and the task path.
+It is the unified router: user-selected full-work translations are prepared and selected first; otherwise it selects the oldest standard pending work/chunk. The emitted task includes source, neighboring context, glossary, and the task path.
 
 Per-work fallback:
 
@@ -107,6 +107,7 @@ python3 scripts/translation_queue.py complete \
 ```
 
 This also rebuilds the local parallel view and refreshes global automation status.
+When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, and a ZIP; the private console exposes them in **파일받기**.
 
 Per-work fallback:
 
@@ -169,6 +170,15 @@ python3 scripts/full_translation.py next-task
 ```
 
 This route is separate from the five-episode sample workspace. It acquires all currently listed episodes, merges the whole source, chunks it, then creates `ko.txt`, `ja-ko.md`, and a ZIP after every chunk is translated.
+
+Normal daily operation does not need to call those three commands separately: `python3 scripts/translation_queue.py next` routes queued full translations first. Complete such a returned task with:
+
+```bash
+python3 scripts/translation_queue.py complete \
+  --request FULL_REQUEST_ID \
+  --chunk 0001 \
+  --result /path/to/result-0001.json
+```
 
 ## Private console / phone downloads
 

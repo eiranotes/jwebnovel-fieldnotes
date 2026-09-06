@@ -44,10 +44,18 @@ def export_work(
     manifest_path = output / "acquisition_manifest.json"
 
     requested_mode = "all" if int(episodes) <= 0 else "first_n"
+    existing: dict = {}
+    reusable_by_url: dict[str, dict] = {}
     if not force and manifest_path.exists():
         try:
             existing = json.loads(manifest_path.read_text(encoding="utf-8"))
             files = [output / x["file"] for x in existing.get("episodes", [])]
+            if existing.get("url") == url:
+                reusable_by_url = {
+                    str(x.get("url")): x
+                    for x in existing.get("episodes", [])
+                    if x.get("url") and x.get("file") and (output / str(x["file"])).is_file()
+                }
             if (
                 existing.get("url") == url
                 and existing.get("requested_mode", "first_n") == requested_mode
@@ -83,8 +91,39 @@ def export_work(
         raise RuntimeError(f"No readable episodes found for {url}")
 
     episode_rows: list[dict] = []
-    ruby_map: dict[str, str] = {}
+    ruby_map: dict[str, str] = dict(existing.get("ruby_notes") or {}) if existing.get("url") == url and not force else {}
+
+    def checkpoint(*, complete: bool) -> dict:
+        manifest = {
+            "schema_version": "1.0",
+            "acquisition_mode": "public_reader_page_capture",
+            "site": meta.site,
+            "work_id": meta.work_id,
+            "url": meta.url,
+            "title": meta.title,
+            "author": meta.author,
+            "summary": meta.summary,
+            "requested_mode": requested_mode,
+            "requested_episodes": "all" if requested_mode == "all" else int(episodes),
+            "available_episodes": len(meta.episode_urls),
+            "acquired_episodes": len(episode_rows),
+            "episodes": episode_rows,
+            "ruby_notes": ruby_map,
+            "acquired_at": datetime.now(timezone.utc).isoformat(),
+            "complete": complete,
+            "reused": False,
+        }
+        _write_json(manifest_path, manifest)
+        return manifest
+
     for number, episode_url in enumerate(wanted, start=1):
+        reusable = reusable_by_url.get(episode_url)
+        if reusable:
+            row = dict(reusable)
+            row["number"] = number
+            episode_rows.append(row)
+            checkpoint(complete=False)
+            continue
         episode = site.fetch_episode(episode_url, number)
         title = episode.title or f"Episode {number}"
         payload = (
@@ -112,24 +151,6 @@ def export_work(
                 "sha256": _sha256_text(payload),
             }
         )
+        checkpoint(complete=False)
 
-    manifest = {
-        "schema_version": "1.0",
-        "acquisition_mode": "public_reader_page_capture",
-        "site": meta.site,
-        "work_id": meta.work_id,
-        "url": meta.url,
-        "title": meta.title,
-        "author": meta.author,
-        "summary": meta.summary,
-        "requested_mode": requested_mode,
-        "requested_episodes": "all" if requested_mode == "all" else int(episodes),
-        "available_episodes": len(meta.episode_urls),
-        "acquired_episodes": len(episode_rows),
-        "episodes": episode_rows,
-        "ruby_notes": ruby_map,
-        "acquired_at": datetime.now(timezone.utc).isoformat(),
-        "reused": False,
-    }
-    _write_json(manifest_path, manifest)
-    return manifest
+    return checkpoint(complete=True)

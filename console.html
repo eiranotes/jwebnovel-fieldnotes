@@ -45,6 +45,7 @@
       <header class="section-head"><span>SEARCH PROFILES</span><div><h2>조건 그룹</h2><p>체크된 그룹은 다음 탐색에서 모두 각각 실행한다. 아무 그룹도 선택하지 않으면 아래 fallback 방식으로 자동 선택한다.</p></div></header>
       <div class="selection-bar">
         <label><span>NO SELECTION</span><select id="fallback-mode"><option value="round_robin">순환</option><option value="least_recently_run">가장 오래 안 쓴 그룹</option><option value="random_daily">날짜 기반 랜덤</option><option value="all_enabled">활성 그룹 전부</option></select></label>
+        <label><span>CHECKED GROUPS</span><select id="explicit-mode"><option value="once">다음 탐색 1회만</option><option value="sticky">계속 고정</option></select></label>
         <label><span>BATCH</span><input id="rotation-batch" type="number" min="1" value="1"></label>
         <button id="save-selection" class="control-button">다음 탐색 선택 저장</button>
       </div>

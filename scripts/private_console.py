@@ -89,6 +89,21 @@ def artifact_inventory() -> list[dict]:
                     "filename": target.name,
                     "size": target.stat().st_size,
                 })
+        workspace = work.get("workspace")
+        if workspace:
+            output_dir = (ROOT / workspace / "translation" / "output").resolve()
+            if output_dir.is_dir():
+                for target in sorted(output_dir.iterdir()):
+                    if not target.is_file() or target.suffix.lower() not in {".txt", ".md", ".zip"}:
+                        continue
+                    rows.append({
+                        "kind": "standard_translation",
+                        "title": work.get("title"),
+                        "work_id": work.get("work_id"),
+                        "path": str(target.relative_to(ROOT)),
+                        "filename": target.name,
+                        "size": target.stat().st_size,
+                    })
     full = load(FULL_QUEUE, {"requests": []})
     for request in full.get("requests", []):
         for rel in request.get("artifacts") or []:
@@ -186,6 +201,8 @@ class Handler(SimpleHTTPRequestHandler):
                 selected = body.get("selected_profile_ids") or []
                 valid = {p.get("profile_id") for p in data.get("profiles", []) if p.get("enabled")}
                 selection["selected_profile_ids"] = [x for x in selected if x in valid]
+                if body.get("explicit_selection_mode") in {"once", "sticky"}:
+                    selection["explicit_selection_mode"] = body["explicit_selection_mode"]
                 if body.get("when_none") in {"round_robin", "least_recently_run", "random_daily", "all_enabled"}:
                     selection["when_none"] = body["when_none"]
                 if body.get("rotation_batch_size") is not None:

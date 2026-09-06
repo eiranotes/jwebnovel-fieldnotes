@@ -14,6 +14,7 @@ from automation_log import log_event, new_run_id
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "data" / "work-registry.json"
 AUTOMATION = ROOT / "config" / "automation.json"
+FULL_QUEUE = ROOT / "data" / "full-translation-queue.json"
 
 
 def load_json(path: Path) -> dict:
@@ -51,6 +52,45 @@ def pending_works() -> list[dict]:
 
 def command_next(args) -> int:
     run_id = new_run_id("translate-next")
+    full = load_json(FULL_QUEUE) if FULL_QUEUE.exists() else {"requests": []}
+    if any(x.get("status") in {"queued", "acquisition_error"} for x in full.get("requests", [])):
+        acquire = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "full_translation.py"), "run-next"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+        )
+        if acquire.returncode != 0:
+            log_event(task="translation_queue", action="prepare_full", status="error", run_id=run_id, message=acquire.stderr.strip() or "Full translation acquisition failed")
+            print(acquire.stderr, file=sys.stderr)
+            return acquire.returncode
+
+    full_next = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "full_translation.py"), "next-task"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    if full_next.returncode != 0:
+        print(full_next.stderr, file=sys.stderr)
+        return full_next.returncode
+    full_task = json.loads(full_next.stdout)
+    if full_task.get("status") != "complete":
+        full_task["queue"] = {
+            "selected_by": "user_selected_full_translation_first",
+            "request_id": full_task.get("full_translation_request_id"),
+        }
+        log_event(
+            task="translation_queue",
+            action="next",
+            status="pending",
+            run_id=run_id,
+            message=f"Selected full translation / {full_task.get('work_id')} / {full_task.get('chunk_id')}",
+            public_details={"work_id": full_task.get("work_id"), "chunk": full_task.get("chunk_id"), "mode": "full"},
+        )
+        print(json.dumps(full_task, ensure_ascii=False, indent=2))
+        return 0
+
     queue = pending_works()
     if not queue:
         log_event(task="translation_queue", action="next", status="complete", run_id=run_id, message="No pending standard translation chunks")
@@ -93,6 +133,32 @@ def command_complete(args) -> int:
     result_path = Path(args.result).expanduser().resolve()
     if not result_path.exists():
         raise SystemExit(f"result not found: {result_path}")
+    if args.request:
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "full_translation.py"),
+                "complete",
+                "--request",
+                args.request,
+                "--chunk",
+                args.chunk,
+                "--result",
+                str(result_path),
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+        )
+        if proc.returncode != 0:
+            print(proc.stderr, file=sys.stderr)
+            return proc.returncode
+        payload = json.loads(proc.stdout)
+        log_event(task="translation_queue", action="complete", status="done", run_id=run_id, message=f"Completed full request {args.request} / {args.chunk}", public_details={"request_id": args.request, "chunk": args.chunk, "mode": "full"})
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+    if not args.entry or not args.work:
+        raise SystemExit("Standard completion requires --entry and --work; full completion requires --request")
     cmd = [
         sys.executable,
         str(ROOT / "scripts" / "source_pipeline.py"),
@@ -125,8 +191,25 @@ def command_complete(args) -> int:
         text=True,
         capture_output=True,
     )
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True)
     payload = json.loads(proc.stdout)
+    if int(payload.get("done", 0)) >= int(payload.get("total", 0)) > 0:
+        package = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "source_pipeline.py"),
+                "build-output",
+                "--entry",
+                args.entry,
+                "--work",
+                args.work,
+            ],
+            cwd=ROOT,
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        payload["output"] = json.loads(package.stdout)
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True)
     payload["completed_at"] = datetime.now(timezone.utc).isoformat()
     log_event(task="translation_queue", action="complete", status="done", run_id=run_id, message=f"Completed {args.work} / {args.chunk}", details=payload, public_details={"work_id": args.work, "chunk": args.chunk, "done": payload.get("done"), "total": payload.get("total")})
     print(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -164,8 +247,9 @@ def main() -> int:
     p = sub.add_parser("next")
     p.set_defaults(func=command_next)
     p = sub.add_parser("complete")
-    p.add_argument("--entry", required=True)
-    p.add_argument("--work", required=True)
+    p.add_argument("--entry")
+    p.add_argument("--work")
+    p.add_argument("--request")
     p.add_argument("--chunk", required=True)
     p.add_argument("--result", required=True)
     p.set_defaults(func=command_complete)

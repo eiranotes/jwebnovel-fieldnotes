@@ -61,6 +61,14 @@ def commit_state(state: dict, chosen: list[dict], mode: str) -> None:
     STATE.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def consume_explicit_selection(config: dict, mode: str) -> None:
+    selection = config.setdefault("selection", {})
+    if mode != "explicit_selected" or selection.get("explicit_selection_mode", "once") != "once":
+        return
+    selection["selected_profile_ids"] = []
+    CONFIG.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
@@ -71,6 +79,7 @@ def main() -> int:
     chosen, mode = choose(config, state, args.date)
     if args.commit:
         commit_state(state, chosen, mode)
+        consume_explicit_selection(config, mode)
         run_id = new_run_id("profile-select")
         log_event(
             task="profile_selection",

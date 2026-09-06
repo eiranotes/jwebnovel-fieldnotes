@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import mimetypes
 import os
 import subprocess
 import sys
+import zipfile
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
+from xml.sax.saxutils import escape as xml_escape
 
 from automation_log import log_event
 from rebuild_work_index import canonical
@@ -248,6 +251,178 @@ def taste_sample(date: str, canonical_key: str, start: int = 0, limit: int = 650
     }
 
 
+
+def _taste_registry_by_key() -> dict[str, dict]:
+    registry = load(REGISTRY, {"works": []})
+    return {canonical(w): w for w in registry.get("works", []) if w.get("title")}
+
+
+def _safe_text_filename(value: str) -> str:
+    cleaned = "".join("_" if ch in '/\\:*?\"<>|\r\n\t' else ch for ch in str(value or "")).strip(" ._")
+    return (cleaned or "untitled")[:100]
+
+
+def _taste_work_text(item: dict, registry_by_key: dict[str, dict]) -> tuple[str, str]:
+    reg = registry_by_key.get(str(item.get("canonical_key") or ""))
+    if not reg or not reg.get("workspace"):
+        raise ValueError(f"local sample is not available: {item.get('title')}")
+    workspace = (ROOT / reg["workspace"]).resolve()
+    alternating = (workspace / "translation" / "output" / "ja-ko-alternating.txt").resolve()
+    translated = (workspace / "translation" / "output" / "ko.txt").resolve()
+    source = (workspace / "merged" / "ja.txt").resolve()
+    if alternating.is_file() and alternating.is_relative_to(workspace) and alternating.stat().st_size > 0:
+        return alternating.read_text(encoding="utf-8"), "JA/KO"
+    if translated.is_file() and translated.is_relative_to(workspace) and translated.stat().st_size > 0:
+        return translated.read_text(encoding="utf-8"), "KO"
+    if source.is_file() and source.is_relative_to(workspace):
+        return source.read_text(encoding="utf-8"), "JA"
+    raise ValueError(f"local sample is not available: {item.get('title')}")
+
+
+def taste_reading_files(date: str) -> list[dict]:
+    deck = taste_deck(date)
+    if not deck.get("items"):
+        raise ValueError("no readable works in the selected daily taste deck")
+    registry_by_key = _taste_registry_by_key()
+    rows = []
+    for index, item in enumerate(deck["items"], 1):
+        text, language = _taste_work_text(item, registry_by_key)
+        header = (
+            f"FIELD NOTES DAILY TASTE · {date}\n"
+            f"{index:02d}. {item.get('title') or ''}\n"
+            f"작가: {item.get('author') or '-'}\n"
+            f"플랫폼: {item.get('platform') or '-'} · 추천등급: {item.get('rank') or '-'} · 본문: {language}\n"
+            f"원문: {item.get('url') or '-'}\n"
+            + "=" * 72 + "\n\n"
+        )
+        body = header + text.strip() + "\n"
+        filename = f"{index:02d}_{_safe_text_filename(item.get('title') or '')}.txt"
+        rows.append({"filename": filename, "body": body, "language": language, "item": item})
+    return rows
+
+
+def taste_bundle(date: str, fmt: str = "txt") -> tuple[bytes, str, str]:
+    rows = taste_reading_files(date)
+    combined_parts = [
+        f"FIELD NOTES · 오늘의 추천 소설 · {date}\n",
+        f"총 {len(rows)}편 · 각 작품은 daily taste용 로컬 샘플입니다.\n",
+        "Text Viewer에서는 작품별 ZIP 또는 이 통합 TXT를 바로 읽을 수 있습니다.\n",
+        "#" * 72 + "\n",
+    ]
+    for row in rows:
+        combined_parts.append("\n\n" + row["body"] + "\n")
+    combined = "".join(combined_parts).encode("utf-8")
+    stem = f"fieldnotes-{date}-daily-taste"
+    if fmt == "txt":
+        return combined, f"{stem}.txt", "text/plain; charset=utf-8"
+    if fmt == "zip":
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("00_오늘추천_통합.txt", combined)
+            for row in rows:
+                archive.writestr(row["filename"], row["body"].encode("utf-8"))
+        return buffer.getvalue(), f"{stem}.zip", "application/zip"
+    raise ValueError("format must be txt or zip")
+
+
+def _content_disposition(filename: str) -> str:
+    return f"attachment; filename=fieldnotes-daily; filename*=UTF-8''{quote(filename)}"
+
+
+def _dav_date_and_name(path: str) -> tuple[str | None, str | None]:
+    decoded = unquote(path).rstrip("/")
+    if decoded in {"/dav", "/dav/today"}:
+        if decoded == "/dav/today":
+            dates = available_taste_dates()
+            return (dates[0] if dates else None), None
+        return None, None
+    if not decoded.startswith("/dav/"):
+        return None, None
+    rest = decoded[len("/dav/"):]
+    parts = rest.split("/", 1)
+    date = parts[0]
+    if date == "today":
+        dates = available_taste_dates()
+        date = dates[0] if dates else ""
+    return (date or None), (parts[1] if len(parts) > 1 else None)
+
+
+def _dav_file_map(date: str) -> dict[str, tuple[bytes, str]]:
+    rows = taste_reading_files(date)
+    combined, _, _ = taste_bundle(date, "txt")
+    zipped, _, _ = taste_bundle(date, "zip")
+    files: dict[str, tuple[bytes, str]] = {
+        "00_오늘추천_통합.txt": (combined, "text/plain; charset=utf-8"),
+        "99_오늘추천_작품별.zip": (zipped, "application/zip"),
+    }
+    for row in rows:
+        files[row["filename"]] = (row["body"].encode("utf-8"), "text/plain; charset=utf-8")
+    return files
+
+
+def dav_resource(path: str):
+    date, name = _dav_date_and_name(path)
+    decoded = unquote(path).rstrip("/")
+    if decoded == "/dav":
+        return {"collection": True, "display": "Field Notes", "date": None, "name": None}
+    if decoded == "/dav/today" or (date and name is None and date in available_taste_dates()):
+        return {"collection": True, "display": "오늘" if decoded == "/dav/today" else date, "date": date, "name": None}
+    if date and name:
+        files = _dav_file_map(date)
+        if name in files:
+            data, mime = files[name]
+            return {"collection": False, "display": name, "date": date, "name": name, "data": data, "mime": mime}
+    return None
+
+
+def dav_children(path: str) -> list[dict]:
+    decoded = unquote(path).rstrip("/")
+    if decoded == "/dav":
+        children = [{"path": "/dav/today/", "collection": True, "display": "오늘"}]
+        children += [{"path": f"/dav/{date}/", "collection": True, "display": date} for date in available_taste_dates()]
+        return children
+    resource = dav_resource(path)
+    if resource and resource.get("collection") and resource.get("date"):
+        date = resource["date"]
+        base = decoded + "/"
+        return [
+            {"path": base + name, "collection": False, "display": name, "data": data, "mime": mime}
+            for name, (data, mime) in _dav_file_map(date).items()
+        ]
+    return []
+
+
+def dav_multistatus(path: str, depth: str = "1") -> bytes:
+    resource = dav_resource(path)
+    if not resource:
+        raise FileNotFoundError(path)
+    decoded = unquote(path).rstrip("/") or "/dav"
+    base_path = decoded + ("/" if resource.get("collection") else "")
+    nodes = [{"path": base_path, **resource}]
+    if str(depth) != "0" and resource.get("collection"):
+        nodes.extend(dav_children(path))
+    responses = []
+    for node in nodes:
+        href = quote("/fieldnotes" + node["path"], safe="/")
+        collection = bool(node.get("collection"))
+        length = 0 if collection else len(node.get("data") or b"")
+        content_type = "httpd/unix-directory" if collection else node.get("mime", "application/octet-stream")
+        resource_type = "<D:collection/>" if collection else ""
+        responses.append(
+            "<D:response>"
+            f"<D:href>{xml_escape(href)}</D:href>"
+            "<D:propstat><D:prop>"
+            f"<D:displayname>{xml_escape(str(node.get('display') or ''))}</D:displayname>"
+            f"<D:resourcetype>{resource_type}</D:resourcetype>"
+            f"<D:getcontentlength>{length}</D:getcontentlength>"
+            f"<D:getcontenttype>{xml_escape(content_type)}</D:getcontenttype>"
+            "</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>"
+            "</D:response>"
+        )
+    xml = '<?xml version="1.0" encoding="utf-8"?><D:multistatus xmlns:D="DAV:">' + "".join(responses) + "</D:multistatus>"
+    return xml.encode("utf-8")
+
+
 def save_taste_response(body: dict) -> dict:
     date = str(body.get("date") or "").strip()
     key = str(body.get("canonical_key") or "").strip()
@@ -338,6 +513,31 @@ class Handler(SimpleHTTPRequestHandler):
             key = (query.get("key") or [""])[0]
             start = int((query.get("start") or [0])[0])
             return json_response(self, 200, taste_sample(date, key, start=start))
+        if path == "/api/taste/bundle":
+            query = parse_qs(parsed.query)
+            date = (query.get("date") or [""])[0]
+            fmt = (query.get("format") or ["txt"])[0]
+            data, filename, mime = taste_bundle(date, fmt)
+            self.send_response(200)
+            self.send_header("Content-Type", mime)
+            self.send_header("Content-Disposition", _content_disposition(filename))
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path.startswith("/dav"):
+            resource = dav_resource(path)
+            if not resource or resource.get("collection"):
+                return json_response(self, 404, {"error": "WebDAV file not found"})
+            data = resource["data"]
+            self.send_response(200)
+            self.send_header("Content-Type", resource["mime"])
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path == "/api/download":
             query = parse_qs(parsed.query)
             rel = (query.get("path") or [""])[0]
@@ -359,6 +559,63 @@ class Handler(SimpleHTTPRequestHandler):
             return json_response(self, 404, {"error": "not available from private console"})
         self.path = safe_path
         return super().do_GET()
+
+    def do_OPTIONS(self):
+        _, path = self._parsed_route()
+        if path.startswith("/dav"):
+            self.send_response(200)
+            self.send_header("Allow", "OPTIONS, GET, HEAD, PROPFIND")
+            self.send_header("DAV", "1")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(204)
+        self.send_header("Allow", "GET, HEAD, POST, OPTIONS")
+        self.end_headers()
+
+    def do_PROPFIND(self):
+        _, path = self._parsed_route()
+        if not path.startswith("/dav"):
+            return json_response(self, 404, {"error": "not a WebDAV route"})
+        try:
+            body = dav_multistatus(path, self.headers.get("Depth", "1"))
+            self.send_response(207)
+            self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("DAV", "1")
+            self.end_headers()
+            self.wfile.write(body)
+        except FileNotFoundError:
+            json_response(self, 404, {"error": "WebDAV resource not found"})
+        except Exception as exc:
+            json_response(self, 400, {"error": str(exc)})
+
+    def do_HEAD(self):
+        parsed, path = self._parsed_route()
+        if path == "/api/taste/bundle":
+            query = parse_qs(parsed.query)
+            date = (query.get("date") or [""])[0]
+            fmt = (query.get("format") or ["txt"])[0]
+            data, filename, mime = taste_bundle(date, fmt)
+            self.send_response(200)
+            self.send_header("Content-Type", mime)
+            self.send_header("Content-Disposition", _content_disposition(filename))
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
+        if path.startswith("/dav"):
+            resource = dav_resource(path)
+            if not resource:
+                self.send_response(404); self.end_headers(); return
+            data = resource.get("data") or b""
+            self.send_response(200)
+            self.send_header("Content-Type", "httpd/unix-directory" if resource.get("collection") else resource.get("mime", "application/octet-stream"))
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("DAV", "1")
+            self.end_headers()
+            return
+        return super().do_HEAD()
 
     def do_POST(self):
         parsed, path = self._parsed_route()

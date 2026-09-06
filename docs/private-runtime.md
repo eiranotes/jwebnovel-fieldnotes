@@ -49,3 +49,13 @@ The LaunchAgent no longer needs external-volume permission at boot.
 - the runtime mirror is tailnet-only and the HTTP server binds only to loopback
 - `/api/download` still exposes only files in the explicit artifact inventory; it is not an arbitrary filesystem browser
 - raw preference feedback stays under `workspace/` and is not published to GitHub Pages
+
+## Daily Taste delivery
+
+The private runtime exposes daily recommendation reading files without publishing source text to GitHub Pages.
+
+- Combined TXT: `/fieldnotes/api/taste/bundle?date=YYYY-MM-DD&format=txt`
+- Per-work ZIP: `/fieldnotes/api/taste/bundle?date=YYYY-MM-DD&format=zip`
+- Read-only WebDAV shelf: `/fieldnotes/dav/today/`
+
+The bundle prefers a completed `ja-ko-alternating.txt`, then `ko.txt`, and falls back to the locally acquired Japanese sample when translation output is not ready. The WebDAV surface is read-only at the Field Notes server layer and is intended to be used only through the user's Tailscale network.

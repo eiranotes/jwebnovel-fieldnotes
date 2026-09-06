@@ -48,6 +48,15 @@ function renderDateOptions() {
   select.disabled = !(deck.available_dates || []).length;
 }
 
+function renderTransferLinks() {
+  if (!deck?.date) return;
+  const base = `api/taste/bundle?date=${encodeURIComponent(deck.date)}`;
+  $('#taste-txt').href = `${base}&format=txt`;
+  $('#taste-zip').href = `${base}&format=zip`;
+  const root = `${location.origin}${location.pathname.includes('/fieldnotes/') ? '/fieldnotes' : ''}`;
+  $('#taste-webdav-url').value = `${root}/dav/today/`;
+}
+
 function renderProgress() {
   const total = deck?.items?.length || 0;
   const done = deck?.completed_count || 0;
@@ -177,6 +186,7 @@ async function loadDeck(date=null, autoSelect=true) {
   const suffix = date ? `?date=${encodeURIComponent(date)}` : '';
   deck = await api(`api/taste/today${suffix}`);
   renderDateOptions();
+  renderTransferLinks();
   renderProgress();
   if (autoSelect || !deck.items.some(x=>x.canonical_key===selectedKey)) {
     selectedKey = (deck.items.find(x=>!x.response) || deck.items[0] || {}).canonical_key || null;
@@ -188,6 +198,21 @@ async function loadDeck(date=null, autoSelect=true) {
   }
 }
 
+async function shareToday() {
+  if (!deck?.date) return toast('오늘 추천이 없다.', true);
+  const url = `api/taste/bundle?date=${encodeURIComponent(deck.date)}&format=txt`;
+  const response = await fetch(url, {cache:'no-store'});
+  if (!response.ok) throw new Error(`TXT 생성 실패: ${response.status}`);
+  const blob = await response.blob();
+  const file = new File([blob], `fieldnotes-${deck.date}-daily-taste.txt`, {type:'text/plain'});
+  if (navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))) {
+    await navigator.share({title:`Field Notes ${deck.date}`, text:'오늘의 추천 소설 모음', files:[file]});
+    return;
+  }
+  location.href = url;
+  toast('공유 시트를 지원하지 않아 TXT 다운로드로 전환함');
+}
+
 $('#taste-queue-list').addEventListener('click', event=>{
   const button = event.target.closest('[data-key]');
   if (button) selectWork(button.dataset.key);
@@ -195,6 +220,19 @@ $('#taste-queue-list').addEventListener('click', event=>{
 $('#taste-date').addEventListener('change', event=>{ sampleState.clear(); selectedKey=null; loadDeck(event.target.value).catch(error=>toast(error.message,true)); });
 $('#taste-reader').addEventListener('click', event=>{ if (event.target.dataset.action==='more') loadSample(selectedKey,true).catch(error=>toast(error.message,true)); });
 $('#taste-answer').addEventListener('click', event=>{ if (event.target.id==='taste-save') saveAnswer().catch(error=>toast(error.message,true)); });
+$('#taste-share').addEventListener('click', ()=>shareToday().catch(error=>{
+  if (error?.name !== 'AbortError') toast(error.message,true);
+}));
+$('#taste-copy-webdav').addEventListener('click', async ()=>{
+  try {
+    await navigator.clipboard.writeText($('#taste-webdav-url').value);
+    toast('WebDAV 주소 복사됨');
+  } catch {
+    $('#taste-webdav-url').select();
+    document.execCommand('copy');
+    toast('WebDAV 주소 복사됨');
+  }
+});
 
 loadDeck().catch(error=>{
   $('#taste-reader').innerHTML = `<div class="archive-state error">PRIVATE RUNTIME ONLY · ${esc(error.message)}</div>`;

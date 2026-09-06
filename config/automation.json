@@ -9,7 +9,7 @@
   "source_acquisition": {
     "mode": "automatic_first_n_private_local",
     "episodes_per_work": 5,
-    "worker_root": "/Volumes/DevDrive/Projects/novel-daily-pipeline",
+    "worker_root": "workers/novel-download",
     "reuse_existing_manifest": true
   },
   "public_fulltext": false,

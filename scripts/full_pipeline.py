@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "data" / "work-registry.json"
 STATUS = ROOT / "data" / "automation-status.json"
 AUTOMATION = ROOT / "config" / "automation.json"
-WORKER_DEFAULT = Path("/Volumes/DevDrive/Projects/novel-daily-pipeline")
+WORKER_DEFAULT = ROOT / "workers" / "novel-download"
 
 
 def load_json(path: Path) -> dict:
@@ -158,10 +158,14 @@ def refresh_status(last_run: dict, worker_root: Path) -> None:
     run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT)
     status = load_json(STATUS)
     status["last_run"] = last_run
+    try:
+        worker_display = str(worker_root.relative_to(ROOT))
+    except ValueError:
+        worker_display = str(worker_root)
     status.setdefault("source_acquisition", {}).update(
         {
             "status": "automatic_first_n_private_local",
-            "worker": str(worker_root),
+            "worker": worker_display,
             "public_fulltext": False,
         }
     )
@@ -213,11 +217,14 @@ def main() -> int:
     parser.add_argument("--worker-root", default=os.environ.get("NOVEL_PIPELINE_ROOT", str(WORKER_DEFAULT)))
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
+    worker_root = Path(args.worker_root).expanduser()
+    if not worker_root.is_absolute():
+        worker_root = ROOT / worker_root
     result = pipeline(
         args.entry,
         max(1, args.top_n),
         max(1, args.episodes),
-        Path(args.worker_root).expanduser().resolve(),
+        worker_root.resolve(),
         args.force,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))

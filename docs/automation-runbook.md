@@ -40,7 +40,7 @@ python3 scripts/full_pipeline.py \
 
 This performs `register targets -> first N public episodes -> source_inbox -> normalize/merge -> chunk manifest -> glossary -> parallel-view scaffold`.
 
-The acquisition worker is `/Volumes/DevDrive/Projects/novel-daily-pipeline` by default. Override it with `--worker-root` or `NOVEL_PIPELINE_ROOT`.
+The acquisition worker is bundled at `workers/novel-download/` inside this repository. Override it with `--worker-root` or `NOVEL_PIPELINE_ROOT` only when intentionally testing another worker checkout.
 
 Re-running the command reuses an unchanged `acquisition_manifest.json`; use `--force` only when a fresh first-N capture is required.
 

@@ -1,7 +1,7 @@
 # Daily ChatGPT/Steroids Job Contract
 
 You are executing the daily Japanese web-novel research pipeline in repository:
-`/Users/tofu/HermesWorkspace/project/jwebnovel-fieldnotes`.
+`/Volumes/DevDrive/Projects/fieldnotes`.
 
 Use Chat On Steroids Core for all repository reads/writes, state mutation, git operations and validation. Use current web search for discovery. Do not scrape/download Narou/Kakuyomu public novel bodies automatically.
 

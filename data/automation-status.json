@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T07:52:01.355653+00:00",
+  "updated_at": "2026-09-06T07:59:56.329263+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -23,7 +23,7 @@
     "status": "automatic_first_n_private_local",
     "public_fulltext": false,
     "acquired_works": 5,
-    "worker": "/Volumes/DevDrive/Projects/novel-daily-pipeline"
+    "worker": "workers/novel-download"
   },
   "translation": {
     "mode": "resumable_chunk_queue",
@@ -35,8 +35,8 @@
   },
   "last_run": {
     "entry_id": "2026-09-06-02",
-    "started_at": "2026-09-06T07:52:00.377495+00:00",
-    "finished_at": "2026-09-06T07:52:01.330004+00:00",
+    "started_at": "2026-09-06T07:59:55.244892+00:00",
+    "finished_at": "2026-09-06T07:59:56.304423+00:00",
     "top_n": 5,
     "episodes_per_work": 5,
     "processed": 5,

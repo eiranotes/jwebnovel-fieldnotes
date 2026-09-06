@@ -82,7 +82,11 @@ def export_work(
         path = output / filename
         path.write_text(payload, encoding="utf-8")
         for base, reading in episode.ruby_pairs:
-            if base and reading and base not in ruby_map:
+            if not base or not reading:
+                continue
+            if set(reading) <= {"・", "･", ".", "·"}:
+                continue
+            if base not in ruby_map:
                 ruby_map[base] = reading
         episode_rows.append(
             {

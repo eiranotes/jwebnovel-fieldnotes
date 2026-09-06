@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-06T07:30:16.841994+00:00",
+  "phase": "pipeline_ready_configuration_pending",
+  "schedule": {
+    "cadence": "daily",
+    "timezone": "Asia/Seoul",
+    "time": null,
+    "status": "awaiting_user_time"
+  },
+  "criteria": {
+    "status": "awaiting_user_answers",
+    "default_min_chars": 300000,
+    "length_exception": "high_fit_only",
+    "profile_count": 1
+  },
+  "discovery": {
+    "narou": "official_api_only",
+    "kakuyomu": "chatgpt_web_search_or_user_supplied_metadata_no_local_body_scrape",
+    "top_candidates_for_source_pipeline": 5
+  },
+  "source_acquisition": {
+    "status": "manual_or_user_supplied_gate",
+    "public_fulltext": false
+  },
+  "translation": {
+    "mode": "resumable_chunk_queue",
+    "target_chunk_chars": 9000,
+    "pending_chunks": 0,
+    "completed_chunks": 0,
+    "works_waiting_for_source": 5,
+    "works_ready": 0
+  },
+  "last_run": null,
+  "next_action": "collect search criteria and exact daily time"
+}

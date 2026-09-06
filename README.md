@@ -77,3 +77,17 @@ https://ncode.syosetu.com/n2066cv/
 - `P3` 상업출판 확인 — 비출판 조건이 있으면 제외
 
 현재 프로토콜은 `docs/search-protocol.md`의 **v0.4**를 따른다. 과거 엔트리에 기록된 점수·판정은 당시 조사 기록이므로 소급 변경하지 않는다.
+
+## Daily automation
+
+Daily discovery/translation automation scaffolding lives in:
+
+- `docs/automation-questionnaire.md` — inputs still needed from the user
+- `docs/automation-decisions.md` — implementation decisions and platform boundaries
+- `docs/decision-log.md` — chronological decisions
+- `docs/automation-runbook.md` — source/merge/chunk/translation commands
+- `docs/daily-automation-prompt.md` — execution contract for the scheduled ChatGPT/Steroids job
+- `docs/current-status.md` — current blockers and top-5 work paths
+- `data/work-registry.json` — machine-readable work path/status registry
+
+The actual daily scheduled job is intentionally not enabled until the exact Asia/Seoul clock time and at least one completed search profile are supplied.

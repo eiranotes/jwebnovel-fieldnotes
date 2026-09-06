@@ -122,3 +122,31 @@ fetch('data/research-index.json', { cache: 'no-store' })
 
 queryInput.addEventListener('input', render);
 dateSelect.addEventListener('change', render);
+
+
+const automationRoot = document.querySelector('#automation-status');
+if (automationRoot) {
+  fetch('data/automation-status.json', { cache: 'no-store' })
+    .then(response => {
+      if (!response.ok) throw new Error(`automation status ${response.status}`);
+      return response.json();
+    })
+    .then(status => {
+      const time = status.schedule?.time ? `${status.schedule.time} KST` : '시간 미정';
+      const criteria = status.criteria?.status === 'ready' ? `${status.criteria.profile_count} profiles` : '조건 대기';
+      const waiting = Number(status.translation?.works_waiting_for_source || 0);
+      const ready = Number(status.translation?.works_ready || 0);
+      const pending = Number(status.translation?.pending_chunks || 0);
+      automationRoot.innerHTML = `
+        <div class="automation-stat"><span>SCHEDULE</span><b>${esc(time)}</b><small>매일 1회 · Asia/Seoul</small></div>
+        <div class="automation-stat"><span>CRITERIA</span><b>${esc(criteria)}</b><small>기본 300,000자 + high-fit exception</small></div>
+        <div class="automation-stat"><span>SOURCE GATE</span><b>${esc(waiting)} waiting</b><small>사용자 제공/합법 확보 원문만 후속 처리</small></div>
+        <div class="automation-stat"><span>TRANSLATION</span><b>${esc(ready)} ready</b><small>${esc(pending)} pending chunks · resumable queue</small></div>
+        <div class="automation-stat"><span>PUBLICATION</span><b>metadata only</b><small>원문·번역 전문은 로컬 전용</small></div>
+      `;
+    })
+    .catch(error => {
+      console.error(error);
+      automationRoot.innerHTML = '<div class="archive-state error">자동화 상태를 읽지 못했다.</div>';
+    });
+}

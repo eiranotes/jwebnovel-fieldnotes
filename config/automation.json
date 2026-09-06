@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "enabled": false,
+  "cadence": "daily",
+  "timezone": "Asia/Seoul",
+  "time": null,
+  "entry_mode": "one_entry_per_search_profile_per_day",
+  "top_candidates_for_source_pipeline": 5,
+  "public_fulltext": false,
+  "private_translation_view": true,
+  "translation": {
+    "target_chunk_chars": 9000,
+    "hard_max_chunk_chars": 12000,
+    "context_tail_chars": 700,
+    "context_head_chars": 500,
+    "max_chunks_per_daily_run": null,
+    "strategy": "resume_oldest_pending_before_newer_work"
+  },
+  "dedupe": {
+    "same_work_across_platforms": true,
+    "normalized_key": "normalized_title+author",
+    "repeat_candidate_cooldown_days": 30
+  }
+}

@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Private source and translation payloads (copyrighted/user-provided text)
+workspace/**/source_inbox/
+workspace/**/source/
+workspace/**/merged/
+workspace/**/translation/chunks/*/ja.txt
+workspace/**/translation/chunks/*/ko.txt
+workspace/**/translation/tasks/
+workspace/**/parallel/
+private-viewer/
+
+# Temporary/runtime files
+.tmp/
+*.tmp
+__pycache__/
+*.pyc

@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-06T07:29:58.018764+00:00",
+  "works": [
+    {
+      "schema_version": "1.0",
+      "entry_id": "2026-09-06-02",
+      "work_id": "sakasano-chagasa",
+      "rank": "A-LE1",
+      "title": "逆さの茶笠",
+      "author": "千華",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818622170137414869",
+      "length_chars": 10755,
+      "source_policy": "user_supplied_or_lawfully_acquired_only",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa",
+      "status": "waiting_for_source",
+      "paths": {
+        "metadata": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/metadata.json",
+        "state": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/state.json",
+        "source_inbox": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/source_inbox",
+        "merged": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/merged/ja.txt",
+        "glossary": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/glossary.json",
+        "translation_manifest": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/translation/manifest.json",
+        "parallel_view": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/translation/parallel/index.html"
+      },
+      "latest_entry_id": "2026-09-06-02",
+      "latest_rank": "A-LE1"
+    },
+    {
+      "schema_version": "1.0",
+      "entry_id": "2026-09-06-02",
+      "work_id": "beni-death-gamer",
+      "rank": "A1",
+      "title": "紅さんはデスゲーマー",
+      "author": "ニッケン",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/1177354054934389837",
+      "length_chars": 351428,
+      "source_policy": "user_supplied_or_lawfully_acquired_only",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer",
+      "status": "waiting_for_source",
+      "paths": {
+        "metadata": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/metadata.json",
+        "state": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/state.json",
+        "source_inbox": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/source_inbox",
+        "merged": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/merged/ja.txt",
+        "glossary": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/glossary.json",
+        "translation_manifest": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/translation/manifest.json",
+        "parallel_view": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/translation/parallel/index.html"
+      },
+      "latest_entry_id": "2026-09-06-02",
+      "latest_rank": "A1"
+    },
+    {
+      "schema_version": "1.0",
+      "entry_id": "2026-09-06-02",
+      "work_id": "haikei-ashita-no-watashi",
+      "rank": "A2",
+      "title": "拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜",
+      "author": "廃れ",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818622175556728824",
+      "length_chars": 466846,
+      "source_policy": "user_supplied_or_lawfully_acquired_only",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi",
+      "status": "waiting_for_source",
+      "paths": {
+        "metadata": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/metadata.json",
+        "state": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/state.json",
+        "source_inbox": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/source_inbox",
+        "merged": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/merged/ja.txt",
+        "glossary": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/glossary.json",
+        "translation_manifest": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/translation/manifest.json",
+        "parallel_view": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/translation/parallel/index.html"
+      },
+      "latest_entry_id": "2026-09-06-02",
+      "latest_rank": "A2"
+    },
+    {
+      "schema_version": "1.0",
+      "entry_id": "2026-09-06-02",
+      "work_id": "deathgame-jikketsu",
+      "rank": "B-LE1",
+      "title": "デスゲーム界の十傑 ～世界最強の10人によるタイマン～",
+      "author": "キタナベ",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n3360hy/",
+      "length_chars": 43428,
+      "source_policy": "user_supplied_or_lawfully_acquired_only",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu",
+      "status": "waiting_for_source",
+      "paths": {
+        "metadata": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/metadata.json",
+        "state": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/state.json",
+        "source_inbox": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/source_inbox",
+        "merged": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/merged/ja.txt",
+        "glossary": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/glossary.json",
+        "translation_manifest": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/translation/manifest.json",
+        "parallel_view": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/translation/parallel/index.html"
+      },
+      "latest_entry_id": "2026-09-06-02",
+      "latest_rank": "B-LE1"
+    },
+    {
+      "schema_version": "1.0",
+      "entry_id": "2026-09-06-02",
+      "work_id": "redo",
+      "rank": "B1",
+      "title": "Redo -リドゥ-",
+      "author": "くろぬか",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818023213480370601",
+      "length_chars": 706483,
+      "source_policy": "user_supplied_or_lawfully_acquired_only",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/redo",
+      "status": "waiting_for_source",
+      "paths": {
+        "metadata": "workspace/2026-09-06/2026-09-06-02/redo/metadata.json",
+        "state": "workspace/2026-09-06/2026-09-06-02/redo/state.json",
+        "source_inbox": "workspace/2026-09-06/2026-09-06-02/redo/source_inbox",
+        "merged": "workspace/2026-09-06/2026-09-06-02/redo/merged/ja.txt",
+        "glossary": "workspace/2026-09-06/2026-09-06-02/redo/glossary.json",
+        "translation_manifest": "workspace/2026-09-06/2026-09-06-02/redo/translation/manifest.json",
+        "parallel_view": "workspace/2026-09-06/2026-09-06-02/redo/translation/parallel/index.html"
+      },
+      "latest_entry_id": "2026-09-06-02",
+      "latest_rank": "B1"
+    }
+  ]
+}

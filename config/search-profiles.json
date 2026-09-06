@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.1",
+  "defaults": {
+    "min_chars": 300000,
+    "length_exception": {
+      "enabled": true,
+      "max_count": 2,
+      "rule": "keep_only_when_all_non_length_core_requirements_are_high_fit"
+    },
+    "result_count": 10,
+    "source_pipeline_top_n": 5,
+    "platforms": ["Narou", "Kakuyomu"],
+    "repeat_candidate_cooldown_days": 30
+  },
+  "criteria_ready": false,
+  "profiles": [
+    {
+      "profile_id": "example-disabled",
+      "enabled": false,
+      "name": "replace after questionnaire",
+      "reference_works": [],
+      "anti_reference_works": [],
+      "hard_filters": {
+        "platforms": ["Narou", "Kakuyomu"],
+        "min_chars": 300000,
+        "genres": [],
+        "must": [],
+        "must_not": [],
+        "commercial_publication": "profile_specific",
+        "adult_r18": "exclude"
+      },
+      "soft_preferences": {
+        "serialization_priority": [],
+        "freshness": null,
+        "visibility": null,
+        "protagonist": null,
+        "pov": null,
+        "style": [],
+        "pacing": [],
+        "romance_tolerance": null,
+        "element_preferences": []
+      },
+      "output": {
+        "shortlist_count": 10,
+        "source_pipeline_top_n": 5,
+        "length_exception_max": 2,
+        "when_candidates_are_insufficient": "output_fewer_and_report_gap"
+      },
+      "translation": {
+        "enqueue_top_n": true,
+        "priority": "oldest_pending_first",
+        "daily_chunk_cap": null,
+        "proper_name_policy": "work_specific_evidence",
+        "speech_style_preservation": "high",
+        "review_level": "chunk_consistency"
+      }
+    }
+  ]
+}

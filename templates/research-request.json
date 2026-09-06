@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.1",
+  "entry_id": "YYYY-MM-DD-NN",
+  "date": "YYYY-MM-DD",
+  "sequence": 1,
+  "continuation_of": null,
+  "title": "",
+  "method_version_used": "0.3",
+  "current_protocol_version": "0.3",
+  "request_snapshot": "",
+  "reference_works": [
+    {
+      "title": "",
+      "url": "",
+      "role": "style_benchmark",
+      "notes": ""
+    }
+  ],
+  "anti_reference_works": [],
+  "hard_filters": {
+    "platforms": [],
+    "genres": [],
+    "min_chars": null,
+    "must": [],
+    "must_not": [],
+    "publication": null
+  },
+  "soft_preferences": [],
+  "allowed_exceptions": [],
+  "style_dimensions": [
+    {
+      "name": "",
+      "weight": 0,
+      "diagnostic_question": ""
+    }
+  ],
+  "sampling_plan": {
+    "s0_for_all_survivors": true,
+    "deeper_samples": ["S1", "S2"],
+    "adaptive_s3": true
+  },
+  "results": {
+    "shortlist": [],
+    "queue": [],
+    "deprioritized": [],
+    "excluded": []
+  },
+  "checked_at": "YYYY-MM-DD"
+}

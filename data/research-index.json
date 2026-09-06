@@ -1,0 +1,30 @@
+[
+  {
+    "entry_id": "2026-09-06-01",
+    "date": "2026-09-06",
+    "sequence": 1,
+    "title": "경파한 문체와 빠른 사건 전개",
+    "summary": "『賢者フィロフィーと気苦労の絶えない悪魔之書』를 기준으로, 장편 비상위권 판타지 중 건조한 문장과 높은 사건 처리량을 가진 작품을 찾은 첫 조사.",
+    "reference_works": ["賢者フィロフィーと気苦労の絶えない悪魔之書"],
+    "criteria_terms": [
+      "500000자 이상",
+      "전생 제외",
+      "악역영애 제외",
+      "게임 요소 제외",
+      "비출판",
+      "연재중 우선",
+      "경파",
+      "건조한 문체",
+      "빠른 사건 전개"
+    ],
+    "platforms": ["Narou", "Kakuyomu"],
+    "genres": ["High fantasy", "Low fantasy"],
+    "min_chars": 500000,
+    "status": "active",
+    "candidate_count": 9,
+    "shortlist_count": 7,
+    "page": "entries/2026-09-06-01.html",
+    "doc": "docs/entries/2026-09-06-01.md",
+    "data": "data/entries/2026-09-06-01.json"
+  }
+]

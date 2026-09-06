@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "entry_id": "2026-09-06-01",
+  "date": "2026-09-06",
+  "sequence": 1,
+  "continuation_of": null,
+  "title": "경파한 문체와 빠른 사건 전개",
+  "method_version_used": "0.1 + manual prose calibration",
+  "current_protocol_version": "0.3",
+  "request_snapshot": "50만 자 이상 하이/로우 판타지. 전생·악역영애·게임 요소 제외. 상위 랭킹 대형작과 상업출판작 제외. 연재중 우선. 이후 기준작과 같은 경파하고 건조한 문장, 빠른 사건 전개를 핵심 기준으로 추가.",
+  "reference_works": [
+    {
+      "title": "賢者フィロフィーと気苦労の絶えない悪魔之書",
+      "url": "https://ncode.syosetu.com/n2066cv/",
+      "role": "style_benchmark",
+      "notes": "50만 자 hard filter의 예외. 문체와 전개만 기준점으로 사용."
+    }
+  ],
+  "hard_filters": {
+    "platforms": ["Narou", "Kakuyomu"],
+    "genres": ["High fantasy", "Low fantasy"],
+    "min_chars": 500000,
+    "must": ["middle_or_lower_visibility"],
+    "must_not": ["reincarnation", "villainess", "otome_game", "vrmmo", "game_world", "system_ui_core"],
+    "publication": "exclude_confirmed_commercial_editions"
+  },
+  "soft_preferences": ["ongoing_serialization"],
+  "allowed_exceptions": ["completed", "hiatus", "reference_work_below_min_chars"],
+  "style_dimensions": [
+    {"name": "sentence_hardness", "weight": 20},
+    {"name": "event_throughput", "weight": 20},
+    {"name": "expository_compression", "weight": 15},
+    {"name": "deadpan_abnormality", "weight": 15},
+    {"name": "character_logic_humor", "weight": 10},
+    {"name": "low_sentimentality", "weight": 10},
+    {"name": "low_ornamental_drag", "weight": 10}
+  ],
+  "results": {
+    "shortlist": [
+      {"class": "A1", "title": "神の女王と解放者", "similarity_score": 89},
+      {"class": "A2", "title": "うちの師匠は猫で魔王！", "similarity_score": 86},
+      {"class": "A3", "title": "終末の歌姫と滅びの子", "similarity_score": 79},
+      {"class": "B1", "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～", "similarity_score": 72},
+      {"class": "B2", "title": "マリー・パスファインダー series", "similarity_score": 70},
+      {"class": "B3", "title": "Eighteen Years' War ～三大陸千年紀～", "similarity_score": 68},
+      {"class": "B4", "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～", "similarity_score": 67}
+    ],
+    "queue": ["英雄なのか？"],
+    "deprioritized": ["煌国のマジェスティ", "水精演義", "泥濘のレクイエム"]
+  },
+  "checked_at": "2026-09-06"
+}

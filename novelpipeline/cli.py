@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .config import ensure_directories, load_config
 from .db import StateDB
+from .export import export_work
 from .pipeline import NovelPipeline, setup_logging
 from .report import build_report
 
@@ -71,6 +72,19 @@ def cmd_report(args) -> int:
     return 0
 
 
+def cmd_fetch_work(args) -> int:
+    result = export_work(
+        url=args.url,
+        output_dir=args.output_dir,
+        episodes=args.episodes,
+        delay_seconds=args.delay,
+        timeout_seconds=args.timeout,
+        force=args.force,
+    )
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="novel-pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -95,6 +109,15 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("rebuild-report", help="rebuild static HTML report")
     p.add_argument("--config", default=str(_default_config()))
     p.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("fetch-work", help="export the first N public episodes of one work")
+    p.add_argument("--url", required=True)
+    p.add_argument("--output-dir", required=True)
+    p.add_argument("--episodes", type=int, default=5)
+    p.add_argument("--delay", type=float, default=1.5)
+    p.add_argument("--timeout", type=float, default=30.0)
+    p.add_argument("--force", action="store_true")
+    p.set_defaults(func=cmd_fetch_work)
     return parser
 
 

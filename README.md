@@ -32,7 +32,10 @@ cp config.example.toml config.toml
 .venv/bin/python -m novelpipeline run --config config.toml
 .venv/bin/python -m novelpipeline work-status --config config.toml
 .venv/bin/python -m novelpipeline rebuild-report --config config.toml
+.venv/bin/python -m novelpipeline fetch-work --url 'https://kakuyomu.jp/works/...' --output-dir /path/to/source_inbox --episodes 5
 ```
+
+`fetch-work`는 다른 오케스트레이터가 작품 URL 하나를 넘겨줄 때 쓰는 integration command입니다. 작품 앞 N화를 회차별 TXT와 `acquisition_manifest.json`으로 내보냅니다.
 
 ## 자동 실행
 

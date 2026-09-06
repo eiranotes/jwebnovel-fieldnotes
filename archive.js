@@ -45,11 +45,17 @@ function render() {
   archiveRoot.innerHTML = Object.keys(groups)
     .sort((a, b) => b.localeCompare(a))
     .map(date => {
-      const rows = groups[date]
+      const dayEntries = groups[date].sort((a, b) => a.sequence - b.sequence);
+      const dayNav = dayEntries.map(entry => `
+        <a href="${esc(entry.page)}" title="${esc(entry.title)}">
+          <b>${esc(String(entry.sequence).padStart(2, '0'))}</b><span>${esc(entry.title)}</span>
+        </a>
+      `).join('');
+      const rows = [...dayEntries]
         .sort((a, b) => b.sequence - a.sequence)
         .map(entry => `
           <article class="archive-entry">
-            <div class="entry-id">${esc(String(entry.sequence).padStart(2, '0'))}</div>
+            <div class="entry-id"><span>ENTRY</span>${esc(String(entry.sequence).padStart(2, '0'))}</div>
             <div class="entry-main">
               <h3><a href="${esc(entry.page)}">${esc(entry.title)}</a></h3>
               <p>${esc(entry.summary)}</p>
@@ -69,7 +75,10 @@ function render() {
         `).join('');
       return `
         <section class="archive-day" data-date="${esc(date)}">
-          <header><time datetime="${esc(date)}">${esc(date.replaceAll('-', '.'))}</time><span>${groups[date].length} ${groups[date].length === 1 ? 'entry' : 'entries'}</span></header>
+          <header class="archive-day-head">
+            <div class="day-date"><time datetime="${esc(date)}">${esc(date.replaceAll('-', '.'))}</time><span>${groups[date].length} RESEARCH ${groups[date].length === 1 ? 'ENTRY' : 'ENTRIES'}</span></div>
+            <nav class="day-entry-nav" aria-label="${esc(date)} research entries">${dayNav}</nav>
+          </header>
           ${rows}
         </section>
       `;
@@ -87,8 +96,9 @@ fetch('data/research-index.json', { cache: 'no-store' })
       .sort((a, b) => b.localeCompare(a))
       .forEach(date => {
         const option = document.createElement('option');
+        const count = entries.filter(entry => entry.date === date).length;
         option.value = date;
-        option.textContent = date;
+        option.textContent = `${date} · ${count} ${count === 1 ? 'entry' : 'entries'}`;
         dateSelect.append(option);
       });
 

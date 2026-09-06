@@ -5,7 +5,9 @@
     "sequence": 1,
     "title": "경파한 문체와 빠른 사건 전개",
     "summary": "『賢者フィロフィーと気苦労の絶えない悪魔之書』를 기준으로, 장편 비상위권 판타지 중 건조한 문장과 높은 사건 처리량을 가진 작품을 찾은 첫 조사.",
-    "reference_works": ["賢者フィロフィーと気苦労の絶えない悪魔之書"],
+    "reference_works": [
+      "賢者フィロフィーと気苦労の絶えない悪魔之書"
+    ],
     "criteria_terms": [
       "500000자 이상",
       "전생 제외",
@@ -17,8 +19,14 @@
       "건조한 문체",
       "빠른 사건 전개"
     ],
-    "platforms": ["Narou", "Kakuyomu"],
-    "genres": ["High fantasy", "Low fantasy"],
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [
+      "High fantasy",
+      "Low fantasy"
+    ],
     "min_chars": 500000,
     "status": "active",
     "candidate_count": 9,
@@ -26,5 +34,43 @@
     "page": "entries/2026-09-06-01.html",
     "doc": "docs/entries/2026-09-06-01.md",
     "data": "data/entries/2026-09-06-01.json"
+  },
+  {
+    "entry_id": "2026-09-06-02",
+    "date": "2026-09-06",
+    "sequence": 2,
+    "title": "죽음이 일상이 된 플레이어들",
+    "summary": "『死亡遊戯で飯を食う。』 2권을 기준으로, 죽음의 게임을 반복 가능한 경력·수입·산업으로 취급하고 규칙과 자원을 냉정하게 계산하는 작품을 찾은 조사.",
+    "reference_works": [
+      "死亡遊戯で飯を食う。"
+    ],
+    "criteria_terms": [
+      "데스게임",
+      "직업형 데스게임",
+      "반복 참가",
+      "상금",
+      "여성 주인공",
+      "냉정한 플레이어",
+      "룰 공략",
+      "자원 계산",
+      "플레이어 관계"
+    ],
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [
+      "Death game",
+      "Mystery",
+      "Horror",
+      "Modern fantasy"
+    ],
+    "min_chars": null,
+    "status": "active",
+    "candidate_count": 12,
+    "shortlist_count": 9,
+    "page": "entries/2026-09-06-02.html",
+    "doc": "docs/entries/2026-09-06-02.md",
+    "data": "data/entries/2026-09-06-02.json"
   }
 ]

@@ -24,5 +24,6 @@ For this run:
 15. Continue only up to the configured daily translation cap. If no cap is configured, translate one pending chunk per work to bound context/cost.
 16. Run `scripts/refresh_automation_status.py`, `scripts/rebuild_work_index.py`, and `scripts/validate_repo.py`.
 17. Finish the run log with done/partial/error status. Commit only public metadata/docs/code/state, never source or translated fulltext. Push main and verify GitHub Pages responds successfully.
-18. Refresh the internal private runtime with `python3 scripts/runtime_sync.py push` so the iPhone console sees the newest profile state, queues, artifacts, feedback model and logs.
-19. Report: selected search groups, new entries, duplicates filtered, shortlist count, full-translation progress, translated chunks, blockers.
+18. The private `taste.html` daily review deck is derived only from that date's `shortlist` and `length_exceptions`. Do not include rejected/deprioritized works. It uses the local acquired sample so the user can read and answer from iPhone without publishing source text.
+19. Refresh the internal private runtime with `python3 scripts/runtime_sync.py push` so the iPhone daily taste page and operations console see the newest entries, local samples, profile state, queues, artifacts, feedback model and logs.
+20. Report: selected search groups, new entries, duplicates filtered, shortlist count, daily taste deck count, full-translation progress, translated chunks, blockers.

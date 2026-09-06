@@ -34,7 +34,7 @@ def save(path: Path, data: dict) -> None:
     tmp.replace(path)
 
 
-def record(*, canonical_key: str, verdict: str, reasons: list[str], tags: list[str] | None = None, note: str = '', profile_id: str | None = None, source: str = 'manual') -> dict:
+def record(*, canonical_key: str, verdict: str, reasons: list[str], tags: list[str] | None = None, note: str = '', profile_id: str | None = None, source: str = 'manual', external_id: str | None = None) -> dict:
     if verdict not in SCORES:
         raise ValueError(f'unsupported verdict: {verdict}')
     reasons = [x for x in dict.fromkeys(reasons) if x in ALLOWED_REASONS]
@@ -43,9 +43,12 @@ def record(*, canonical_key: str, verdict: str, reasons: list[str], tags: list[s
     event = {
         'timestamp': now(), 'canonical_key': canonical_key, 'profile_id': profile_id,
         'verdict': verdict, 'score': SCORES[verdict], 'reasons': reasons, 'tags': tags,
-        'note': note.strip(), 'source': source,
+        'note': note.strip(), 'source': source, 'external_id': external_id,
     }
-    data.setdefault('events', []).append(event)
+    events = data.setdefault('events', [])
+    if external_id:
+        events[:] = [x for x in events if x.get('external_id') != external_id]
+    events.append(event)
     data['updated_at'] = event['timestamp']
     save(FEEDBACK, data)
     rebuild()
@@ -141,12 +144,12 @@ def apply_suggestion(profile_id: str, reason: str, direction: str) -> dict:
 def main() -> int:
     p=argparse.ArgumentParser()
     sp=p.add_subparsers(dest='cmd',required=True)
-    q=sp.add_parser('record'); q.add_argument('--key',required=True); q.add_argument('--verdict',required=True); q.add_argument('--reasons',default=''); q.add_argument('--tags',default=''); q.add_argument('--note',default=''); q.add_argument('--profile'); q.add_argument('--source',default='manual')
+    q=sp.add_parser('record'); q.add_argument('--key',required=True); q.add_argument('--verdict',required=True); q.add_argument('--reasons',default=''); q.add_argument('--tags',default=''); q.add_argument('--note',default=''); q.add_argument('--profile'); q.add_argument('--source',default='manual'); q.add_argument('--external-id')
     sp.add_parser('rebuild')
     q=sp.add_parser('apply'); q.add_argument('--profile',required=True); q.add_argument('--reason',required=True); q.add_argument('--direction',required=True)
     sp.add_parser('status')
     a=p.parse_args()
-    if a.cmd=='record': result=record(canonical_key=a.key,verdict=a.verdict,reasons=[x.strip() for x in a.reasons.split(',') if x.strip()],tags=[x.strip() for x in a.tags.split(',') if x.strip()],note=a.note,profile_id=a.profile,source=a.source)
+    if a.cmd=='record': result=record(canonical_key=a.key,verdict=a.verdict,reasons=[x.strip() for x in a.reasons.split(',') if x.strip()],tags=[x.strip() for x in a.tags.split(',') if x.strip()],note=a.note,profile_id=a.profile,source=a.source,external_id=a.external_id)
     elif a.cmd=='rebuild': result=rebuild()
     elif a.cmd=='apply': result=apply_suggestion(a.profile,a.reason,a.direction)
     else: result={'feedback':load(FEEDBACK,{'events':[]}), 'model':load(MODEL,{'profiles':{}})}

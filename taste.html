@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Field Notes daily taste review">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Field Notes — Daily Taste</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="archive-page taste-page">
+  <aside class="rail">FIELD NOTES · DAILY TASTE</aside>
+  <main>
+    <nav class="wrap top-tabs" aria-label="fieldnotes navigation">
+      <a href="index.html">ARCHIVE</a>
+      <a class="active" href="taste.html">DAILY TASTE</a>
+      <a href="console.html#profiles">SEARCH CONTROL</a>
+      <a href="console.html#works">WORK INDEX</a>
+      <a href="console.html#logs">LOGS</a>
+    </nav>
+
+    <header class="taste-head wrap">
+      <div>
+        <p class="kicker">READ → ANSWER → LEARN</p>
+        <h1>오늘의 취향 탐색</h1>
+        <p>매일 새 추천을 짧게 읽고 반응을 남긴다. 답변은 다음 탐색의 소프트 랭킹에 반영되고, 하드 조건은 자동으로 바뀌지 않는다.</p>
+      </div>
+      <div class="taste-day-control">
+        <label><span>REVIEW DATE</span><select id="taste-date"></select></label>
+        <div class="taste-progress"><strong id="taste-progress-count">0 / 0</strong><span>ANSWERED</span><i><b id="taste-progress-bar"></b></i></div>
+      </div>
+    </header>
+
+    <section class="wrap taste-workspace" id="taste-workspace" aria-live="polite">
+      <aside class="taste-queue" aria-label="오늘의 추천 목록">
+        <div class="taste-queue-head"><span>TODAY'S DECK</span><b id="taste-pool-count">0 works</b></div>
+        <div id="taste-queue-list"></div>
+      </aside>
+
+      <article class="taste-reader" id="taste-reader">
+        <div class="archive-state">오늘의 추천을 불러오는 중.</div>
+      </article>
+
+      <aside class="taste-answer" id="taste-answer">
+        <div class="taste-answer-empty">작품을 선택하면 답변란이 열린다.</div>
+      </aside>
+    </section>
+
+    <section class="wrap taste-complete" id="taste-complete" hidden>
+      <span>DAILY REVIEW COMPLETE</span>
+      <h2>오늘 추천을 모두 봤다.</h2>
+      <p>응답은 취향 신호로 누적됐다. 다음 탐색에서는 명시 조건을 통과한 후보 안에서 이 신호를 2차 랭킹에 사용한다.</p>
+      <a href="console.html#feedback">학습된 취향 신호 보기 →</a>
+    </section>
+
+    <div id="toast" class="control-toast" hidden></div>
+    <footer class="wrap"><span>Field Notes daily taste review</span><span>private runtime · source text stays local</span></footer>
+  </main>
+  <script src="taste.js"></script>
+</body>
+</html>

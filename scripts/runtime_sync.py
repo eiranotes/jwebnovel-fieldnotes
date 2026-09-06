@@ -23,6 +23,8 @@ RUNTIME_DIRS = (
 )
 RUNTIME_FILES = (
     "index.html",
+    "taste.html",
+    "taste.js",
     "console.html",
     "console.js",
     "styles.css",
@@ -44,6 +46,7 @@ MUTABLE_FILES = (
 PRIVATE_STATE_FILES = (
     "workspace/preference-feedback.json",
     "workspace/preference-model.json",
+    "workspace/daily-taste-state.json",
 )
 
 MUTABLE_WORKSPACE_DIRS = (

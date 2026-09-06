@@ -7,11 +7,13 @@ import mimetypes
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 from automation_log import log_event
+from rebuild_work_index import canonical
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,7 +26,9 @@ ROTATION = ROOT / "data" / "profile-rotation-state.json"
 REGISTRY = ROOT / "data" / "work-registry.json"
 PREFERENCE_FEEDBACK = ROOT / "workspace" / "preference-feedback.json"
 PREFERENCE_MODEL = ROOT / "workspace" / "preference-model.json"
-SAFE_STATIC_FILES = {"/", "/index.html", "/console.html", "/styles.css", "/archive.js", "/console.js", "/.nojekyll"}
+DAILY_TASTE = ROOT / "workspace" / "daily-taste-state.json"
+ENTRIES = ROOT / "data" / "entries"
+SAFE_STATIC_FILES = {"/", "/index.html", "/taste.html", "/taste.js", "/console.html", "/styles.css", "/archive.js", "/console.js", "/.nojekyll"}
 SAFE_STATIC_ROOTS = ("entries", "docs", "data")
 
 
@@ -142,6 +146,147 @@ def refresh_index() -> None:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "rebuild_work_index.py")], cwd=ROOT, check=True, text=True, capture_output=True)
 
 
+def taste_state() -> dict:
+    return load(DAILY_TASTE, {"schema_version": "1.0", "updated_at": None, "responses": []})
+
+
+def available_taste_dates() -> list[str]:
+    dates = set()
+    for path in ENTRIES.glob("*.json"):
+        try:
+            entry = load(path, {})
+            if entry.get("date") and any((entry.get("results") or {}).get(bucket) for bucket in ("shortlist", "length_exceptions")):
+                dates.add(str(entry["date"]))
+        except Exception:
+            continue
+    return sorted(dates, reverse=True)
+
+
+def taste_deck(date: str | None = None) -> dict:
+    dates = available_taste_dates()
+    if not date:
+        date = dates[0] if dates else None
+    if not date:
+        return {"date": None, "available_dates": [], "items": [], "completed_count": 0, "pool_count": 0}
+    state = taste_state()
+    responses = {(x.get("date"), x.get("canonical_key")): x for x in state.get("responses", [])}
+    registry = load(REGISTRY, {"works": []})
+    registry_by_key = {canonical(w): w for w in registry.get("works", []) if w.get("title")}
+    by_key: dict[str, dict] = {}
+    pool_count = 0
+    for path in sorted(ENTRIES.glob(f"{date}-*.json")):
+        entry = load(path, {})
+        if str(entry.get("date") or "") != date:
+            continue
+        profile_id = entry.get("search_profile_id") or entry.get("profile_id")
+        results = entry.get("results") or {}
+        for bucket in ("shortlist", "length_exceptions"):
+            for item in results.get(bucket) or []:
+                if not isinstance(item, dict) or not item.get("title"):
+                    continue
+                pool_count += 1
+                key = canonical(item)
+                row = by_key.setdefault(key, {
+                    "canonical_key": key,
+                    "title": item.get("title"), "author": item.get("author"), "platform": item.get("platform"),
+                    "url": item.get("url"), "length_chars": item.get("length_chars"), "episodes": item.get("episodes"),
+                    "rank": item.get("rank"), "why": item.get("why"), "difference": item.get("difference"),
+                    "entry_id": entry.get("entry_id") or path.stem, "entry_ids": [], "entry_title": entry.get("title"),
+                    "profile_id": profile_id, "bucket": bucket,
+                })
+                eid = entry.get("entry_id") or path.stem
+                if eid not in row["entry_ids"]:
+                    row["entry_ids"].append(eid)
+                for field in ("author", "platform", "url", "length_chars", "episodes", "rank", "why", "difference"):
+                    if item.get(field) not in (None, ""):
+                        row[field] = item.get(field)
+    items = []
+    for row in by_key.values():
+        reg = registry_by_key.get(row["canonical_key"])
+        sample_available = False
+        if reg and reg.get("workspace"):
+            sample_available = (ROOT / reg["workspace"] / "merged" / "ja.txt").is_file()
+            row["work_id"] = reg.get("work_id")
+        row["sample_available"] = sample_available
+        row["response"] = responses.get((date, row["canonical_key"]))
+        if sample_available or row["response"]:
+            items.append(row)
+    def rank_key(row: dict):
+        rank = str(row.get("rank") or "Z")
+        group = 0 if rank.startswith("A") else 1 if rank.startswith("B") else 2
+        exception = 1 if "-LE" in rank else 0
+        digits = "".join(ch for ch in rank if ch.isdigit())
+        return group, exception, int(digits or 99), str(row.get("title") or "")
+    items.sort(key=rank_key)
+    return {
+        "date": date,
+        "available_dates": dates,
+        "items": items,
+        "completed_count": sum(1 for x in items if x.get("response")),
+        "pool_count": pool_count,
+    }
+
+
+def taste_sample(date: str, canonical_key: str, start: int = 0, limit: int = 6500) -> dict:
+    item = next((x for x in taste_deck(date).get("items", []) if x.get("canonical_key") == canonical_key), None)
+    if not item:
+        raise ValueError("work is not in the selected daily taste deck")
+    registry = load(REGISTRY, {"works": []})
+    reg = next((w for w in registry.get("works", []) if w.get("title") and canonical(w) == canonical_key), None)
+    if not reg or not reg.get("workspace"):
+        raise ValueError("local sample is not available")
+    source = (ROOT / reg["workspace"] / "merged" / "ja.txt").resolve()
+    workspace = (ROOT / reg["workspace"]).resolve()
+    if not source.is_file() or not source.is_relative_to(workspace):
+        raise ValueError("local sample is not available")
+    text = source.read_text(encoding="utf-8")
+    start = max(0, min(int(start), len(text)))
+    end = min(len(text), start + max(500, min(int(limit), 8000)))
+    return {
+        "canonical_key": canonical_key, "date": date, "start": start, "end": end, "total": len(text),
+        "has_more": end < len(text), "ja_text": text[start:end], "ko_text": None,
+    }
+
+
+def save_taste_response(body: dict) -> dict:
+    date = str(body.get("date") or "").strip()
+    key = str(body.get("canonical_key") or "").strip()
+    verdict = str(body.get("verdict") or "").strip()
+    if not date or not key or verdict not in {"love", "like", "neutral", "dislike", "exclude"}:
+        raise ValueError("date, canonical_key and a valid verdict are required")
+    deck = taste_deck(date)
+    item = next((x for x in deck.get("items", []) if x.get("canonical_key") == key), None)
+    if not item:
+        raise ValueError("work is not in the selected daily taste deck")
+    reasons = [str(x).strip() for x in body.get("reasons") or [] if str(x).strip()]
+    tags = [str(x).strip()[:80] for x in body.get("tags") or [] if str(x).strip()]
+    note = str(body.get("note") or "").strip()
+    profile_id = str(body.get("profile_id") or item.get("profile_id") or "").strip() or None
+    stamp = datetime.now(timezone.utc).isoformat()
+    response = {
+        "date": date, "canonical_key": key, "entry_id": body.get("entry_id") or item.get("entry_id"),
+        "profile_id": profile_id, "verdict": verdict, "reasons": reasons, "tags": tags, "note": note,
+        "read_chars": max(0, int(body.get("read_chars") or 0)), "updated_at": stamp,
+    }
+    state = taste_state()
+    state["responses"] = [x for x in state.get("responses", []) if not (x.get("date") == date and x.get("canonical_key") == key)]
+    state["responses"].append(response)
+    state["updated_at"] = stamp
+    atomic_write(DAILY_TASTE, state)
+    cmd = [
+        sys.executable, str(ROOT / "scripts" / "preference_feedback.py"), "record",
+        "--key", key, "--verdict", verdict, "--reasons", ",".join(reasons), "--tags", ",".join(tags),
+        "--note", note, "--source", "daily_taste", "--external-id", f"daily_taste:{date}:{key}",
+    ]
+    if profile_id:
+        cmd += ["--profile", profile_id]
+    proc = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
+    log_event(task="daily_taste", action="respond", status="done", message=f"Taste response: {verdict}", public_details={"date": date, "verdict": verdict})
+    return response
+
+
 def safe_static_request_path(path: str) -> str | None:
     decoded = unquote(path)
     if decoded == "/":
@@ -184,6 +329,15 @@ class Handler(SimpleHTTPRequestHandler):
         parsed, path = self._parsed_route()
         if path == "/api/state":
             return json_response(self, 200, state_payload())
+        if path == "/api/taste/today":
+            query = parse_qs(parsed.query)
+            return json_response(self, 200, taste_deck((query.get("date") or [None])[0]))
+        if path == "/api/taste/read":
+            query = parse_qs(parsed.query)
+            date = (query.get("date") or [""])[0]
+            key = (query.get("key") or [""])[0]
+            start = int((query.get("start") or [0])[0])
+            return json_response(self, 200, taste_sample(date, key, start=start))
         if path == "/api/download":
             query = parse_qs(parsed.query)
             rel = (query.get("path") or [""])[0]
@@ -230,6 +384,8 @@ class Handler(SimpleHTTPRequestHandler):
                 atomic_write(PROFILES, data)
                 log_event(task="private_console", action="save_selection", status="done", message="Search profile selection updated", public_details={"selected": len(selection["selected_profile_ids"]), "fallback": selection.get("when_none")})
                 return json_response(self, 200, selection)
+            if path == "/api/taste/respond":
+                return json_response(self, 200, save_taste_response(body))
             if path == "/api/feedback":
                 key = str(body.get("canonical_key") or "").strip()
                 verdict = str(body.get("verdict") or "").strip()

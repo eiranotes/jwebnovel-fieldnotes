@@ -21,3 +21,4 @@ __pycache__/
 *.pyc
 workspace/preference-feedback.json
 workspace/preference-model.json
+workspace/daily-taste-state.json

@@ -1,5 +1,15 @@
 # Preference Learning v0.1
 
+## Daily Taste review
+
+`taste.html`은 매일 피드백의 기본 화면이다. 선택 날짜의 `shortlist`와 `length_exceptions`를 후보 pool로 사용하되, 실제 리뷰 큐에는 private local sample이 준비된 작품만 올린다. 원 후보 수는 별도의 pool count로 유지한다.
+
+추천 근거는 기본적으로 접어 둔다. 먼저 실제 샘플을 읽고 반응을 고르게 해서 discovery 모델의 설명에 의한 anchoring을 줄인다.
+
+각 답변은 날짜, canonical work key, verdict, reasons, 선택 태그/메모, 실제로 연 source 문자 수를 저장한다. `daily_taste:<date>:<canonical_key>`를 stable external id로 사용하므로 같은 날 같은 작품의 답변을 수정하면 기존 preference event를 교체하고 중복 가산하지 않는다.
+
+상태 파일 `workspace/daily-taste-state.json`은 private이며 `scripts/runtime_sync.py`를 통해 iPhone runtime과 DevDrive canonical repository 사이에서 동기화한다.
+
 ## 목적
 
 탐색 결과에 대한 실제 사용자 반응을 누적해 추천 정확도를 높이되, 현재 검색 요청이나 명시적 조건을 자동으로 훼손하지 않는다.

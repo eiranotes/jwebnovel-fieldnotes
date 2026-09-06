@@ -103,9 +103,48 @@ def extract_ruby_notes(text: str) -> dict[str, str]:
     for pat in patterns:
         for base, reading in re.findall(pat, text):
             base, reading = base.strip(), reading.strip()
-            if base and reading and base not in notes:
+            if not base or not reading:
+                continue
+            if set(reading) <= {'・', '･', '.', '·'}:
+                continue
+            if not re.search(r'[一-龯々〆ヵヶぁ-んァ-ヶーA-Za-z0-9]', base):
+                continue
+            if base not in notes:
                 notes[base] = reading
     return notes
+
+
+def seed_glossary_ruby(wdir: Path, text: str) -> dict:
+    glossary = wdir / 'glossary.json'
+    if glossary.exists():
+        glossary_data = json.loads(glossary.read_text(encoding='utf-8'))
+    else:
+        glossary_data = {'schema_version':'1.0','people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}
+
+    acquisition = wdir / 'source_inbox' / 'acquisition_manifest.json'
+    source = 'merged/ja.txt'
+    if acquisition.exists():
+        try:
+            manifest = json.loads(acquisition.read_text(encoding='utf-8'))
+            ruby_notes = {
+                str(k): str(v)
+                for k, v in (manifest.get('ruby_notes') or {}).items()
+                if k and v and not set(str(v)) <= {'・', '･', '.', '·'}
+            }
+            source = 'source_inbox/acquisition_manifest.json'
+            glossary_data['ruby_notes'] = ruby_notes
+        except Exception:
+            ruby_notes = extract_ruby_notes(text)
+            glossary_data.setdefault('ruby_notes', {}).update({k:v for k,v in ruby_notes.items() if k not in glossary_data.get('ruby_notes', {})})
+    else:
+        ruby_notes = extract_ruby_notes(text)
+        glossary_data.setdefault('ruby_notes', {}).update({k:v for k,v in ruby_notes.items() if k not in glossary_data.get('ruby_notes', {})})
+
+    decisions = [x for x in glossary_data.setdefault('decisions', []) if x.get('type') != 'ruby_scan']
+    decisions.append({'type':'ruby_scan','count':len(ruby_notes),'source':source})
+    glossary_data['decisions'] = decisions
+    glossary.write_text(json.dumps(glossary_data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    return glossary_data
 
 def split_paragraphs(text: str, target: int, hard_max: int) -> list[str]:
     paras = re.split(r'(?<=\n)\n+', text)
@@ -129,6 +168,20 @@ def split_paragraphs(text: str, target: int, hard_max: int) -> list[str]:
 
 def init_translation(wdir: Path, merged: Path, target: int, hard_max: int) -> dict:
     text = merged.read_text(encoding='utf-8')
+    seed_glossary_ruby(wdir, text)
+    source_sha256 = sha256_bytes(text.encode('utf-8'))
+    existing_manifest_path = wdir / 'translation' / 'manifest.json'
+    if existing_manifest_path.exists():
+        try:
+            existing = json.loads(existing_manifest_path.read_text(encoding='utf-8'))
+            if (
+                existing.get('source_sha256') == source_sha256
+                and int(existing.get('target_chunk_chars', target)) == target
+                and int(existing.get('hard_max_chunk_chars', hard_max)) == hard_max
+            ):
+                return existing
+        except Exception:
+            pass
     chunks = split_paragraphs(text, target, hard_max)
     tdir = wdir / 'translation'
     croot = tdir / 'chunks'
@@ -153,20 +206,12 @@ def init_translation(wdir: Path, merged: Path, target: int, hard_max: int) -> di
         offset += len(chunk)
     manifest = {
         'schema_version': '1.0', 'source': str(merged.relative_to(ROOT)),
+        'source_sha256': source_sha256,
         'target_chunk_chars': target, 'hard_max_chunk_chars': hard_max,
         'chunk_count': len(chunks), 'chunks': manifest_chunks,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     (tdir / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    glossary = wdir / 'glossary.json'
-    ruby_notes = extract_ruby_notes(text)
-    if glossary.exists():
-        glossary_data = json.loads(glossary.read_text(encoding='utf-8'))
-    else:
-        glossary_data = {'schema_version':'1.0','people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}
-    glossary_data.setdefault('ruby_notes', {}).update({k:v for k,v in ruby_notes.items() if k not in glossary_data.get('ruby_notes', {})})
-    glossary_data.setdefault('decisions', []).append({'type':'ruby_scan','count':len(ruby_notes),'source':'merged/ja.txt'})
-    glossary.write_text(json.dumps(glossary_data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     return manifest
 
 
@@ -179,7 +224,8 @@ def prepare(args):
     extracted = extract_inbox(wdir)
     merged, inventory = merge_sources(wdir)
     manifest = init_translation(wdir, merged, args.target, args.hard_max)
-    state = {'status':'translation_pending','source_files':len(inventory['files']),'merged_chars':inventory['merged_chars'],'chunks_total':manifest['chunk_count'],'chunks_done':0,'updated_at':datetime.now(timezone.utc).isoformat()}
+    chunks_done = sum(1 for c in manifest.get('chunks', []) if c.get('status') == 'done')
+    state = {'status':'translation_complete' if chunks_done == manifest['chunk_count'] else 'translation_pending','source_files':len(inventory['files']),'merged_chars':inventory['merged_chars'],'chunks_total':manifest['chunk_count'],'chunks_done':chunks_done,'updated_at':datetime.now(timezone.utc).isoformat()}
     (wdir/'state.json').write_text(json.dumps(state, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(json.dumps({'work_dir':str(wdir),'extracted':len(extracted),'merged':str(merged),'chunks':manifest['chunk_count']}, ensure_ascii=False, indent=2))
 

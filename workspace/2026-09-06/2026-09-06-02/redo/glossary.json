@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "唐沢": "からさわ",
+    "歩": "あゆむ",
+    "Redo": "リドゥ",
+    "黒獣": "こくじゅう"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 4,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

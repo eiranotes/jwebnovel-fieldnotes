@@ -1,9 +1,8 @@
 {
-  "status": "waiting_for_source",
-  "source_files": 0,
-  "merged_chars": 0,
-  "chunks_total": 0,
+  "status": "translation_pending",
+  "source_files": 3,
+  "merged_chars": 12439,
+  "chunks_total": 2,
   "chunks_done": 0,
-  "source_inbox": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/source_inbox",
-  "updated_at": "2026-09-06T16:01:00+09:00"
+  "updated_at": "2026-09-06T07:52:01.119904+00:00"
 }

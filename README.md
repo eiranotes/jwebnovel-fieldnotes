@@ -90,4 +90,6 @@ Daily discovery/translation automation scaffolding lives in:
 - `docs/current-status.md` — current blockers and top-5 work paths
 - `data/work-registry.json` — machine-readable work path/status registry
 
+The local acquisition worker lives at `/Volumes/DevDrive/Projects/novel-daily-pipeline`. `scripts/full_pipeline.py` bridges finalized research entries into that worker, then hands the resulting first-N source files back to this repository's merge/chunk/glossary pipeline. `scripts/translation_queue.py` provides one global oldest-pending-first queue across all registered works.
+
 The actual daily scheduled job is intentionally not enabled until the exact Asia/Seoul clock time and at least one completed search profile are supplied.

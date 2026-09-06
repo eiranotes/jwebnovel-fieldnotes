@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/merged/ja.txt",
+  "source_sha256": "a4acc338312bce891ebd1cec737772262d11be86263b7dcc926071f3f8e3f92d",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 1,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "pending",
+      "source_start_char": 0,
+      "source_end_char": 8570,
+      "ja_chars": 8570,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-06T07:49:22.100958+00:00"
+}

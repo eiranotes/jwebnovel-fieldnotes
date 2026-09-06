@@ -14,8 +14,8 @@ Shorter works are excluded by default. A small number may remain as `LENGTH EXCE
 ### D004 — Daily automation is Steroids-first
 ChatGPT performs current discovery/reasoning; Chat On Steroids Core owns repository reads/writes, state files, validation, git push, and durable work continuation.
 
-### D005 — Third-party novel fulltext acquisition is a gate
-Do not automate public Narou/Kakuyomu body scraping. Source pipeline starts only from user-supplied or otherwise lawfully acquired text files placed in `source_inbox/`.
+### D005 — Selected first-N acquisition is integrated
+The shortlist pipeline may capture only the selected work's first N public reader episodes into the private local workspace. Default N is 5. Full-work archiving is not part of this pipeline, and manual source inbox remains available as a fallback.
 
 ### D006 — Fulltext is private
 Japanese source, Korean translation, translation tasks and parallel viewer are gitignored. Public GitHub Pages gets only metadata, findings and progress.

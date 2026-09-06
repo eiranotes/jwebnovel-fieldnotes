@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "三度": "みたび",
+    "利物": "りぶつ",
+    "『』": "引用符",
+    "【】": "墨括弧",
+    "塵肺症": "じんぱいしょう"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 5,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

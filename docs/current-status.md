@@ -14,7 +14,7 @@ Updated: 2026-09-06
 | exact daily schedule | **blocked: clock time not supplied** |
 | Narou metadata discovery | official API lane |
 | Kakuyomu discovery | current web metadata/search lane |
-| automatic third-party body download | **not implemented by policy/platform constraint** |
+| automatic first-5 public episode acquisition | implemented through `novel-daily-pipeline` worker |
 | source inbox / normalize / merge | implemented |
 | resumable chunk queue | implemented |
 | glossary / proper-name continuity | implemented |
@@ -26,13 +26,15 @@ Updated: 2026-09-06
 
 | Rank | Work | Status | Workspace |
 |---|---|---|---|
-| A1 | 紅さんはデスゲーマー | waiting_for_source | `workspace/2026-09-06/2026-09-06-02/beni-death-gamer/` |
-| A2 | 拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜 | waiting_for_source | `workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/` |
-| B1 | Redo -リドゥ- | waiting_for_source | `workspace/2026-09-06/2026-09-06-02/redo/` |
-| A-LE1 | 逆さの茶笠 | waiting_for_source | `workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/` |
-| B-LE1 | デスゲーム界の十傑 | waiting_for_source | `workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/` |
+| A1 | 紅さんはデスゲーマー | translation_pending · 2 chunks | `workspace/2026-09-06/2026-09-06-02/beni-death-gamer/` |
+| A2 | 拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜 | translation_pending · 3 chunks | `workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/` |
+| B1 | Redo -リドゥ- | translation_pending · 2 chunks | `workspace/2026-09-06/2026-09-06-02/redo/` |
+| A-LE1 | 逆さの茶笠 | translation_pending · 2 chunks (3 public episodes total) | `workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/` |
+| B-LE1 | デスゲーム界の十傑 | translation_pending · 1 chunk | `workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/` |
 
-Each work has tracked `metadata.json` and `state.json`. Put lawful/user-supplied TXT/ZIP into its `source_inbox/`; that directory and all source/translation fulltext are gitignored.
+Each work has tracked `metadata.json` and `state.json`. The integrated runner writes the selected first five public episodes to `source_inbox/` and immediately prepares the local translation queue. Manual TXT/ZIP remains a fallback. Source/translation fulltext stays gitignored.
+
+Current integrated smoke run: **5 works processed, 0 errors, 10 pending translation chunks**. Both Kakuyomu and Narou acquisition paths were exercised.
 
 ## Required before enabling the daily automation
 
@@ -44,4 +46,4 @@ Each work has tracked `metadata.json` and `state.json`. Put lawful/user-supplied
 
 ## Current blocker detail
 
-The discovery/page pipeline can run unattended once profiles/time are configured. The **body acquisition step cannot be unattended for third-party Narou/Kakuyomu works** under the verified current platform constraints. It is intentionally a source-inbox gate. Everything after that gate is automated and resumable.
+Discovery, target registration, first-five acquisition, source preparation, chunking and state updates are now connected. Remaining configuration inputs are the final search profiles, daily translation chunk cap, and the exact daily schedule time.

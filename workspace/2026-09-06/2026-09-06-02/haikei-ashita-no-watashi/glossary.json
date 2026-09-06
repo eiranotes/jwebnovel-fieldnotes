@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "阿修羅": "あしゅら",
+    "鏡花": "きょうか",
+    "形": "けい",
+    "白鳥一": "しらとりはじめ",
+    "三浦": "みうら",
+    "初音青": "はつねあお",
+    "井頭愛花": "いがしらあいか"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 7,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

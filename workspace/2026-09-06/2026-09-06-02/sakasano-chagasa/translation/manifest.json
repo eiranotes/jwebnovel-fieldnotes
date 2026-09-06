@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/merged/ja.txt",
+  "source_sha256": "6af6bf8f4d315614df10b14c3fe8752bc1793c70fcf7b643a4c9484ff013351f",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 2,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "pending",
+      "source_start_char": 0,
+      "source_end_char": 8969,
+      "ja_chars": 8969,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0002",
+      "order": 2,
+      "status": "pending",
+      "source_start_char": 8969,
+      "source_end_char": 12027,
+      "ja_chars": 3058,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-06T07:48:12.503797+00:00"
+}

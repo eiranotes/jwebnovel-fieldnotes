@@ -6,6 +6,12 @@
   "time": null,
   "entry_mode": "one_entry_per_search_profile_per_day",
   "top_candidates_for_source_pipeline": 5,
+  "source_acquisition": {
+    "mode": "automatic_first_n_private_local",
+    "episodes_per_work": 5,
+    "worker_root": "/Volumes/DevDrive/Projects/novel-daily-pipeline",
+    "reuse_existing_manifest": true
+  },
   "public_fulltext": false,
   "private_translation_view": true,
   "translation": {

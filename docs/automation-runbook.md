@@ -27,7 +27,24 @@ python3 scripts/register_targets.py --entry 2026-09-06-02 --top-n 5
 
 This creates/updates tracked work metadata/state and `data/work-registry.json` without acquiring body text.
 
-## Source preparation
+## Automatic top-N source acquisition + preparation
+
+After an entry is finalized, run:
+
+```bash
+python3 scripts/full_pipeline.py \
+  --entry 2026-09-06-02 \
+  --top-n 5 \
+  --episodes 5
+```
+
+This performs `register targets -> first N public episodes -> source_inbox -> normalize/merge -> chunk manifest -> glossary -> parallel-view scaffold`.
+
+The acquisition worker is `/Volumes/DevDrive/Projects/novel-daily-pipeline` by default. Override it with `--worker-root` or `NOVEL_PIPELINE_ROOT`.
+
+Re-running the command reuses an unchanged `acquisition_manifest.json`; use `--force` only when a fresh first-N capture is required.
+
+## Manual source preparation fallback
 
 ```bash
 python3 scripts/source_pipeline.py prepare \
@@ -37,7 +54,7 @@ python3 scripts/source_pipeline.py prepare \
   --platform Kakuyomu
 ```
 
-Before running, put user-supplied/lawfully acquired `.txt`, `.md`, or `.zip` into:
+For a manually supplied source, put `.txt`, `.md`, or `.zip` into:
 
 ```text
 workspace/2026-09-06/2026-09-06-02/beni-death-gamer/source_inbox/
@@ -46,6 +63,16 @@ workspace/2026-09-06/2026-09-06-02/beni-death-gamer/source_inbox/
 `prepare` extracts TXT/MD, normalizes, merges, chunks, and creates state/glossary files.
 
 ## Next translation task
+
+Across all works, use the global queue:
+
+```bash
+python3 scripts/translation_queue.py next
+```
+
+It selects the oldest pending work/chunk and emits the full translation task JSON, including source, neighboring context, glossary, and the task path.
+
+Per-work fallback:
 
 ```bash
 python3 scripts/source_pipeline.py next-task \
@@ -64,6 +91,20 @@ The returned task JSON contains:
 ChatGPT translates it and writes a result JSON with `ko_text` and `glossary_update`.
 
 ## Complete a chunk
+
+For the global queue path:
+
+```bash
+python3 scripts/translation_queue.py complete \
+  --entry 2026-09-06-02 \
+  --work beni-death-gamer \
+  --chunk 0001 \
+  --result /path/to/result-0001.json
+```
+
+This also rebuilds the local parallel view and refreshes global automation status.
+
+Per-work fallback:
 
 ```bash
 python3 scripts/source_pipeline.py complete \

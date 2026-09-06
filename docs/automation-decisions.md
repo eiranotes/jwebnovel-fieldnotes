@@ -20,10 +20,11 @@ Updated: 2026-09-06
    - GitHub Pages: 메타데이터, 탐색 근거, shortlist, 진행상태만 공개.
    - 원문 전문 / 한국어 전문 / 병렬 본문: 로컬 workspace 전용. Git에는 올리지 않는다.
 
-4. **Source acquisition gate**
-   - Narou 본문 자동 scraping/downloading은 구현하지 않는다.
-   - Kakuyomu 타인 작품의 공식 백업 다운로드도 자동화 대상으로 보지 않는다.
-   - 사용자가 합법적으로 확보하여 `source_inbox/`에 넣은 TXT/ZIP만 이후 파이프라인이 자동 처리한다.
+4. **Source acquisition boundary**
+   - 탐색 결과의 상위 작품에 한해 기본 5개 공개 회차를 개인 로컬 workspace로 수집한다.
+   - 전체 작품 archive를 만들지 않고 source pipeline에 필요한 제한 범위만 저장한다.
+   - acquisition manifest가 같으면 재다운로드하지 않는다.
+   - 직접 제공 TXT/ZIP은 계속 fallback으로 지원한다.
 
 5. **Translation continuity**
    - 작품별 merged JA → chunk manifest → pending/done checkpoint.
@@ -35,13 +36,13 @@ Updated: 2026-09-06
    - 파일 생성, 상태 갱신, Git commit/push, Pages 검증은 Chat On Steroids Core를 기본 실행 채널로 사용.
    - 웹 탐색/검색은 ChatGPT web 기능을 사용하고 결과를 Steroids가 저장소에 기록.
 
-## Platform acquisition constraints verified on 2026-09-06
+## Acquisition implementation verified on 2026-09-06
 
-- Narou: 독자용 TXT 다운로드 기능은 2026-03-26 폐지. 소설 API는 메타데이터 검색용이며 본문 대량수집 용도가 아님.
-- Narou: API 외 자동화된 데이터 수집은 사이트 정책상 피한다.
-- Kakuyomu: 공식 작품 다운로드/백업은 작가가 자신의 작품을 내려받는 기능 중심. 제3자 공개 작품을 일괄 TXT로 받는 파이프라인으로 사용하지 않는다.
+- Discovery remains metadata/search driven.
+- A separate worker handles only the selected work URL and first N readable episodes.
+- Source and translation payloads remain private/local and are not committed or published.
 
-따라서 `discover → top5 → source acquisition gate → merge/chunk/translate`를 분리한다.
+Flow: `discover → shortlist → top5 → first5 acquisition → merge/chunk → translate`.
 
 ## Daily run order
 
@@ -52,8 +53,8 @@ Updated: 2026-09-06
 04 read/reference-sample survivors
 05 produce dated entry + update archive
 06 select top N (default 5) for source pipeline
-07 check source_inbox availability
-08 if source exists: normalize → merge → chunk
+07 acquire selected first N public episodes into private source_inbox
+08 normalize → merge → chunk
 09 resume oldest pending translation chunk(s)
 10 update glossary / state / local parallel view
 11 refresh public automation-status.json

@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "音重": "おとしげ",
+    "渡辺": "わたなべ",
+    "紅": "くれない",
+    "1": "ワン",
+    "2": "ツー",
+    "3": "スリー",
+    "アウト": "死",
+    "殺": "や"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 8,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

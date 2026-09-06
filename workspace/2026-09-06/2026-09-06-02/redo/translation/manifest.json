@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-06/2026-09-06-02/redo/merged/ja.txt",
+  "source_sha256": "16cdaf4f2bc9e91b0c17d1a36d2107b6b881c74433c6678609fd99b4843b7301",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 2,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "pending",
+      "source_start_char": 0,
+      "source_end_char": 8975,
+      "ja_chars": 8975,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0002",
+      "order": 2,
+      "status": "pending",
+      "source_start_char": 8975,
+      "source_end_char": 17419,
+      "ja_chars": 8444,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-06T07:49:11.793990+00:00"
+}

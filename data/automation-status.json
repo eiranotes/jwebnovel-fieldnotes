@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T07:30:48.884814+00:00",
+  "updated_at": "2026-09-06T07:52:01.355653+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -20,17 +20,27 @@
     "top_candidates_for_source_pipeline": 5
   },
   "source_acquisition": {
-    "status": "manual_or_user_supplied_gate",
-    "public_fulltext": false
+    "status": "automatic_first_n_private_local",
+    "public_fulltext": false,
+    "acquired_works": 5,
+    "worker": "/Volumes/DevDrive/Projects/novel-daily-pipeline"
   },
   "translation": {
     "mode": "resumable_chunk_queue",
     "target_chunk_chars": 9000,
-    "pending_chunks": 0,
+    "pending_chunks": 10,
     "completed_chunks": 0,
-    "works_waiting_for_source": 5,
-    "works_ready": 0
+    "works_waiting_for_source": 0,
+    "works_ready": 5
   },
-  "last_run": null,
+  "last_run": {
+    "entry_id": "2026-09-06-02",
+    "started_at": "2026-09-06T07:52:00.377495+00:00",
+    "finished_at": "2026-09-06T07:52:01.330004+00:00",
+    "top_n": 5,
+    "episodes_per_work": 5,
+    "processed": 5,
+    "errors": []
+  },
   "next_action": "collect search criteria and exact daily time"
 }

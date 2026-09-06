@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/merged/ja.txt",
+  "source_sha256": "1632096370f62d8ac16a290fbb3bcb5436c246c5167582984474da26e9d659c3",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 2,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "pending",
+      "source_start_char": 0,
+      "source_end_char": 8965,
+      "ja_chars": 8965,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0002",
+      "order": 2,
+      "status": "pending",
+      "source_start_char": 8965,
+      "source_end_char": 9812,
+      "ja_chars": 847,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-06T07:48:38.954767+00:00"
+}

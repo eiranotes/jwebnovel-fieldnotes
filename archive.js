@@ -23,6 +23,12 @@ function searchable(entry) {
   ].join(' ').toLowerCase();
 }
 
+function lengthLabel(entry) {
+  if (!entry.min_chars) return 'length open';
+  const base = `${Number(entry.min_chars).toLocaleString()}자+`;
+  return entry.length_policy === 'default_with_high_fit_exception' ? `${base} · EXC` : base;
+}
+
 function render() {
   const q = queryInput.value.trim().toLowerCase();
   const selectedDate = dateSelect.value;
@@ -64,7 +70,7 @@ function render() {
             <div class="entry-meta">
               <span>${esc((entry.platforms || []).join(' / '))}</span>
               <span>${esc((entry.genres || []).join(' / '))}</span>
-              <span>${entry.min_chars ? `${Number(entry.min_chars).toLocaleString()}자+` : 'length open'}</span>
+              <span>${esc(lengthLabel(entry))}</span>
             </div>
             <div class="entry-count">
               <b>${esc(entry.shortlist_count)}</b>

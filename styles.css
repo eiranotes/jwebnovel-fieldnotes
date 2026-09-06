@@ -123,6 +123,7 @@ section { padding: 58px 0; border-bottom: 1px solid var(--rule); }
 .search span { font-size: 11px; color: var(--accent); }
 .search input { width: min(420px, 100%); border: 0; border-bottom: 1px solid var(--ink); background: transparent; border-radius: 0; padding: 8px 2px; font: inherit; }
 .list { border-top: 1px solid var(--ink); }
+.list-divider { padding: 10px 0 9px 72px; border-bottom: 1px solid var(--dark); font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; color: var(--accent); }
 .list article { display: grid; grid-template-columns: 72px minmax(260px, 1.1fr) minmax(175px, .7fr) 210px; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--rule); }
 .rank { font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); padding-top: 4px; }
 .list h3 { font-size: 23px; line-height: 1.22; margin: 0 0 7px; }

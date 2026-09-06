@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "entry_id": "2026-09-06-02",
   "date": "2026-09-06",
   "sequence": 2,
   "continuation_of": null,
   "title": "죽음이 일상이 된 플레이어들",
   "method_version_used": "0.3",
-  "current_protocol_version": "0.3",
+  "current_protocol_version": "0.4",
   "request_snapshot": "『死亡遊戯で飯を食う。』와 비슷한 소설을 Narou/Kakuyomu에서 찾는다. 이전 조사(2026-09-06-01)의 50만 자·판타지·전생 제외·비출판 조건은 상속하지 않는다.",
   "reference_works": [
     {
@@ -93,35 +93,11 @@
         "status": "ongoing / last update 2025-08-16",
         "fit": "very high",
         "why": "여성 데스게이머의 일상과 반복 게임을 장편으로 지속. 플레이어/게임마스터 양쪽 경험이 누적되어 기준작의 직업성·관계 축에 가장 안정적으로 맞는다.",
-        "difference": "문장 완성도와 긴장 조절은 기준작보다 거칠고 개그 비중이 높다."
+        "difference": "문장 완성도와 긴장 조절은 기준작보다 거칠고 개그 비중이 높다.",
+        "length_bucket": "main_300k_plus"
       },
       {
         "rank": "A2",
-        "title": "逆さの茶笠",
-        "author": "千華",
-        "platform": "Kakuyomu",
-        "url": "https://kakuyomu.jp/works/16818622170137414869",
-        "length_chars": 10755,
-        "episodes": 3,
-        "status": "ongoing / last update 2025-03-09",
-        "fit": "very high / low confidence",
-        "why": "게임 종료 뒤 보상, 생존률, 참가비 플랜, 아바타 수리비, 월간 참가 횟수를 생활비처럼 정산한다. 구조적 감각은 가장 직접적으로 닮았다.",
-        "difference": "현재 3화뿐이라 지속성 검증이 불가능하고 아바타 기반이라 실제 죽음의 무게도 다르다."
-      },
-      {
-        "rank": "A3",
-        "title": "デスゲーム界の十傑 ～世界最強の10人によるタイマン～",
-        "author": "キタナベ",
-        "platform": "Narou",
-        "url": "https://ncode.syosetu.com/n3360hy/",
-        "episodes": 24,
-        "status": "stopped / last update 2022-12-19",
-        "fit": "high",
-        "why": "데스게임 참가 상금을 생활의 기반으로 삼는 사람을 'デスゲーマー'라 부르는 세계. 경력·랭킹·클랜이 사회 구조로 굳어 있다.",
-        "difference": "치트 능력자 1대1 토너먼트 성격이 강해 퍼즐·탈출·환경 활용은 약하다."
-      },
-      {
-        "rank": "B1",
         "title": "拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜",
         "author": "廃れ",
         "platform": "Kakuyomu",
@@ -131,10 +107,11 @@
         "status": "ongoing / last update 2025-10-08",
         "fit": "high on rules / medium on routine",
         "why": "게임이 여러 장으로 반복되고 참가비·상금·승패 기록을 계산하며, 룰의 허점을 즉시 승리 전략으로 바꾸는 장면이 많다.",
-        "difference": "게임을 생업으로 삼는 감각보다 심리전·광기 캐릭터가 전면에 나온다."
+        "difference": "게임을 생업으로 삼는 감각보다 심리전·광기 캐릭터가 전면에 나온다.",
+        "length_bucket": "main_300k_plus"
       },
       {
-        "rank": "B2",
+        "rank": "B1",
         "title": "Redo -リドゥ-",
         "author": "くろぬか",
         "platform": "Kakuyomu",
@@ -144,63 +121,32 @@
         "status": "completed / 2026-01-08 listing",
         "fit": "high on income loop",
         "why": "게임에서 번 포인트를 실제 돈으로 환전·송금하고, 장비 강화와 생활비를 분리한다. 죽음의 게임이 생계 루프가 되는 점이 강하다.",
-        "difference": "남성 주인공·VR/아바타·전투 파워 판타지 비중이 높고 가족을 위한 동기가 감정 중심축이다."
-      },
-      {
-        "rank": "B3",
-        "title": "これはデスゲームを見守る簡単なお仕事です。①-入社編-",
-        "author": "三嶋トウカ",
-        "platform": "Kakuyomu",
-        "url": "https://kakuyomu.jp/works/16817330657080123886",
-        "length_chars": 126541,
-        "episodes": 56,
-        "status": "completed",
-        "fit": "high on occupational normalization",
-        "why": "월급·승진·게임 설계·현장 관리까지 데스게임을 회사 업무로 취급한다. 죽음을 업무 언어로 처리하는 건 기준작과 매우 가깝다.",
-        "difference": "플레이어가 아니라 운영자/회사 시점이다."
-      },
-      {
-        "rank": "B4",
-        "title": "見てるこっちが怖いデスゲーム",
-        "author": "キタナベ",
-        "platform": "Kakuyomu",
-        "url": "https://kakuyomu.jp/works/16818792437644050925",
-        "length_chars": 105981,
-        "episodes": 57,
-        "status": "completed / 2026-05-10",
-        "fit": "medium-high",
-        "why": "데스게임이 합법 오락으로 정착하고 참가자에게 경력·등급·예상순위가 붙는다. 반복 참가자가 죽음을 스포츠처럼 계산한다.",
-        "difference": "운영이 죽은 참가자를 부활시키는 장면이 있어 사망의 비가역성이 약하다. 능력 배틀 대회 쪽에 더 가깝다."
-      },
-      {
-        "rank": "B5",
-        "title": "〖完結〗彼はデスゲームで最善の結果を求めるようです",
-        "author": "仁",
-        "platform": "Narou",
-        "url": "https://ncode.syosetu.com/n5703id/",
-        "length_chars": 148722,
-        "episodes": 50,
-        "status": "completed / 2023-05-15",
-        "fit": "medium-high on competence",
-        "why": "다른 참가자가 동요할 때 주인공은 바로 공략 루트를 세우고 게임마스터까지 전략의 일부로 다룬다.",
-        "difference": "단일 게임 완결형이라 경력 누적·게임 사이 일상·직업성이 없다."
-      },
-      {
-        "rank": "B6",
-        "title": "おばあちゃん家のデスゲーム屋さん",
-        "author": "咢咢",
-        "platform": "Kakuyomu",
-        "url": "https://kakuyomu.jp/works/16818093094123311579",
-        "length_chars": 16767,
-        "episodes": 1,
-        "status": "completed short story",
-        "fit": "medium-high on industry tone",
-        "why": "영업·기획·행사장 확보·진행자·스카우트 등 데스게임 산업을 일반 회사 조직처럼 풀어낸다.",
-        "difference": "단편이고 회사 코미디가 중심이라 생존 플레이 감각은 약하다."
+        "difference": "남성 주인공·VR/아바타·전투 파워 판타지 비중이 높고 가족을 위한 동기가 감정 중심축이다.",
+        "length_bucket": "main_300k_plus"
       }
     ],
     "queue": [],
     "deprioritized": [
+      {
+        "title": "これはデスゲームを見守る簡単なお仕事です。①-入社編-",
+        "length_chars": 126541,
+        "reason": "126,541자로 기본 30만 자 미달. 산업화는 가깝지만 운영자/회사 시점이라 분량 외 핵심축이 모두 맞지는 않는다."
+      },
+      {
+        "title": "見てるこっちが怖いデスゲーム",
+        "length_chars": 105981,
+        "reason": "105,981자로 기본 30만 자 미달. 경력/랭킹은 맞지만 부활 가능한 스포츠형 데스게임이라 죽음의 비가역성과 생업 감각이 다르다."
+      },
+      {
+        "title": "〖完結〗彼はデスゲームで最善の結果を求めるようです",
+        "length_chars": 148722,
+        "reason": "148,722자로 기본 30만 자 미달. 숙련자 사고는 가깝지만 단일 게임 완결형이라 반복 경력과 게임 사이 일상이 없다."
+      },
+      {
+        "title": "おばあちゃん家のデスゲーム屋さん",
+        "length_chars": 16767,
+        "reason": "16,767자 단편. 산업 백오피스는 흥미롭지만 플레이어 생존술과 반복 경력이 없어 참고군으로 내린다."
+      },
       {
         "title": "一番好きな子を殺さないと脱出できない百合デスゲーム",
         "reason": "여성 군상과 네임드 사망은 맞지만 단일 게임·감정/관계 중심이라 직업적 건조함과 거리가 있다."
@@ -214,7 +160,49 @@
         "reason": "냉정한 여성 주인공과 룰 해킹은 닮았지만 묘사가 장식적이고 대마녀 무쌍 구조가 전면에 나온다."
       }
     ],
-    "excluded": []
+    "excluded": [],
+    "length_exceptions": [
+      {
+        "rank": "A-LE1",
+        "title": "逆さの茶笠",
+        "author": "千華",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16818622170137414869",
+        "length_chars": 10755,
+        "episodes": 3,
+        "status": "ongoing / last update 2025-03-09",
+        "fit": "very high / low confidence",
+        "why": "게임 종료 뒤 보상, 생존률, 참가비 플랜, 아바타 수리비, 월간 참가 횟수를 생활비처럼 정산한다. 구조적 감각은 가장 직접적으로 닮았다.",
+        "difference": "현재 3화뿐이라 지속성 검증이 불가능하고 아바타 기반이라 실제 죽음의 무게도 다르다.",
+        "length_exception": true,
+        "length_bucket": "under_300k_exception"
+      },
+      {
+        "rank": "B-LE1",
+        "title": "デスゲーム界の十傑 ～世界最強の10人によるタイマン～",
+        "author": "キタナベ",
+        "platform": "Narou",
+        "url": "https://ncode.syosetu.com/n3360hy/",
+        "episodes": 24,
+        "status": "stopped / last update 2022-12-19",
+        "fit": "high",
+        "why": "데스게임 참가 상금을 생활의 기반으로 삼는 사람을 'デスゲーマー'라 부르는 세계. 경력·랭킹·클랜이 사회 구조로 굳어 있다.",
+        "difference": "치트 능력자 1대1 토너먼트 성격이 강해 퍼즐·탈출·환경 활용은 약하다.",
+        "length_chars": 43428,
+        "length_note": "24개 공개 회차 본문을 2026-09-06에 직접 합산한 근사치",
+        "length_exception": true,
+        "length_bucket": "under_300k_exception"
+      }
+    ]
   },
-  "checked_at": "2026-09-06"
+  "checked_at": "2026-09-06",
+  "length_policy": {
+    "source": "global_default",
+    "default_min_chars": 300000,
+    "explicit_min_chars": null,
+    "effective_min_chars": 300000,
+    "allow_high_fit_exception": true,
+    "exception_label": "LENGTH EXCEPTION",
+    "applied_after_initial_research": true
+  }
 }

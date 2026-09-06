@@ -47,14 +47,14 @@ def main() -> int:
         return 0
 
     data = {
-        "schema_version": "1.1",
+        "schema_version": "1.2",
         "entry_id": entry_id,
         "date": args.date,
         "sequence": sequence,
         "continuation_of": args.continuation_of,
         "title": args.title,
-        "method_version_used": "0.3",
-        "current_protocol_version": "0.3",
+        "method_version_used": "0.4",
+        "current_protocol_version": "0.4",
         "request_snapshot": "",
         "reference_works": [],
         "anti_reference_works": [],
@@ -65,6 +65,14 @@ def main() -> int:
             "must": [],
             "must_not": [],
             "publication": None,
+        },
+        "length_policy": {
+            "source": "global_default",
+            "default_min_chars": 300000,
+            "explicit_min_chars": None,
+            "effective_min_chars": 300000,
+            "allow_high_fit_exception": True,
+            "exception_label": "LENGTH EXCEPTION",
         },
         "soft_preferences": [],
         "allowed_exceptions": [],
@@ -94,6 +102,11 @@ TBD
 TBD
 
 ## Active filters
+
+### DEFAULT LENGTH
+
+- 300,000자 이상
+- 분량 외 핵심 조건이 매우 강하게 일치하면 LENGTH EXCEPTION 허용
 
 ### MUST
 
@@ -147,7 +160,7 @@ TBD
     <nav class="wrap entry-nav"><a href="../index.html">← Archive</a><a href="../docs/entries/{entry_id}.md">Markdown</a></nav>
     <header class="hero wrap">
       <p class="kicker">RESEARCH ENTRY · DRAFT</p>
-      <div class="hero-grid"><div><h1>{safe_title}</h1><p class="deck">Request snapshot and findings will be written here.</p></div><p class="side-note"><b>{entry_id}</b><br>Scaffolded entry. Replace draft content after research.</p></div>
+      <div class="hero-grid"><div><h1>{safe_title}</h1><p class="deck">Request snapshot and findings will be written here.</p></div><p class="side-note"><b>{entry_id}</b><br>Default length: 300,000 chars. High-fit underlength works may be kept as LENGTH EXCEPTION.</p></div>
     </header>
   </main>
 </body>
@@ -164,7 +177,8 @@ TBD
         "criteria_terms": [],
         "platforms": [],
         "genres": [],
-        "min_chars": None,
+        "min_chars": 300000,
+        "length_policy": "default_with_high_fit_exception",
         "status": "draft",
         "candidate_count": 0,
         "shortlist_count": 0,

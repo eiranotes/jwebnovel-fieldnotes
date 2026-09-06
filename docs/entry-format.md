@@ -21,6 +21,23 @@ YYYY-MM-DD-NN
 - `PREFER` — 우선하지만 필수 아님
 - `TOLERATE` — 허용 예외
 
+## Length policy
+
+사용자가 별도 최소 분량을 지정하지 않으면 전역 기본값은 **300,000자**다.
+
+```json
+{
+  "source": "global_default",
+  "default_min_chars": 300000,
+  "explicit_min_chars": null,
+  "effective_min_chars": 300000,
+  "allow_high_fit_exception": true,
+  "exception_label": "LENGTH EXCEPTION"
+}
+```
+
+사용자가 직접 최소 분량을 지정하면 `source = user_explicit`으로 바꾸고 그 값을 `explicit_min_chars`와 `effective_min_chars`에 기록한다. 전역 30만 자 기준에만 미달하면서 분량 외 핵심 조건이 강하게 일치하는 작품은 `A-LE / B-LE`로 별도 저장한다.
+
 ## Reference
 
 - `reference_works[]` — 닮아야 할 기준
@@ -55,6 +72,7 @@ YYYY-MM-DD-NN
 - `Q` 추가검증 대기
 - `D` 읽은 뒤 우선순위 하향
 - `X` hard filter 위반
+- `A-LE / B-LE` global 30만 자 기본값에만 미달한 고유사도 length exception
 
 ## Scaffold
 

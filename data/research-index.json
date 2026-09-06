@@ -45,6 +45,9 @@
       "死亡遊戯で飯を食う。"
     ],
     "criteria_terms": [
+      "300000자 이상",
+      "30만 자 기본",
+      "분량 예외",
       "데스게임",
       "직업형 데스게임",
       "반복 참가",
@@ -65,12 +68,13 @@
       "Horror",
       "Modern fantasy"
     ],
-    "min_chars": null,
+    "min_chars": 300000,
     "status": "active",
     "candidate_count": 12,
-    "shortlist_count": 9,
+    "shortlist_count": 5,
     "page": "entries/2026-09-06-02.html",
     "doc": "docs/entries/2026-09-06-02.md",
-    "data": "data/entries/2026-09-06-02.json"
+    "data": "data/entries/2026-09-06-02.json",
+    "length_policy": "default_with_high_fit_exception"
   }
 ]

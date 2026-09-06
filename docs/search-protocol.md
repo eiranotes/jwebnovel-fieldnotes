@@ -1,4 +1,4 @@
-# Search Protocol v0.3 — Parameterized Discovery
+# Search Protocol v0.4 — Parameterized Discovery
 
 **Updated: 2026-09-06**
 
@@ -44,6 +44,26 @@
 사용자가 허용한 예외. 예: 연재중 우선이지만 완결·중단도 허용.
 
 이 네 묶음을 섞지 않는다. 특히 `PREFER`를 hard filter처럼 사용하지 않는다.
+
+### Global default — 300,000자
+
+사용자가 별도 분량을 지정하지 않으면 **300,000자 이상을 기본 탐색 하한**으로 둔다. 읽을 만한 누적 분량이 있는 작품을 우선하기 위한 기본값이지, 절대적인 hard exclusion은 아니다.
+
+우선순위는 다음과 같다.
+
+1. 사용자가 분량을 명시하면 그 값이 global default를 덮어쓴다.
+2. 분량 언급이 없으면 `default_min_chars = 300000`을 적용한다.
+3. 300,000자 미만 작품은 원칙적으로 본 shortlist에서 제외한다.
+4. 다만 **분량을 제외한 핵심 fingerprint와 요구조건이 모두 강하게 일치**하면 `LENGTH EXCEPTION`으로 별도 유지할 수 있다.
+
+`LENGTH EXCEPTION`은 다음을 모두 만족해야 한다.
+
+- 다른 hard filter 위반 없음
+- 활성화된 핵심 style dimension에서 명백한 큰 차이 없음
+- 단순 소재 일치가 아니라 구조·문체·전개 중 이번 요청의 핵심축이 A급으로 근접
+- 짧다는 사실과 현재 분량을 결과 페이지에 명시
+
+이 예외는 정상 분량 후보와 섞어 수량을 채우기 위한 장치가 아니다. **정확히 닮았지만 짧아서 버리기 아까운 작품을 보존하는 별도 lane**이다.
 
 ## 2. 기준작을 “작품명”이 아니라 fingerprint로 바꾼다
 
@@ -100,6 +120,8 @@
 - 공개일 / 갱신일
 - 필요하면 콘테스트 조건
 
+전역 기본값인 300,000자와 카쿠요무 UI의 분량 버킷이 정확히 일치하지 않을 수 있으므로, **가까운 넓은 분량 구간으로 수집한 뒤 작품별 표시 글자수에서 300,000자를 후처리**한다. 30만 자 미만도 곧바로 삭제하지 않고 고유사도 후보는 `underlength_queue`에 남긴다.
+
 키워드는 최대한 넓게 수집하는 용도로 사용하고, 태그만으로 문체 통과 판정을 하지 않는다.
 
 카쿠요무 검색결과에서 `書籍化` 배지가 직접 보이는 경우 Gate C에서 즉시 P3 후보로 처리한다. 다만 배지가 없다는 것만으로 P2를 주지는 않는다.
@@ -123,7 +145,7 @@
 
 ### Gate A — metadata
 
-장르, 글자수, 연재 상태 등 구조화 필드로 제거.
+장르, 글자수, 연재 상태 등 구조화 필드로 제거. 분량 미지정 요청에서는 300,000자를 기본 probe 기준으로 사용하되, 고유사도 예외 후보를 완전히 버리지 않고 `underlength_queue`에 남긴다.
 
 ### Gate B — lexical disqualifier
 
@@ -192,7 +214,7 @@ S0에서 살아남은 작품만 추가로 읽는다.
 - `visibility_band`: low / mid-low / mid / mid-high / high
 - `confidence`: low / medium / high
 
-글자수가 부족한 작품이 문체 거리가 매우 가깝다고 해서 A가 되지 않는다. 반대로 모든 메타 조건을 만족해도 본문이 다르면 Q/D다.
+사용자가 **명시적으로 최소 분량을 hard condition으로 지정한 경우** 그보다 짧으면 A가 되지 않는다. 반대로 분량이 global default 300,000자에만 미달하고 나머지 핵심축이 모두 매우 가깝다면 `A-LE` 또는 `B-LE`처럼 `LENGTH EXCEPTION`으로 별도 표시할 수 있다. 모든 메타 조건을 만족해도 본문이 다르면 Q/D다.
 
 ## 8. 0–100 단일점수보다 reference-relative vector를 우선한다
 
@@ -234,6 +256,7 @@ interiority            +2   # 내면 서술이 훨씬 많음
 - `Q` — 아직 본문/출판 검증이 덜 됨
 - `D` — 읽어본 뒤 해당 요청에서 우선순위 하향
 - `X` — hard filter 위반
+- `A-LE / B-LE` — global 300,000자 기본값에만 미달하지만, 분량 외 핵심 조건이 매우 강하게 맞는 length exception
 
 고정 점수 컷보다 **샘플의 증거와 차이 설명**을 우선한다.
 
@@ -308,7 +331,7 @@ Narou에서 특히 유용한 것:
 
 비율은 요청마다 조정한다. 이렇게 하면 연재중 작품이 많다는 이유로 중단작 탐색이 사실상 사라지는 문제를 막는다.
 
-## 16. Search loop v0.3
+## 16. Search loop v0.4
 
 ```text
 REQUEST SNAPSHOT
@@ -318,6 +341,12 @@ REFERENCE / ANTI-REFERENCE FINGERPRINT
 STRUCTURED HARVEST — lanes × sort rotations
   ↓
 METADATA GATE
+  ↓
+DEFAULT 300K LENGTH LANE
+  ├─ 300K+ → normal lane
+  └─ <300K → underlength queue
+                 ↓ only if core fit is very high
+              LENGTH EXCEPTION
   ↓
 STRUCTURED EXCLUSION FLAGS
   ↓

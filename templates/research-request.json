@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "entry_id": "YYYY-MM-DD-NN",
   "date": "YYYY-MM-DD",
   "sequence": 1,
   "continuation_of": null,
   "title": "",
-  "method_version_used": "0.3",
-  "current_protocol_version": "0.3",
+  "method_version_used": "0.4",
+  "current_protocol_version": "0.4",
   "request_snapshot": "",
   "reference_works": [
     {
@@ -24,6 +24,14 @@
     "must": [],
     "must_not": [],
     "publication": null
+  },
+  "length_policy": {
+    "source": "global_default",
+    "default_min_chars": 300000,
+    "explicit_min_chars": null,
+    "effective_min_chars": 300000,
+    "allow_high_fit_exception": true,
+    "exception_label": "LENGTH EXCEPTION"
   },
   "soft_preferences": [],
   "allowed_exceptions": [],

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 ROOT=Path(__file__).resolve().parent.parent
 status_path=ROOT/'data/automation-status.json'; cfg=json.loads((ROOT/'config/automation.json').read_text()); profiles=json.loads((ROOT/'config/search-profiles.json').read_text())
 status=json.loads(status_path.read_text())
+fullq=json.loads((ROOT/'data/full-translation-queue.json').read_text()) if (ROOT/'data/full-translation-queue.json').exists() else {'requests':[]}
 pending=done=waiting=ready=acquired=0
 for state_path in (ROOT/'workspace').glob('*/*/*/state.json'):
     try: s=json.loads(state_path.read_text())
@@ -20,6 +21,10 @@ status['updated_at']=datetime.now(timezone.utc).isoformat(); status['schedule'].
 enabled_profiles=[x for x in profiles.get('profiles',[]) if x.get('enabled')]
 status['criteria'].update({'status':'ready' if profiles.get('criteria_ready') and enabled_profiles else 'awaiting_user_answers','profile_count':len(enabled_profiles)})
 status['translation'].update({'pending_chunks':pending,'completed_chunks':done,'works_waiting_for_source':waiting,'works_ready':ready})
+status['translation']['full_requests']={
+ 'queued':sum(1 for x in fullq.get('requests',[]) if x.get('status') in {'queued','acquiring','acquisition_error'}),
+ 'translating':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='translation_pending'),
+ 'complete':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='complete')}
 status.setdefault('source_acquisition',{}).update({'acquired_works':acquired})
 status['phase']='ready_for_schedule' if cfg.get('time') and profiles.get('criteria_ready') else 'pipeline_ready_configuration_pending'
 status['next_action']='enable daily schedule' if status['phase']=='ready_for_schedule' else 'collect search criteria and exact daily time'

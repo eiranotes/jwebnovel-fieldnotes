@@ -89,7 +89,18 @@ Daily discovery/translation automation scaffolding lives in:
 - `docs/daily-automation-prompt.md` — execution contract for the scheduled ChatGPT/Steroids job
 - `docs/current-status.md` — current blockers and top-5 work paths
 - `data/work-registry.json` — machine-readable work path/status registry
+- `data/work-index.json` — all previously seen works, canonicalized for duplicate suppression
+- `data/automation-logs.json` — public-safe automation event summaries
+- `console.html` — search-profile/work-index/full-translation/log/download control console
 
 The acquisition worker is bundled at `workers/novel-download/` in this same repository. `scripts/full_pipeline.py` bridges finalized research entries into that worker, then hands the resulting first-N source files back to the merge/chunk/glossary pipeline. `scripts/translation_queue.py` provides one global oldest-pending-first queue across all registered works.
+
+The same console becomes writable when served from the Mac private console. Search profiles can be selected explicitly in multiples; when none is selected the configured fallback uses round-robin, least-recently-run, date-seeded random, or all-enabled selection. User-selected full translations use a separate full-work workspace and produce private TXT/MD/ZIP artifacts after all chunks finish.
+
+Private iPhone access on the same Tailscale tailnet:
+
+`https://tofu-macbookair.tail05abcf.ts.net/fieldnotes/console.html`
+
+The private server allows only explicit artifact downloads. Direct browsing of `workspace/` source files is blocked.
 
 The actual daily scheduled job is intentionally not enabled until the exact Asia/Seoul clock time and at least one completed search profile are supplied.

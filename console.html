@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Fieldnotes private operations console">
+  <title>Field Notes — Control Console</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="archive-page control-page">
+  <aside class="rail">FIELD NOTES · CONTROL</aside>
+  <main>
+    <nav class="wrap top-tabs" aria-label="fieldnotes navigation">
+      <a href="index.html">ARCHIVE</a>
+      <a class="active" href="console.html#profiles">SEARCH CONTROL</a>
+      <a href="console.html#works">WORK INDEX</a>
+      <a href="console.html#logs">LOGS</a>
+    </nav>
+
+    <header class="archive-hero wrap control-hero">
+      <p class="kicker">PRIVATE OPERATIONS CONSOLE</p>
+      <div class="archive-hero-grid">
+        <div>
+          <h1>탐색 · 번역<br>운영 콘솔</h1>
+          <p class="deck">조건 그룹을 만들고 다음 탐색 대상을 지정한다. 작품 색인은 이미 본 작품을 걸러내며, 특정 작품은 전체 번역 큐로 올릴 수 있다.</p>
+        </div>
+        <dl class="archive-principle">
+          <div><dt>MODE</dt><dd id="console-mode">checking</dd></div>
+          <div><dt>SEARCH</dt><dd>profile groups</dd></div>
+          <div><dt>DEDUPE</dt><dd>strict seen index</dd></div>
+          <div><dt>FULL TEXT</dt><dd>private local only</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <div class="wrap control-tabs" role="tablist" aria-label="control sections">
+      <button data-tab="profiles" class="active">탐색조건</button>
+      <button data-tab="works">작품색인</button>
+      <button data-tab="full">전체번역</button>
+      <button data-tab="logs">자동화 로그</button>
+      <button data-tab="files">파일받기</button>
+    </div>
+
+    <section class="wrap control-section active" data-panel="profiles" id="profiles">
+      <header class="section-head"><span>SEARCH PROFILES</span><div><h2>조건 그룹</h2><p>체크된 그룹은 다음 탐색에서 모두 각각 실행한다. 아무 그룹도 선택하지 않으면 아래 fallback 방식으로 자동 선택한다.</p></div></header>
+      <div class="selection-bar">
+        <label><span>NO SELECTION</span><select id="fallback-mode"><option value="round_robin">순환</option><option value="least_recently_run">가장 오래 안 쓴 그룹</option><option value="random_daily">날짜 기반 랜덤</option><option value="all_enabled">활성 그룹 전부</option></select></label>
+        <label><span>BATCH</span><input id="rotation-batch" type="number" min="1" value="1"></label>
+        <button id="save-selection" class="control-button">다음 탐색 선택 저장</button>
+      </div>
+      <div id="profile-list" class="profile-list"></div>
+      <div class="control-actions"><button id="add-profile" class="control-button secondary">+ 조건 그룹</button><button id="save-profiles" class="control-button">전체 조건 저장</button></div>
+    </section>
+
+    <section class="wrap control-section" data-panel="works" id="works">
+      <header class="section-head"><span>WORK INDEX</span><div><h2>탐색 작품 색인</h2><p>한 번이라도 shortlist/queue/deprioritized/excluded에 등장한 작품은 색인한다. 다음 탐색에서는 기본적으로 이 색인을 제외 목록으로 사용한다.</p></div></header>
+      <div class="archive-toolbar"><label class="search archive-search"><span>SEARCH</span><input id="work-filter" type="search" placeholder="제목 · 작가 · 플랫폼"></label><div class="index-count" id="work-count">0 works</div></div>
+      <div id="work-index-list" class="work-index-list"></div>
+    </section>
+
+    <section class="wrap control-section" data-panel="full" id="full">
+      <header class="section-head"><span>FULL TRANSLATION</span><div><h2>전체 번역 큐</h2><p>사용자가 직접 선택한 작품은 일반 5화 샘플과 분리해 전 회차를 로컬에 취득하고 병합한 뒤 전용 번역 큐로 처리한다.</p></div></header>
+      <div class="queue-toolbar"><button id="run-next-full" class="control-button">대기 작품 원문 준비</button><span>장시간 작업은 큐 방식. 일일 자동화에서 최우선 처리된다.</span></div>
+      <div id="full-queue-list" class="full-queue-list"></div>
+    </section>
+
+    <section class="wrap control-section" data-panel="logs" id="logs">
+      <header class="section-head"><span>AUTOMATION LOGS</span><div><h2>작업 로그</h2><p>각 실행은 run id로 묶고, 단계별 started/done/error를 남긴다.</p></div></header>
+      <div class="archive-toolbar"><label class="search archive-search"><span>FILTER</span><input id="log-filter" type="search" placeholder="pipeline · translation · error · 작품명"></label></div>
+      <div id="console-log-list" class="log-list"></div>
+    </section>
+
+    <section class="wrap control-section" data-panel="files" id="files">
+      <header class="section-head"><span>DOWNLOADS</span><div><h2>핸드폰으로 파일 받기</h2><p>완료된 전체 번역은 TXT, 원문/번역 병렬 Markdown, ZIP으로 제공한다. private console을 Tailscale Serve로 노출하면 아이폰에서 바로 받을 수 있다.</p></div></header>
+      <div id="artifact-list" class="artifact-list"></div>
+    </section>
+
+    <div id="toast" class="control-toast" hidden></div>
+    <footer class="wrap"><span>Field Notes private console</span><span>local write API · Tailscale recommended</span></footer>
+  </main>
+  <script src="console.js"></script>
+</body>
+</html>

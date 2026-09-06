@@ -8,6 +8,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from automation_log import log_event, new_run_id
+
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "data" / "work-registry.json"
@@ -48,8 +50,10 @@ def pending_works() -> list[dict]:
 
 
 def command_next(args) -> int:
+    run_id = new_run_id("translate-next")
     queue = pending_works()
     if not queue:
+        log_event(task="translation_queue", action="next", status="complete", run_id=run_id, message="No pending standard translation chunks")
         print(json.dumps({"status": "complete"}, ensure_ascii=False))
         return 0
     selected = queue[0]["row"]
@@ -79,11 +83,13 @@ def command_next(args) -> int:
         "pending_chunks_total": sum(len(x["pending"]) for x in queue),
         "task_path": str(task_path),
     }
+    log_event(task="translation_queue", action="next", status="pending", run_id=run_id, message=f"Selected {selected.get('title')} / {task.get('chunk_id')}", details={"work_id": selected.get("work_id"), "chunk": task.get("chunk_id"), "pending_works": len(queue)}, public_details={"title": selected.get("title"), "chunk": task.get("chunk_id")})
     print(json.dumps(task, ensure_ascii=False, indent=2))
     return 0
 
 
 def command_complete(args) -> int:
+    run_id = new_run_id("translate-complete")
     result_path = Path(args.result).expanduser().resolve()
     if not result_path.exists():
         raise SystemExit(f"result not found: {result_path}")
@@ -122,6 +128,7 @@ def command_complete(args) -> int:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True)
     payload = json.loads(proc.stdout)
     payload["completed_at"] = datetime.now(timezone.utc).isoformat()
+    log_event(task="translation_queue", action="complete", status="done", run_id=run_id, message=f"Completed {args.work} / {args.chunk}", details=payload, public_details={"work_id": args.work, "chunk": args.chunk, "done": payload.get("done"), "total": payload.get("total")})
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
 

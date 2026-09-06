@@ -9,6 +9,9 @@ workspace/**/translation/chunks/*/ja.txt
 workspace/**/translation/chunks/*/ko.txt
 workspace/**/translation/tasks/
 workspace/**/parallel/
+workspace/**/translation/output/
+workspace/automation-logs/
+workspace/private-console.*
 private-viewer/
 
 # Temporary/runtime files

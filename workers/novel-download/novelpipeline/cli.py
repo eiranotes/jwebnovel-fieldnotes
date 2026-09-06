@@ -76,7 +76,7 @@ def cmd_fetch_work(args) -> int:
     result = export_work(
         url=args.url,
         output_dir=args.output_dir,
-        episodes=args.episodes,
+        episodes=0 if args.all else args.episodes,
         delay_seconds=args.delay,
         timeout_seconds=args.timeout,
         force=args.force,
@@ -114,6 +114,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--url", required=True)
     p.add_argument("--output-dir", required=True)
     p.add_argument("--episodes", type=int, default=5)
+    p.add_argument("--all", action="store_true", help="export all episodes currently listed by the work page")
     p.add_argument("--delay", type=float, default=1.5)
     p.add_argument("--timeout", type=float, default=30.0)
     p.add_argument("--force", action="store_true")

@@ -20,11 +20,18 @@
     "context_tail_chars": 700,
     "context_head_chars": 500,
     "max_chunks_per_daily_run": null,
-    "strategy": "resume_oldest_pending_before_newer_work"
+    "strategy": "user_selected_full_first_then_oldest_pending"
   },
   "dedupe": {
     "same_work_across_platforms": true,
     "normalized_key": "normalized_title+author",
-    "repeat_candidate_cooldown_days": 30
+    "repeat_candidate_cooldown_days": 30,
+    "work_index": "data/work-index.json",
+    "default_mode": "strict_seen_index"
+  },
+  "private_console": {
+    "host": "127.0.0.1",
+    "port": 18765,
+    "tailscale_serve": true
   }
 }

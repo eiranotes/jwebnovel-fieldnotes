@@ -137,16 +137,41 @@ if (automationRoot) {
       const waiting = Number(status.translation?.works_waiting_for_source || 0);
       const ready = Number(status.translation?.works_ready || 0);
       const pending = Number(status.translation?.pending_chunks || 0);
+      const acquired = Number(status.source_acquisition?.acquired_works || 0);
+      const fullQueued = Number(status.translation?.full_requests?.queued || 0);
+      const fullActive = Number(status.translation?.full_requests?.translating || 0);
       automationRoot.innerHTML = `
         <div class="automation-stat"><span>SCHEDULE</span><b>${esc(time)}</b><small>매일 1회 · Asia/Seoul</small></div>
         <div class="automation-stat"><span>CRITERIA</span><b>${esc(criteria)}</b><small>기본 300,000자 + high-fit exception</small></div>
-        <div class="automation-stat"><span>SOURCE GATE</span><b>${esc(waiting)} waiting</b><small>사용자 제공/합법 확보 원문만 후속 처리</small></div>
-        <div class="automation-stat"><span>TRANSLATION</span><b>${esc(ready)} ready</b><small>${esc(pending)} pending chunks · resumable queue</small></div>
+        <div class="automation-stat"><span>SOURCE</span><b>${esc(acquired)} acquired</b><small>${esc(waiting)} fallback waiting · first-N private local</small></div>
+        <div class="automation-stat"><span>TRANSLATION</span><b>${esc(ready)} ready</b><small>${esc(pending)} chunks · full ${esc(fullQueued)} queued / ${esc(fullActive)} active</small></div>
         <div class="automation-stat"><span>PUBLICATION</span><b>metadata only</b><small>원문·번역 전문은 로컬 전용</small></div>
       `;
     })
     .catch(error => {
       console.error(error);
       automationRoot.innerHTML = '<div class="archive-state error">자동화 상태를 읽지 못했다.</div>';
+    });
+}
+
+const publicLogRoot = document.querySelector('#automation-log-list');
+if (publicLogRoot) {
+  fetch('data/automation-logs.json', { cache: 'no-store' })
+    .then(response => {
+      if (!response.ok) throw new Error(`logs ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      const rows = [...(data.entries || [])].slice(-8).reverse();
+      publicLogRoot.innerHTML = rows.length ? rows.map(x => `
+        <article class="log-row ${esc(x.status)}">
+          <time>${esc((x.timestamp || '').replace('T',' ').slice(0,19))}</time>
+          <b>${esc(x.task)} · ${esc(x.action)}</b>
+          <span>${esc(x.status)}</span>
+          <p>${esc(x.message || '')}</p>
+        </article>`).join('') : '<div class="archive-state">아직 자동화 로그가 없다.</div>';
+    })
+    .catch(() => {
+      publicLogRoot.innerHTML = '<div class="archive-state error">자동화 로그를 읽지 못했다.</div>';
     });
 }

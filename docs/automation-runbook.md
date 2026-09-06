@@ -16,6 +16,10 @@
 | chunk source/KO | `.../translation/chunks/NNNN/` |
 | translation work orders | `.../translation/tasks/` |
 | private parallel viewer | `.../translation/parallel/index.html` |
+| persistent work index | `data/work-index.json` |
+| automation log summary | `data/automation-logs.json` |
+| private detailed logs | `workspace/automation-logs/YYYY-MM-DD.jsonl` |
+| full-work translation root | `workspace/full-translations/WORK_ID/` |
 
 ## Register top-N targets
 
@@ -136,3 +140,48 @@ Exact daily time is required before activation.
 4. Optional Mac-local state heartbeat: `python3 scripts/install_launchd.py`.
 
 The ChatGPT automation is the important scheduler because discovery and translation require model/web capabilities. `launchd` alone cannot perform those steps.
+
+## Search profile selection
+
+The private console writes `config/search-profiles.json`. Resolve the next run with:
+
+```bash
+python3 scripts/select_search_profiles.py --commit
+```
+
+Explicitly checked groups all run. With no explicit selection the fallback can be `round_robin`, `least_recently_run`, `random_daily`, or `all_enabled`.
+
+Before ranking discovery candidates, rebuild and consult the seen index:
+
+```bash
+python3 scripts/rebuild_work_index.py
+cat candidates.json | python3 scripts/work_index.py --unseen-only
+```
+
+## Full-work translation
+
+The private console's **전체 번역** action queues a work. CLI equivalent:
+
+```bash
+python3 scripts/full_translation.py request --key 'title-author:...'
+python3 scripts/full_translation.py run-next
+python3 scripts/full_translation.py next-task
+```
+
+This route is separate from the five-episode sample workspace. It acquires all currently listed episodes, merges the whole source, chunks it, then creates `ko.txt`, `ja-ko.md`, and a ZIP after every chunk is translated.
+
+## Private console / phone downloads
+
+Run locally:
+
+```bash
+python3 scripts/install_private_console.py
+```
+
+The server binds only to `127.0.0.1:18765`. The installer starts or reuses a detached user-session process and adds a Tailscale Serve path without replacing existing routes:
+
+`https://tofu-macbookair.tail05abcf.ts.net/fieldnotes/console.html`
+
+From an iPhone on the same tailnet, the **파일받기** tab downloads completed private translation artifacts directly from the Mac. GitHub Pages never receives those full-text files.
+
+On this Mac, `launchd` is blocked by macOS privacy from reading the project on the external DevDrive (`Operation not permitted`). The project and dependencies stay on DevDrive, so reboot auto-start is intentionally not faked. After a Mac reboot, run `python3 scripts/install_private_console.py` once from an interactive user session; the console then remains available while the Mac is running.

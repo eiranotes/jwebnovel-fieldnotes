@@ -39,6 +39,16 @@ def work_dir(entry_id: str, work_id: str) -> Path:
     return WORKSPACE / date / entry_id / safe_id(work_id)
 
 
+def resolve_work_dir(args) -> Path:
+    explicit = getattr(args, 'work_dir', None)
+    if explicit:
+        path = Path(explicit).expanduser()
+        return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+    if not getattr(args, 'entry', None) or not getattr(args, 'work', None):
+        raise SystemExit('Either --work-dir or both --entry and --work are required')
+    return work_dir(args.entry, args.work)
+
+
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -216,11 +226,11 @@ def init_translation(wdir: Path, merged: Path, target: int, hard_max: int) -> di
 
 
 def prepare(args):
-    wdir = work_dir(args.entry, args.work)
+    wdir = resolve_work_dir(args)
     wdir.mkdir(parents=True, exist_ok=True)
     meta_path = wdir / 'metadata.json'
     if not meta_path.exists():
-        meta_path.write_text(json.dumps({'entry_id': args.entry,'work_id': safe_id(args.work),'title': args.title or args.work,'platform': args.platform,'source_policy':'user_supplied_or_lawfully_acquired_only'}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+        meta_path.write_text(json.dumps({'entry_id': args.entry,'work_id': safe_id(args.work or wdir.name),'title': args.title or args.work or wdir.name,'platform': args.platform,'source_policy':'user_supplied_or_lawfully_acquired_only'}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     extracted = extract_inbox(wdir)
     merged, inventory = merge_sources(wdir)
     manifest = init_translation(wdir, merged, args.target, args.hard_max)
@@ -231,7 +241,7 @@ def prepare(args):
 
 
 def next_task(args):
-    wdir = work_dir(args.entry, args.work)
+    wdir = resolve_work_dir(args)
     manifest = json.loads((wdir/'translation/manifest.json').read_text(encoding='utf-8'))
     chunks = manifest['chunks']
     pending = next((c for c in chunks if c.get('status') != 'done'), None)
@@ -250,8 +260,10 @@ def next_task(args):
     if idx+1 < len(chunks):
         p = wdir/'translation/chunks'/chunks[idx+1]['chunk_id']/'ja.txt'
         next_head = p.read_text(encoding='utf-8')[:args.context_head]
+    metadata_path = wdir / 'metadata.json'
+    metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
     task = {
-        'status':'pending','entry_id':args.entry,'work_id':safe_id(args.work),'chunk_id':cid,
+        'status':'pending','entry_id':args.entry or metadata.get('entry_id'),'work_id':safe_id(args.work or metadata.get('work_id') or wdir.name),'work_dir':str(wdir.relative_to(ROOT)) if wdir.is_relative_to(ROOT) else str(wdir),'chunk_id':cid,
         'source_ja':ja,'previous_source_tail':prev_tail,'next_source_head':next_head,
         'glossary':glossary,
         'instructions':[
@@ -282,7 +294,7 @@ def deep_merge_glossary(base: dict, update: dict):
 
 
 def complete(args):
-    wdir = work_dir(args.entry, args.work)
+    wdir = resolve_work_dir(args)
     result = json.loads(Path(args.result).read_text(encoding='utf-8'))
     cid = args.chunk
     cdir = wdir/'translation/chunks'/cid
@@ -307,7 +319,7 @@ def complete(args):
 
 
 def build_parallel(args):
-    wdir=work_dir(args.entry,args.work); manifest=json.loads((wdir/'translation/manifest.json').read_text(encoding='utf-8'))
+    wdir=resolve_work_dir(args); manifest=json.loads((wdir/'translation/manifest.json').read_text(encoding='utf-8'))
     rows=[]
     for c in manifest['chunks']:
         cdir=wdir/'translation/chunks'/c['chunk_id']; ja=(cdir/'ja.txt').read_text(encoding='utf-8')
@@ -319,9 +331,9 @@ def build_parallel(args):
 
 def main():
     p=argparse.ArgumentParser(); sp=p.add_subparsers(dest='cmd', required=True)
-    q=sp.add_parser('prepare'); q.add_argument('--entry',required=True); q.add_argument('--work',required=True); q.add_argument('--title'); q.add_argument('--platform'); q.add_argument('--target',type=int,default=9000); q.add_argument('--hard-max',type=int,default=12000); q.set_defaults(fn=prepare)
-    q=sp.add_parser('next-task'); q.add_argument('--entry',required=True); q.add_argument('--work',required=True); q.add_argument('--context-tail',type=int,default=700); q.add_argument('--context-head',type=int,default=500); q.set_defaults(fn=next_task)
-    q=sp.add_parser('complete'); q.add_argument('--entry',required=True); q.add_argument('--work',required=True); q.add_argument('--chunk',required=True); q.add_argument('--result',required=True); q.set_defaults(fn=complete)
-    q=sp.add_parser('build-parallel'); q.add_argument('--entry',required=True); q.add_argument('--work',required=True); q.set_defaults(fn=build_parallel)
+    q=sp.add_parser('prepare'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--title'); q.add_argument('--platform'); q.add_argument('--target',type=int,default=9000); q.add_argument('--hard-max',type=int,default=12000); q.set_defaults(fn=prepare)
+    q=sp.add_parser('next-task'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--context-tail',type=int,default=700); q.add_argument('--context-head',type=int,default=500); q.set_defaults(fn=next_task)
+    q=sp.add_parser('complete'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.add_argument('--chunk',required=True); q.add_argument('--result',required=True); q.set_defaults(fn=complete)
+    q=sp.add_parser('build-parallel'); q.add_argument('--entry'); q.add_argument('--work'); q.add_argument('--work-dir'); q.set_defaults(fn=build_parallel)
     args=p.parse_args(); args.fn(args)
 if __name__=='__main__': main()

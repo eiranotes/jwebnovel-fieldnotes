@@ -43,15 +43,24 @@ def export_work(
     output.mkdir(parents=True, exist_ok=True)
     manifest_path = output / "acquisition_manifest.json"
 
+    requested_mode = "all" if int(episodes) <= 0 else "first_n"
     if not force and manifest_path.exists():
         try:
             existing = json.loads(manifest_path.read_text(encoding="utf-8"))
             files = [output / x["file"] for x in existing.get("episodes", [])]
             if (
                 existing.get("url") == url
-                and int(existing.get("requested_episodes", 0)) == int(episodes)
+                and existing.get("requested_mode", "first_n") == requested_mode
+                and (
+                    requested_mode == "all"
+                    or int(existing.get("requested_episodes", 0)) == int(episodes)
+                )
                 and files
                 and all(path.exists() for path in files)
+                and (
+                    requested_mode != "all"
+                    or int(existing.get("acquired_episodes", 0)) == int(existing.get("available_episodes", 0))
+                )
             ):
                 return {**existing, "reused": True}
         except Exception:
@@ -64,7 +73,12 @@ def export_work(
     )
     site, work_id = _resolve_site(url, http)
     meta = site.fetch_metadata(work_id, url)
-    wanted = meta.episode_urls[: max(1, int(episodes))]
+    expected_count = int(meta.extra.get("public_episode_count") or 0) if meta.extra else 0
+    if requested_mode == "all" and expected_count and len(meta.episode_urls) != expected_count:
+        raise RuntimeError(
+            f"Full episode list incomplete for {url}: expected {expected_count}, found {len(meta.episode_urls)}"
+        )
+    wanted = list(meta.episode_urls) if int(episodes) <= 0 else meta.episode_urls[: max(1, int(episodes))]
     if not wanted:
         raise RuntimeError(f"No readable episodes found for {url}")
 
@@ -108,7 +122,9 @@ def export_work(
         "title": meta.title,
         "author": meta.author,
         "summary": meta.summary,
-        "requested_episodes": int(episodes),
+        "requested_mode": requested_mode,
+        "requested_episodes": "all" if requested_mode == "all" else int(episodes),
+        "available_episodes": len(meta.episode_urls),
         "acquired_episodes": len(episode_rows),
         "episodes": episode_rows,
         "ruby_notes": ruby_map,

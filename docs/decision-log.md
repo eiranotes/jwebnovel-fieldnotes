@@ -28,3 +28,18 @@ Glossary is persistent across chunks. Metadata and ruby/furigana are preferred e
 
 ### D009 — Schedule remains disabled until exact time and profiles are supplied
 The user requested one run per day at a fixed time but has not supplied the clock time or final search profiles. No arbitrary time is invented.
+
+### D010 — Search profiles are page-editable and independently selectable
+`console.html` edits `config/search-profiles.json`. Multiple explicitly selected groups all run on the next discovery. With no explicit selection, fallback modes are round-robin, least-recently-run, date-seeded random, or all enabled; rotation state is durable.
+
+### D011 — Seen works have a persistent canonical index
+`data/work-index.json` records every previously surfaced candidate. Canonicalization prefers normalized title + author so Narou/Kakuyomu cross-posts collapse to one work; platform URL/ID is used when title/author evidence is insufficient. Strict discovery excludes already indexed works before sampling/ranking.
+
+### D012 — User-selected full translation is a separate priority lane
+The ordinary shortlist path stays first-5 only. A user's **전체 번역** action creates a separate `workspace/full-translations/<work-id>/` request, verifies the complete episode list, downloads all currently listed episodes, merges, chunks, resumes translation, then emits private `ko.txt`, `ja-ko.md`, and ZIP artifacts.
+
+### D013 — Automation emits private detailed logs plus public-safe summaries
+Every durable automation boundary writes JSONL under ignored `workspace/automation-logs/` and a sanitized rolling summary to `data/automation-logs.json`. The archive and private console expose those summaries without publishing source text.
+
+### D014 — Phone delivery uses a loopback console behind Tailscale Serve
+The private control server binds only to `127.0.0.1:18765`; Tailscale Serve exposes it at `/fieldnotes` on the user's tailnet. Direct `workspace/` browsing is denied and downloads use an artifact allowlist. macOS blocks `launchd` background access to this external DevDrive, so the server runs as a detached interactive-session process and must be restarted once after a Mac reboot.

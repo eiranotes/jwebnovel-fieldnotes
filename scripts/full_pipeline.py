@@ -9,6 +9,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from automation_log import log_event, new_run_id
+
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "data" / "work-registry.json"
@@ -173,7 +175,9 @@ def refresh_status(last_run: dict, worker_root: Path) -> None:
 
 
 def pipeline(entry_id: str, top_n: int, episodes: int, worker_root: Path, force: bool) -> dict:
+    run_id = new_run_id("pipeline")
     started = datetime.now(timezone.utc).isoformat()
+    log_event(task="full_pipeline", action="run", status="started", run_id=run_id, message=f"Pipeline started for {entry_id}", details={"entry_id": entry_id, "top_n": top_n, "episodes": episodes}, public_details={"entry_id": entry_id, "top_n": top_n})
     ensure_target_registered(entry_id, top_n)
     automation = load_json(AUTOMATION)
     rows = target_rows(entry_id)[:top_n]
@@ -182,17 +186,20 @@ def pipeline(entry_id: str, top_n: int, episodes: int, worker_root: Path, force:
     for row in rows:
         item = {"work_id": row.get("work_id"), "title": row.get("title"), "url": row.get("url")}
         try:
+            log_event(task="full_pipeline", action="work", status="started", run_id=run_id, message=f"Processing {row.get('title')}", details={"work_id": row.get("work_id"), "url": row.get("url")}, public_details={"title": row.get("title")})
             item["acquisition"] = acquire(row, worker_root, episodes, force)
             refreshed = next(x for x in target_rows(entry_id) if x.get("work_id") == row.get("work_id"))
             item["prepare"] = prepare(refreshed, automation)
             refreshed = next(x for x in target_rows(entry_id) if x.get("work_id") == row.get("work_id"))
             build_parallel_if_ready(refreshed)
             item["status"] = "translation_pending"
+            log_event(task="full_pipeline", action="work", status="done", run_id=run_id, message=f"Prepared {row.get('title')}", details={"work_id": row.get("work_id"), "acquired_episodes": item["acquisition"].get("acquired_episodes"), "chunks": item["prepare"].get("chunks")}, public_details={"title": row.get("title"), "episodes": item["acquisition"].get("acquired_episodes"), "chunks": item["prepare"].get("chunks")})
         except Exception as exc:
             item["status"] = "error"
             item["error"] = str(exc)
             errors.append({"work_id": row.get("work_id"), "error": str(exc)})
             update_registry(row, status="error", last_error=str(exc), error_at=datetime.now(timezone.utc).isoformat())
+            log_event(task="full_pipeline", action="work", status="error", run_id=run_id, message=str(exc), details={"work_id": row.get("work_id")}, public_details={"title": row.get("title")})
         results.append(item)
 
     last_run = {
@@ -206,6 +213,7 @@ def pipeline(entry_id: str, top_n: int, episodes: int, worker_root: Path, force:
     }
     refresh_status(last_run, worker_root)
     run([sys.executable, str(ROOT / "scripts" / "validate_repo.py")], cwd=ROOT)
+    log_event(task="full_pipeline", action="run", status="done" if not errors else "partial", run_id=run_id, message=f"Pipeline finished: {len(results)} processed, {len(errors)} errors", details=last_run, public_details={"entry_id": entry_id, "processed": len(results), "errors": len(errors)})
     return {"last_run": last_run, "works": results}
 
 

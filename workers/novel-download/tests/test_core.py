@@ -9,10 +9,32 @@ from novelpipeline.config import load_config
 from novelpipeline.db import StateDB
 from novelpipeline.models import WorkCandidate
 from novelpipeline.sites.common import soup, text_with_ruby
+from novelpipeline.sites.kakuyomu import embedded_toc_episode_urls
 from novelpipeline.translate import WorkTranslator, chunk_text
 
 
 class CoreTests(unittest.TestCase):
+    def test_kakuyomu_embedded_toc_reads_all_episode_refs(self):
+        payload = {
+            "props": {"pageProps": {
+                "additionalDataLayer": {"publicEpisodeCount": 3},
+                "__APOLLO_STATE__": {
+                    "Work:123": {"tableOfContentsV2": [{"__ref": "TableOfContentsChapter:"}]},
+                    "TableOfContentsChapter:": {"episodeUnions": [
+                        {"__ref": "Episode:11"}, {"__ref": "Episode:22"}, {"__ref": "Episode:33"}
+                    ]},
+                },
+            }}
+        }
+        doc = soup(f'<script id="__NEXT_DATA__" type="application/json">{json.dumps(payload)}</script>')
+        urls, expected = embedded_toc_episode_urls(doc, "123")
+        self.assertEqual(expected, 3)
+        self.assertEqual(urls, [
+            "https://kakuyomu.jp/works/123/episodes/11",
+            "https://kakuyomu.jp/works/123/episodes/22",
+            "https://kakuyomu.jp/works/123/episodes/33",
+        ])
+
     def test_ruby_is_preserved(self):
         doc = soup("<div><p>九条<ruby>玲奈<rp>(</rp><rt>れいな</rt><rp>)</rp></ruby>です。</p></div>")
         text, pairs = text_with_ruby(doc.div)

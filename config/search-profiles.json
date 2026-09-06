@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "2.0",
   "defaults": {
     "min_chars": 300000,
     "length_exception": {
@@ -9,8 +9,23 @@
     },
     "result_count": 10,
     "source_pipeline_top_n": 5,
-    "platforms": ["Narou", "Kakuyomu"],
-    "repeat_candidate_cooldown_days": 30
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "repeat_candidate_cooldown_days": 30,
+    "dedupe_mode": "strict_seen_index"
+  },
+  "selection": {
+    "selected_profile_ids": [],
+    "when_none": "round_robin",
+    "rotation_batch_size": 1,
+    "options": [
+      "round_robin",
+      "least_recently_run",
+      "random_daily",
+      "all_enabled"
+    ]
   },
   "criteria_ready": false,
   "profiles": [
@@ -21,13 +36,20 @@
       "reference_works": [],
       "anti_reference_works": [],
       "hard_filters": {
-        "platforms": ["Narou", "Kakuyomu"],
+        "platforms": [
+          "Narou",
+          "Kakuyomu"
+        ],
         "min_chars": 300000,
         "genres": [],
         "must": [],
         "must_not": [],
         "commercial_publication": "profile_specific",
         "adult_r18": "exclude"
+      },
+      "dedupe": {
+        "mode": "strict_seen_index",
+        "cooldown_days": 30
       },
       "soft_preferences": {
         "serialization_priority": [],

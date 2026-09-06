@@ -10,6 +10,12 @@
 <body class="archive-page">
   <aside class="rail">FIELD NOTES · ARCHIVE</aside>
   <main>
+    <nav class="wrap top-tabs" aria-label="fieldnotes navigation">
+      <a class="active" href="index.html">ARCHIVE</a>
+      <a href="console.html#profiles">SEARCH CONTROL</a>
+      <a href="console.html#works">WORK INDEX</a>
+      <a href="console.html#logs">LOGS</a>
+    </nav>
     <header class="archive-hero wrap">
       <p class="kicker">NAROU / KAKUYOMU · RESEARCH ARCHIVE</p>
       <div class="archive-hero-grid">
@@ -54,10 +60,23 @@
         <div class="archive-state">자동화 상태를 불러오는 중.</div>
       </div>
       <div class="automation-links">
+        <a href="console.html">운영 콘솔</a>
         <a href="docs/automation-questionnaire.md">조건 질문표</a>
         <a href="docs/current-status.md">현재 상태</a>
         <a href="docs/automation-runbook.md">Runbook</a>
       </div>
+    </section>
+
+    <section class="wrap" id="automation-log-section">
+      <header class="section-head">
+        <span>RUN LOG</span>
+        <div>
+          <h2>최근 자동화 작업</h2>
+          <p>탐색·다운로드·번역·설정 변경을 작업 단위로 남긴다. 상세 로그와 파일 다운로드는 private console에서 확인한다.</p>
+        </div>
+      </header>
+      <div id="automation-log-list" class="log-list"><div class="archive-state">로그를 불러오는 중.</div></div>
+      <p class="protocol-link"><a href="console.html#logs">전체 로그 보기 →</a></p>
     </section>
 
     <section class="wrap" id="research-archive">

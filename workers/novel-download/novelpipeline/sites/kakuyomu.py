@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from urllib.parse import quote, urlparse
 
@@ -9,6 +10,41 @@ from .common import attr_content, first_text, soup, text_with_ruby, unique_absol
 
 
 WORK_RE = re.compile(r"^/works/(\d+)")
+
+
+def embedded_toc_episode_urls(doc, work_id: str) -> tuple[list[str], int | None]:
+    script = doc.select_one("script#__NEXT_DATA__")
+    if not script:
+        return [], None
+    try:
+        raw = script.string or script.get_text("", strip=False)
+        data = json.loads(raw)
+        page_props = data.get("props", {}).get("pageProps", {})
+        expected = page_props.get("additionalDataLayer", {}).get("publicEpisodeCount")
+        expected_count = int(expected) if expected is not None else None
+        apollo = page_props.get("__APOLLO_STATE__", {})
+        work = apollo.get(f"Work:{work_id}", {})
+        refs = work.get("tableOfContentsV2") or []
+        episode_ids: list[str] = []
+        seen: set[str] = set()
+        for chapter_ref in refs:
+            if not isinstance(chapter_ref, dict):
+                continue
+            chapter_key = str(chapter_ref.get("__ref") or "")
+            chapter = apollo.get(chapter_key, {})
+            for union in chapter.get("episodeUnions") or []:
+                if not isinstance(union, dict):
+                    continue
+                ref = str(union.get("__ref") or "")
+                if not ref.startswith("Episode:"):
+                    continue
+                episode_id = ref.split(":", 1)[1]
+                if episode_id and episode_id not in seen:
+                    seen.add(episode_id)
+                    episode_ids.append(episode_id)
+        return [f"https://kakuyomu.jp/works/{work_id}/episodes/{episode_id}" for episode_id in episode_ids], expected_count
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return [], None
 
 
 class KakuyomuSite:
@@ -83,6 +119,11 @@ class KakuyomuSite:
             title = title[: -(len(author) + 2)].rstrip()
         episode_urls = unique_absolute_links(doc, "a[href*='/episodes/']", url)
         episode_urls = [u for u in episode_urls if f"/works/{work_id}/episodes/" in urlparse(u).path]
+        embedded_urls, expected_count = embedded_toc_episode_urls(doc, work_id)
+        toc_source = "dom"
+        if len(embedded_urls) > len(episode_urls):
+            episode_urls = embedded_urls
+            toc_source = "next_data_apollo"
         return WorkMetadata(
             site=self.name,
             work_id=work_id,
@@ -91,6 +132,7 @@ class KakuyomuSite:
             author=author,
             summary=summary,
             episode_urls=episode_urls,
+            extra={"public_episode_count": expected_count, "toc_source": toc_source},
         )
 
     def fetch_episode(self, url: str, number: int) -> Episode:

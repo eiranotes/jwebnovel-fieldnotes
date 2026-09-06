@@ -36,6 +36,22 @@ Updated: 2026-09-06
    - 파일 생성, 상태 갱신, Git commit/push, Pages 검증은 Chat On Steroids Core를 기본 실행 채널로 사용.
    - 웹 탐색/검색은 ChatGPT web 기능을 사용하고 결과를 Steroids가 저장소에 기록.
 
+7. **Profile selection and rotation**
+   - 페이지에서 여러 검색 그룹을 동시에 `NEXT SEARCH`로 지정할 수 있다.
+   - 지정이 없으면 round-robin / least-recently-run / date-seeded random / all-enabled 중 설정된 fallback을 사용한다.
+
+8. **Persistent duplicate index**
+   - 모든 기존 후보를 `data/work-index.json`에 축적하고 새 탐색 전에 strict dedupe한다.
+   - 제목+작가가 확보되면 플랫폼을 넘어 같은 작품으로 묶는다.
+
+9. **User-selected full translation lane**
+   - 기본 shortlist 취득은 계속 앞 5화만 사용한다.
+   - 사용자가 전체 번역을 명시한 작품만 별도 full-work workspace에서 전 회차 취득/병합/번역한다.
+
+10. **Automation observability and private delivery**
+   - 자동화 작업 경계마다 로그를 남기고 공개 페이지에는 sanitized summary만 표시한다.
+   - 원문/번역 파일 전달은 loopback private console + Tailscale Serve로만 제공한다.
+
 ## Acquisition implementation verified on 2026-09-06
 
 - Discovery remains metadata/search driven.

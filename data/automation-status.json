@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T07:59:56.329263+00:00",
+  "updated_at": "2026-09-06T08:26:23.738590+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -31,7 +31,12 @@
     "pending_chunks": 10,
     "completed_chunks": 0,
     "works_waiting_for_source": 0,
-    "works_ready": 5
+    "works_ready": 5,
+    "full_requests": {
+      "queued": 0,
+      "translating": 0,
+      "complete": 0
+    }
   },
   "last_run": {
     "entry_id": "2026-09-06-02",

@@ -1,0 +1,469 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-06T08:26:40.172890+00:00",
+  "works": [
+    {
+      "canonical_key": "title:eighteenyearswar三大陸千年紀",
+      "title": "Eighteen Years' War ～三大陸千年紀～",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:redoリドゥ:くろぬか",
+      "title": "Redo -リドゥ-",
+      "author": "くろぬか",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818023213480370601",
+      "length_chars": 706483,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "shortlist",
+          "rank": "B1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16818023213480370601"
+        }
+      ],
+      "work_id": "redo",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/redo",
+      "pipeline_status": "translation_pending",
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:うちの師匠は猫で魔王",
+      "title": "うちの師匠は猫で魔王！",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:おばあちゃん家のデスゲーム屋さん",
+      "title": "おばあちゃん家のデスゲーム屋さん",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": 16767,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:これはデスゲームを見守る簡単なお仕事です1入社編",
+      "title": "これはデスゲームを見守る簡単なお仕事です。①-入社編-",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": 126541,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:デスゲーム界の十傑世界最強の10人によるタイマン:キタナベ",
+      "title": "デスゲーム界の十傑 ～世界最強の10人によるタイマン～",
+      "author": "キタナベ",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n3360hy/",
+      "length_chars": 43428,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "length_exceptions",
+          "rank": "B-LE1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n3360hy/"
+        }
+      ],
+      "work_id": "deathgame-jikketsu",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu",
+      "pipeline_status": "translation_pending",
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:マリーパスファインダーseries",
+      "title": "マリー・パスファインダー series",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:一番好きな子を殺さないと脱出できない百合デスゲーム",
+      "title": "一番好きな子を殺さないと脱出できない百合デスゲーム",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:一騎当戦東方無双の剣鬼異国に渡りて戦を喰らう",
+      "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:完結彼はデスゲームで最善の結果を求めるようです",
+      "title": "〖完結〗彼はデスゲームで最善の結果を求めるようです",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": 148722,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:拝啓明日ノ私才能で選別される狂気のデスゲーム:廃れ",
+      "title": "拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜",
+      "author": "廃れ",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818622175556728824",
+      "length_chars": 466846,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "shortlist",
+          "rank": "A2"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16818622175556728824"
+        }
+      ],
+      "work_id": "haikei-ashita-no-watashi",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi",
+      "pipeline_status": "translation_pending",
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:現代最強のデスゲーマー異世界デスゲームでも無双する",
+      "title": "現代最強のデスゲーマー、異世界デスゲームでも無双する",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:神の女王と解放者",
+      "title": "神の女王と解放者",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:紅さんはデスゲーマー:ニッケン",
+      "title": "紅さんはデスゲーマー",
+      "author": "ニッケン",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/1177354054934389837",
+      "length_chars": 351428,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "shortlist",
+          "rank": "A1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/1177354054934389837"
+        }
+      ],
+      "work_id": "beni-death-gamer",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer",
+      "pipeline_status": "translation_pending",
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:終末の歌姫と滅びの子",
+      "title": "終末の歌姫と滅びの子",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:花嫁騎士勇者を寝取られたわたしは魔王の城を目指す",
+      "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-01",
+      "last_seen_entry": "2026-09-06-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-01",
+          "bucket": "shortlist",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:見てるこっちが怖いデスゲーム",
+      "title": "見てるこっちが怖いデスゲーム",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": 105981,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:逆さの茶笠:千華",
+      "title": "逆さの茶笠",
+      "author": "千華",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818622170137414869",
+      "length_chars": 10755,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "length_exceptions",
+          "rank": "A-LE1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16818622170137414869"
+        }
+      ],
+      "work_id": "sakasano-chagasa",
+      "workspace": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa",
+      "pipeline_status": "translation_pending",
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:魔女は魔法少女の夢を見ない",
+      "title": "魔女は魔法少女の夢を見ない",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-06-02",
+      "last_seen_entry": "2026-09-06-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-06-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    }
+  ]
+}

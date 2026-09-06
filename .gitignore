@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+config.toml
+config.smoke*.toml
+data/
+logs/
+site/
+.smoke*/
+.smoke*-data/
+.smoke*-site/
+.smoke*-logs/

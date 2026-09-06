@@ -9,7 +9,7 @@ import subprocess
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from automation_log import log_event
 
@@ -22,8 +22,10 @@ FULL_QUEUE = ROOT / "data" / "full-translation-queue.json"
 LOGS = ROOT / "data" / "automation-logs.json"
 ROTATION = ROOT / "data" / "profile-rotation-state.json"
 REGISTRY = ROOT / "data" / "work-registry.json"
+PREFERENCE_FEEDBACK = ROOT / "workspace" / "preference-feedback.json"
+PREFERENCE_MODEL = ROOT / "workspace" / "preference-model.json"
 SAFE_STATIC_FILES = {"/", "/index.html", "/console.html", "/styles.css", "/archive.js", "/console.js", "/.nojekyll"}
-SAFE_STATIC_PREFIXES = ("/entries/", "/docs/", "/data/")
+SAFE_STATIC_ROOTS = ("entries", "docs", "data")
 
 
 def load(path: Path, fallback):
@@ -130,12 +132,31 @@ def state_payload() -> dict:
         "logs": load(LOGS, {"entries": []}),
         "rotation": load(ROTATION, {}),
         "artifacts": artifact_inventory(),
+        "preference_feedback": load(PREFERENCE_FEEDBACK, {"events": []}),
+        "preference_model": load(PREFERENCE_MODEL, {"profiles": {}}),
         "console": {"writable": True, "root": str(ROOT)},
     }
 
 
 def refresh_index() -> None:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "rebuild_work_index.py")], cwd=ROOT, check=True, text=True, capture_output=True)
+
+
+def safe_static_request_path(path: str) -> str | None:
+    decoded = unquote(path)
+    if decoded == "/":
+        return "/index.html"
+    if decoded in SAFE_STATIC_FILES:
+        target = (ROOT / decoded.lstrip("/")).resolve()
+        return decoded if target.is_file() else None
+    target = (ROOT / decoded.lstrip("/")).resolve()
+    if not target.is_file():
+        return None
+    for rel in SAFE_STATIC_ROOTS:
+        allowed_root = (ROOT / rel).resolve()
+        if target.is_relative_to(allowed_root):
+            return "/" + target.relative_to(ROOT).as_posix()
+    return None
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -162,7 +183,6 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed, path = self._parsed_route()
         if path == "/api/state":
-            refresh_index()
             return json_response(self, 200, state_payload())
         if path == "/api/download":
             query = parse_qs(parsed.query)
@@ -180,10 +200,10 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
-        if path not in SAFE_STATIC_FILES and not any(path.startswith(prefix) for prefix in SAFE_STATIC_PREFIXES):
+        safe_path = safe_static_request_path(path)
+        if not safe_path:
             return json_response(self, 404, {"error": "not available from private console"})
-        if path != parsed.path:
-            self.path = path + (f"?{parsed.query}" if parsed.query else "")
+        self.path = safe_path
         return super().do_GET()
 
     def do_POST(self):
@@ -210,6 +230,45 @@ class Handler(SimpleHTTPRequestHandler):
                 atomic_write(PROFILES, data)
                 log_event(task="private_console", action="save_selection", status="done", message="Search profile selection updated", public_details={"selected": len(selection["selected_profile_ids"]), "fallback": selection.get("when_none")})
                 return json_response(self, 200, selection)
+            if path == "/api/feedback":
+                key = str(body.get("canonical_key") or "").strip()
+                verdict = str(body.get("verdict") or "").strip()
+                reasons = [str(x).strip() for x in (body.get("reasons") or []) if str(x).strip()]
+                tags = [str(x).strip() for x in (body.get("tags") or []) if str(x).strip()]
+                profile_id = str(body.get("profile_id") or "").strip() or None
+                note = str(body.get("note") or "")
+                cmd = [
+                    sys.executable,
+                    str(ROOT / "scripts" / "preference_feedback.py"),
+                    "record",
+                    "--key", key,
+                    "--verdict", verdict,
+                    "--reasons", ",".join(reasons),
+                    "--tags", ",".join(tags),
+                    "--note", note,
+                    "--source", "private_console",
+                ]
+                if profile_id:
+                    cmd += ["--profile", profile_id]
+                proc = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
+                if proc.returncode != 0:
+                    raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
+                log_event(task="private_console", action="preference_feedback", status="done", message=f"Preference feedback: {verdict}", public_details={"verdict": verdict})
+                return json_response(self, 200, json.loads(proc.stdout))
+            if path == "/api/feedback/apply":
+                profile_id = str(body.get("profile_id") or "").strip()
+                signal = str(body.get("signal") or "").strip()
+                direction = str(body.get("direction") or "").strip()
+                proc = subprocess.run(
+                    [sys.executable, str(ROOT / "scripts" / "preference_feedback.py"), "apply", "--profile", profile_id, "--reason", signal, "--direction", direction],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True,
+                )
+                if proc.returncode != 0:
+                    raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
+                log_event(task="private_console", action="apply_preference", status="done", message=f"Applied learned preference: {signal}", public_details={"profile": profile_id, "direction": direction})
+                return json_response(self, 200, json.loads(proc.stdout))
             if path == "/api/full-translation/request":
                 key = str(body.get("canonical_key") or "")
                 proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "full_translation.py"), "request", "--key", key], cwd=ROOT, text=True, capture_output=True)

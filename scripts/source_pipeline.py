@@ -164,8 +164,25 @@ def split_paragraphs(text: str, target: int, hard_max: int) -> list[str]:
             continue
         if len(para) > hard_max:
             if cur.strip(): chunks.append(cur.strip() + '\n'); cur = ''
-            for start in range(0, len(para), hard_max):
-                chunks.append(para[start:start+hard_max].strip() + '\n')
+            long_cur = ''
+            for sentence in split_sentence_line(para.strip()):
+                if len(sentence) > hard_max:
+                    if long_cur.strip():
+                        chunks.append(long_cur.strip() + '\n')
+                        long_cur = ''
+                    # Last-resort guard for pathological single sentences that
+                    # exceed the model hard limit. Ordinary Japanese prose is
+                    # split only at sentence boundaries.
+                    for start in range(0, len(sentence), hard_max):
+                        chunks.append(sentence[start:start+hard_max].strip() + '\n')
+                    continue
+                if long_cur and len(long_cur) + len(sentence) > hard_max:
+                    chunks.append(long_cur.strip() + '\n')
+                    long_cur = sentence
+                else:
+                    long_cur += sentence
+            if long_cur.strip():
+                chunks.append(long_cur.strip() + '\n')
             continue
         if cur and len(cur) + len(para) > target:
             chunks.append(cur.strip() + '\n')
@@ -174,6 +191,106 @@ def split_paragraphs(text: str, target: int, hard_max: int) -> list[str]:
             cur += para
     if cur.strip(): chunks.append(cur.strip() + '\n')
     return chunks
+
+
+SENTENCE_END = set('。！？!?')
+SENTENCE_CLOSERS = set('」』）】〕〉》”’\"\'')
+
+
+def split_sentence_line(line: str) -> list[str]:
+    line = line.strip()
+    if not line:
+        return []
+    parts: list[str] = []
+    start = 0
+    i = 0
+    while i < len(line):
+        if line[i] in SENTENCE_END:
+            j = i + 1
+            while j < len(line) and line[j] in SENTENCE_CLOSERS:
+                j += 1
+            piece = line[start:j].strip()
+            if piece:
+                parts.append(piece)
+            start = j
+            i = j
+            continue
+        i += 1
+    tail = line[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts or [line]
+
+
+def sentence_segments(text: str) -> list[dict]:
+    segments: list[dict] = []
+    paragraph = 0
+    serial = 1
+    for raw in text.replace('\r\n', '\n').replace('\r', '\n').split('\n'):
+        line = raw.strip()
+        if not line:
+            paragraph += 1
+            continue
+        if line.startswith('===== SOURCE ') or line.startswith('URL:'):
+            segments.append({'id': f'm{serial:06d}', 'kind': 'meta', 'paragraph': paragraph, 'ja': line})
+            serial += 1
+            continue
+        for sentence in split_sentence_line(line):
+            segments.append({'id': f's{serial:06d}', 'kind': 'sentence', 'paragraph': paragraph, 'ja': sentence})
+            serial += 1
+        paragraph += 1
+    return segments
+
+
+def validate_segment_translations(source_segments: list[dict], translations) -> list[dict]:
+    required = [x for x in source_segments if x.get('kind') == 'sentence']
+    if not isinstance(translations, list):
+        raise SystemExit('segment_translations must be an array')
+    by_id = {}
+    for row in translations:
+        if not isinstance(row, dict):
+            continue
+        sid = str(row.get('id') or '').strip()
+        ko = str(row.get('ko') or '').strip()
+        if sid and ko:
+            by_id[sid] = ko
+    missing = [x['id'] for x in required if x['id'] not in by_id]
+    extras = sorted(set(by_id) - {x['id'] for x in required})
+    if missing or extras:
+        raise SystemExit(f'segment translation mismatch: missing={missing[:10]} extras={extras[:10]}')
+    return [{'id': x['id'], 'paragraph': x['paragraph'], 'ja': x['ja'], 'ko': by_id[x['id']]} for x in required]
+
+
+def korean_text_from_pairs(pairs: list[dict]) -> str:
+    paragraphs: list[str] = []
+    current_para = None
+    current: list[str] = []
+    for row in pairs:
+        para = row.get('paragraph')
+        if current_para is None:
+            current_para = para
+        if para != current_para:
+            if current:
+                paragraphs.append(' '.join(current).strip())
+            current = []
+            current_para = para
+        current.append(str(row.get('ko') or '').strip())
+    if current:
+        paragraphs.append(' '.join(current).strip())
+    return '\n\n'.join(x for x in paragraphs if x).strip()
+
+
+def alternating_text_from_pairs(pairs: list[dict]) -> str:
+    rows = []
+    last_para = None
+    for row in pairs:
+        if last_para is not None and row.get('paragraph') != last_para:
+            rows.append('')
+        rows.append(f"원문: {row['ja']}")
+        rows.append(f"번역: {row['ko']}")
+        rows.append('')
+        last_para = row.get('paragraph')
+    return '\n'.join(rows).rstrip() + '\n'
 
 
 def init_translation(wdir: Path, merged: Path, target: int, hard_max: int) -> dict:
@@ -262,19 +379,21 @@ def next_task(args):
         next_head = p.read_text(encoding='utf-8')[:args.context_head]
     metadata_path = wdir / 'metadata.json'
     metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
+    segments = sentence_segments(ja)
     task = {
         'status':'pending','entry_id':args.entry or metadata.get('entry_id'),'work_id':safe_id(args.work or metadata.get('work_id') or wdir.name),'work_dir':str(wdir.relative_to(ROOT)) if wdir.is_relative_to(ROOT) else str(wdir),'chunk_id':cid,
-        'source_ja':ja,'previous_source_tail':prev_tail,'next_source_head':next_head,
+        'source_ja':ja,'source_segments':segments,'previous_source_tail':prev_tail,'next_source_head':next_head,
         'glossary':glossary,
         'instructions':[
-            'Translate the full source_ja from Japanese to natural Korean without omissions.',
-            'Preserve paragraph boundaries unless Korean readability clearly requires a split.',
+            'Translate every source_segments item whose kind is sentence from Japanese to natural Korean without omissions.',
+            'Return exactly one segment_translations item for every sentence id, preserving the same ids and order. Do not merge, split, skip, or invent ids.',
+            'Meta segments such as SOURCE boundaries and URL lines are context only and must not appear in segment_translations.',
             'For person/place/proper names, consult glossary first; if absent, infer from metadata and ruby/furigana in the source before choosing Korean spelling.',
             'Do not translate a proper name differently across chunks. Add new uncertain/name decisions to glossary_update.',
-            'Preserve ===== SOURCE ... ===== boundary markers unchanged; translate only the novel text around them.',
-            'Return Korean translation only in ko_text plus structured glossary_update; do not summarize.'
+            'The sentence mapping is used to build an alternating original/translation TXT, so one-to-one alignment is mandatory.',
+            'Do not summarize.'
         ],
-        'output_contract':{'ko_text':'string','glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}}
+        'output_contract':{'segment_translations':[{'id':'s000001','ko':'string'}],'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}}
     }
     outdir = wdir/'translation/tasks'; outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir/f'{cid}.json'; outfile.write_text(json.dumps(task, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
@@ -298,9 +417,14 @@ def complete(args):
     result = json.loads(Path(args.result).read_text(encoding='utf-8'))
     cid = args.chunk
     cdir = wdir/'translation/chunks'/cid
-    ko = result.get('ko_text','').strip()
-    if not ko: raise SystemExit('ko_text is empty')
+    ja = (cdir/'ja.txt').read_text(encoding='utf-8')
+    source_segment_rows = sentence_segments(ja)
+    pairs = validate_segment_translations(source_segment_rows, result.get('segment_translations'))
+    ko = korean_text_from_pairs(pairs)
+    if not ko: raise SystemExit('translated Korean text is empty')
     (cdir/'ko.txt').write_text(ko+'\n', encoding='utf-8')
+    (cdir/'pairs.json').write_text(json.dumps({'schema_version':'1.0','chunk_id':cid,'pairs':pairs}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    (cdir/'pairs.txt').write_text(alternating_text_from_pairs(pairs), encoding='utf-8')
     meta = json.loads((cdir/'meta.json').read_text(encoding='utf-8'))
     meta.update({'status':'done','ko_chars':len(ko),'translated_at':datetime.now(timezone.utc).isoformat(),'review_status':'auto_pending'})
     (cdir/'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
@@ -332,22 +456,28 @@ def build_parallel(args):
 def build_output(args):
     wdir = resolve_work_dir(args)
     manifest = json.loads((wdir/'translation/manifest.json').read_text(encoding='utf-8'))
-    ko_parts, bilingual = [], []
+    ko_parts, bilingual, alternating_parts = [], [], []
     for c in manifest.get('chunks', []):
         cdir = wdir/'translation/chunks'/c['chunk_id']
-        ja_path, ko_path = cdir/'ja.txt', cdir/'ko.txt'
+        ja_path, ko_path, pairs_path = cdir/'ja.txt', cdir/'ko.txt', cdir/'pairs.json'
         if not ko_path.exists():
             print(json.dumps({'status':'translation_pending','missing_chunk':c['chunk_id']}, ensure_ascii=False))
             return
+        if not pairs_path.exists():
+            print(json.dumps({'status':'sentence_alignment_missing','missing_chunk':c['chunk_id']}, ensure_ascii=False))
+            return
         ja = ja_path.read_text(encoding='utf-8').rstrip()
         ko = ko_path.read_text(encoding='utf-8').rstrip()
+        pairs = json.loads(pairs_path.read_text(encoding='utf-8')).get('pairs') or []
         ko_parts.append(ko)
         bilingual.append(f"## Chunk {c['chunk_id']}\n\n### 원문\n\n{ja}\n\n### 번역\n\n{ko}")
+        alternating_parts.append(alternating_text_from_pairs(pairs).rstrip())
     out = wdir/'translation/output'
     out.mkdir(parents=True, exist_ok=True)
-    ko_file, bi_file = out/'ko.txt', out/'ja-ko.md'
+    ko_file, bi_file, alt_file = out/'ko.txt', out/'ja-ko.md', out/'ja-ko-alternating.txt'
     ko_file.write_text('\n\n'.join(ko_parts).rstrip()+'\n', encoding='utf-8')
     bi_file.write_text('\n\n---\n\n'.join(bilingual).rstrip()+'\n', encoding='utf-8')
+    alt_file.write_text('\n\n'.join(alternating_parts).rstrip()+'\n', encoding='utf-8')
     metadata_path = wdir/'metadata.json'
     metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
     work_id = safe_id(getattr(args, 'work', None) or metadata.get('work_id') or wdir.name)
@@ -355,9 +485,10 @@ def build_output(args):
     with zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(ko_file, 'ko.txt')
         zf.write(bi_file, 'ja-ko.md')
+        zf.write(alt_file, 'ja-ko-alternating.txt')
         glossary = wdir/'glossary.json'
         if glossary.exists(): zf.write(glossary, 'glossary.json')
-    artifacts = [ko_file, bi_file, zip_file]
+    artifacts = [ko_file, bi_file, alt_file, zip_file]
     print(json.dumps({'status':'complete','artifacts':[str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p) for p in artifacts]}, ensure_ascii=False, indent=2))
 
 

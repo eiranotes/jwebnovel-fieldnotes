@@ -293,16 +293,37 @@ normalized_title + author
 
 수량을 채우기 위해 질 낮은 작품을 끼워 넣지 않는다.
 
-## 13. 다음 요청에 이전 취향을 자동 이식하지 않는다
+## 13. 과거 취향은 soft prior로만 사용하고 현재 요청이 항상 우선한다
 
-새 요청은 항상 새 request snapshot에서 시작한다.
+새 요청은 항상 새 request snapshot에서 시작한다. 다만 사용자가 운영 콘솔에서 남긴 명시적 피드백은 `workspace/preference-model.json`에 누적하고, **hard filter를 모두 통과한 후보의 2차 정렬**에만 사용한다.
 
 - 이전 기준작과 같고 “더 찾아봐” → `continuation_of`
 - 기준작 변경 → 새 fingerprint
 - 글자수/장르/제외조건 변경 → 새 hard filters
 - 문체 요구가 달라짐 → 새 style dimensions
 
-과거 엔트리는 참고 자료이지 묵시적 필터가 아니다.
+피드백 신호는 다음 우선순위를 지킨다.
+
+1. 현재 요청의 `MUST / MUST NOT`
+2. 현재 요청의 기준작 fingerprint와 명시적 `PREFER`
+3. 해당 검색 프로필에서 사용자가 승인한 `learned_preferences`
+4. 누적 피드백의 positive/negative example과 aspect/tag 신호
+5. 탐색 다양성 보정
+
+따라서 과거 엔트리나 취향 모델은 **묵시적 hard filter가 아니다.** 누적 취향과 현재 요청이 충돌하면 현재 요청을 따른다.
+
+### Preference feedback의 입력 강도
+
+- `love` +3
+- `like` +1
+- `neutral` 0
+- `dislike` -1
+- `exclude` -3
+- 사용자의 `전체 번역` 선택은 강한 양성 implicit signal로 기록한다.
+
+사용자는 이유 카테고리와 자유 feature tag를 함께 남길 수 있다. 예: `문체`, `전개`, `주인공` + `여성 주인공`, `건조한 문체`, `규칙 추론`.
+
+같은 방향의 신호가 반복되면 시스템은 soft preference 변경안을 만들 수 있다. **하드 필터나 MUST NOT은 자동 변경하지 않는다.** 변경안은 콘솔에서 사용자가 승인해야 `learned_preferences`에 들어간다.
 
 ## 14. cheap features를 이용해 본문 읽기 순서를 최적화한다
 

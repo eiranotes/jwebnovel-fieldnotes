@@ -32,6 +32,9 @@
   "private_console": {
     "host": "127.0.0.1",
     "port": 18765,
-    "tailscale_serve": true
+    "tailscale_serve": true,
+    "autostart": "launch_agent_internal_runtime",
+    "runtime_mirror": "~/HermesWorkspace/project/fieldnotes-runtime",
+    "canonical_repo": "/Volumes/DevDrive/Projects/fieldnotes"
   }
 }

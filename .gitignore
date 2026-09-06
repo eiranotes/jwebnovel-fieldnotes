@@ -19,3 +19,5 @@ private-viewer/
 *.tmp
 __pycache__/
 *.pyc
+workspace/preference-feedback.json
+workspace/preference-model.json

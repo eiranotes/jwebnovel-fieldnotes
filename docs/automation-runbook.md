@@ -87,12 +87,13 @@ python3 scripts/source_pipeline.py next-task \
 The returned task JSON contains:
 
 - full current Japanese chunk
+- sentence-level `source_segments` with stable ids
 - previous Japanese tail
 - next Japanese head
 - current glossary
 - strict output contract
 
-ChatGPT translates it and writes a result JSON with `ko_text` and `glossary_update`.
+ChatGPT translates it and writes a result JSON with exactly one `segment_translations[{id, ko}]` item for every source sentence id plus `glossary_update`. Missing, extra, merged, or split sentence ids are rejected at completion time so the parallel TXT cannot silently drift out of alignment.
 
 ## Complete a chunk
 
@@ -107,7 +108,7 @@ python3 scripts/translation_queue.py complete \
 ```
 
 This also rebuilds the local parallel view and refreshes global automation status.
-When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, and a ZIP; the private console exposes them in **파일받기**.
+When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, `ja-ko-alternating.txt`, and a ZIP; the private console exposes them in **파일받기**. `ja-ko-alternating.txt` is ordered sentence-by-sentence as `원문 → 번역 → 원문 → 번역`.
 
 Per-work fallback:
 
@@ -138,7 +139,7 @@ Exact daily time is required before activation.
 1. Fill `config/automation.json` → `time: "HH:MM"`, `enabled: true`.
 2. Fill at least one profile in `config/search-profiles.json`; set `criteria_ready: true`.
 3. Create the ChatGPT daily automation with `docs/daily-automation-prompt.md` as its execution contract.
-4. Optional Mac-local state heartbeat: `python3 scripts/install_launchd.py`.
+4. The private iPhone console itself is independent of the ChatGPT scheduler and starts automatically at Mac login via `python3 scripts/install_private_console.py`. It runs from the internal non-Git runtime mirror documented in `docs/private-runtime.md`.
 
 The ChatGPT automation is the important scheduler because discovery and translation require model/web capabilities. `launchd` alone cannot perform those steps.
 

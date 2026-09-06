@@ -3,6 +3,8 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 let state = null;
 let writable = false;
+let feedbackTargetKey = null;
+let feedbackScope = '__global__';
 
 function toast(message, error=false) {
   const el = $('#toast');
@@ -37,7 +39,7 @@ async function loadState() {
       fetch('data/full-translation-queue.json').then(r=>r.json()),
       fetch('data/automation-logs.json').then(r=>r.json())
     ]);
-    state = {profiles, work_index:works, full_translation:queue, logs, console:{writable:false}};
+    state = {profiles, work_index:works, full_translation:queue, logs, preference_feedback:{events:[]}, preference_model:{profiles:{}}, console:{writable:false}};
   }
   renderAll();
 }
@@ -117,13 +119,38 @@ function renderWorks() {
   const works = state.work_index?.works || [];
   const query = ($('#work-filter')?.value||'').toLowerCase();
   const filtered = works.filter(w=>!query || [w.title,w.author,w.platform,w.url,w.canonical_key].join(' ').toLowerCase().includes(query));
+  const latestByKey = new Map();
+  for (const event of state.preference_feedback?.events || []) latestByKey.set(event.canonical_key, event);
   $('#work-count').textContent = `${filtered.length} / ${works.length} works`;
   $('#work-index-list').innerHTML = filtered.map(w=>{
     const ft = w.full_translation || {};
     const badge = ft.status ? `<span class="status-badge">FULL · ${esc(ft.status)}</span>` : '';
+    const feedback = latestByKey.get(w.canonical_key);
+    const feedbackBadge = feedback ? `<span class="status-badge">TASTE · ${esc(feedback.verdict)}</span>` : '';
     const disabled = !writable || ['queued','acquiring','translation_pending','complete'].includes(ft.status);
-    return `<article class="work-index-row"><div><small>${esc(w.platform||'UNKNOWN')} · SEEN ${esc(w.seen_count||1)}×</small><h3>${w.url?`<a href="${esc(w.url)}">${esc(w.title)}</a>`:esc(w.title)}</h3><p>${esc(w.author||'')} · ${Number(w.length_chars||0).toLocaleString()}자 · first ${esc(w.first_seen_entry)} / last ${esc(w.last_seen_entry)}</p></div><div class="work-actions">${badge}<button class="control-button compact" data-full-key="${esc(w.canonical_key)}" ${disabled?'disabled':''}>전체 번역</button></div></article>`;
+    return `<article class="work-index-row"><div><small>${esc(w.platform||'UNKNOWN')} · SEEN ${esc(w.seen_count||1)}×</small><h3>${w.url?`<a href="${esc(w.url)}">${esc(w.title)}</a>`:esc(w.title)}</h3><p>${esc(w.author||'')} · ${Number(w.length_chars||0).toLocaleString()}자 · first ${esc(w.first_seen_entry)} / last ${esc(w.last_seen_entry)}</p></div><div class="work-actions">${feedbackBadge}${badge}<button class="control-button secondary compact" data-feedback-key="${esc(w.canonical_key)}">평가</button><button class="control-button compact" data-full-key="${esc(w.canonical_key)}" ${disabled?'disabled':''}>전체 번역</button></div></article>`;
   }).join('') || '<div class="archive-state">해당 작품이 없다.</div>';
+}
+
+function renderFeedback() {
+  const works = state.work_index?.works || [];
+  if (!feedbackTargetKey && works.length) feedbackTargetKey = works[0].canonical_key;
+  const workSelect = $('#feedback-work');
+  workSelect.innerHTML = works.map(w=>`<option value="${esc(w.canonical_key)}" ${w.canonical_key===feedbackTargetKey?'selected':''}>${esc(w.title)}${w.author?` · ${esc(w.author)}`:''}</option>`).join('');
+  const profiles = state.profiles?.profiles || [];
+  const profileSelect = $('#feedback-profile');
+  profileSelect.innerHTML = `<option value="__global__">전체 취향</option>` + profiles.map(p=>`<option value="${esc(p.profile_id)}" ${p.profile_id===feedbackScope?'selected':''}>${esc(p.name)}</option>`).join('');
+  if (![...profileSelect.options].some(o=>o.value===feedbackScope)) feedbackScope='__global__';
+  profileSelect.value = feedbackScope;
+  const model = state.preference_model?.profiles?.[feedbackScope] || {event_count:0,signals:[],suggestions:[],positive_examples:[],negative_examples:[]};
+  $('#learning-scope-title').textContent = `${feedbackScope==='__global__'?'GLOBAL':profileSelect.selectedOptions[0]?.textContent || feedbackScope} · ${model.event_count||0} signals`;
+  $('#learning-signals').innerHTML = (model.signals||[]).map(x=>`<article class="signal-row"><b>${esc(x.reason)}</b><span>${Number(x.score||0)>0?'+':''}${esc(x.score||0)}</span><small>${esc(x.count||0)}회 · confidence ${Math.round(Number(x.confidence||0)*100)}%</small></article>`).join('') || '<div class="archive-state">아직 학습 신호가 없다.</div>';
+  if (feedbackScope === '__global__') {
+    $('#learning-suggestions').innerHTML = '<div class="archive-state">조건 반영은 특정 프로필을 선택하면 표시된다. 전체 취향 신호는 모든 프로필 랭킹에 기본 반영된다.</div>';
+  } else {
+    $('#learning-suggestions').innerHTML = (model.suggestions||[]).map(x=>`<article class="suggestion-row"><div><small>PROPOSED · ${esc(x.direction)}</small><b>${esc(x.reason)}</b><p>${esc(x.evidence_count)}개 근거 · 평균 ${esc(x.average_score)} · confidence ${Math.round(Number(x.confidence||0)*100)}%</p></div><button class="control-button secondary compact" data-apply-signal="${esc(x.reason)}" data-direction="${esc(x.direction)}" ${!writable?'disabled':''}>조건에 반영</button></article>`).join('') || '<div class="archive-state">승인 대기 변경안이 없다.</div>';
+  }
+  $$('#feedback input, #feedback select, #feedback textarea, #feedback button').forEach(el=>{ el.disabled=!writable; });
 }
 
 function renderFullQueue() {
@@ -143,7 +170,7 @@ function renderArtifacts() {
   $('#artifact-list').innerHTML = rows.map(row=>`<article class="artifact-row"><div><small>${esc(row.kind)}</small><h3>${esc(row.title||row.work_id||'artifact')}</h3><p>${Number(row.size||0).toLocaleString()} bytes</p></div><div class="artifact-links">${writable?`<a href="api/download?path=${encodeURIComponent(row.path)}">${esc(row.filename)}</a>`:`<span>${esc(row.filename)}</span>`}</div></article>`).join('') || '<div class="archive-state">받을 수 있는 로컬 작업물이 아직 없다.</div>';
 }
 
-function renderAll(){ renderProfiles(); renderWorks(); renderFullQueue(); renderLogs(); renderArtifacts(); }
+function renderAll(){ renderProfiles(); renderFeedback(); renderWorks(); renderFullQueue(); renderLogs(); renderArtifacts(); }
 
 function activateTab(name){
   $$('.control-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
@@ -188,6 +215,13 @@ $('#work-filter').addEventListener('input',renderWorks);
 $('#log-filter').addEventListener('input',renderLogs);
 
 $('#work-index-list').addEventListener('click',async event=>{
+  const feedbackKey=event.target.dataset.feedbackKey;
+  if(feedbackKey){
+    feedbackTargetKey=feedbackKey;
+    renderFeedback();
+    activateTab('feedback');
+    return;
+  }
   const key=event.target.dataset.fullKey;
   if(!key) return;
   try{
@@ -195,6 +229,33 @@ $('#work-index-list').addEventListener('click',async event=>{
     toast('전체 번역 큐에 등록됨');
     await loadState();
     activateTab('full');
+  }catch(error){toast(error.message,true);}
+});
+
+$('#feedback-work').addEventListener('change',event=>{ feedbackTargetKey=event.target.value; });
+$('#feedback-profile').addEventListener('change',event=>{ feedbackScope=event.target.value; renderFeedback(); });
+
+$('#save-feedback').addEventListener('click',async()=>{
+  try{
+    const reasons=$$('.feedback-reasons input:checked').map(x=>x.value);
+    const tags=splitList($('#feedback-tags').value);
+    await api('api/feedback',{method:'POST',body:JSON.stringify({canonical_key:$('#feedback-work').value,profile_id:$('#feedback-profile').value==='__global__'?null:$('#feedback-profile').value,verdict:$('#feedback-verdict').value,reasons,tags,note:$('#feedback-note').value})});
+    $$('.feedback-reasons input').forEach(x=>x.checked=false);
+    $('#feedback-tags').value=''; $('#feedback-note').value='';
+    toast('취향 피드백 저장됨');
+    await loadState();
+    activateTab('feedback');
+  }catch(error){toast(error.message,true);}
+});
+
+$('#learning-suggestions').addEventListener('click',async event=>{
+  const signal=event.target.dataset.applySignal;
+  if(!signal) return;
+  try{
+    await api('api/feedback/apply',{method:'POST',body:JSON.stringify({profile_id:feedbackScope,signal,direction:event.target.dataset.direction})});
+    toast('학습 제안을 탐색 조건에 반영함');
+    await loadState();
+    activateTab('feedback');
   }catch(error){toast(error.message,true);}
 });
 

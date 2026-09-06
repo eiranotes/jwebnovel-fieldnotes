@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from automation_log import log_event, new_run_id
+from preference_feedback import record as record_preference
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -82,6 +83,7 @@ def request(canonical_key: str) -> dict:
     }
     queue.setdefault("requests", []).append(item)
     save_queue(queue)
+    record_preference(canonical_key=canonical_key, verdict="love", reasons=[], tags=[], source="full_translation")
     log_event(task="full_translation", action="request", status="queued", message=f"Full translation requested: {item['title']}", details={"request_id": item["request_id"], "canonical_key": canonical_key}, public_details={"title": item["title"], "request_id": item["request_id"]})
     return item
 
@@ -188,31 +190,22 @@ def finalize(request_id: str) -> dict:
         raise SystemExit(f"request not found: {request_id}")
     wdir = ROOT / item["workspace"]
     manifest = load(wdir / "translation" / "manifest.json")
-    ko_parts, bilingual = [], []
-    for c in manifest.get("chunks", []):
-        cdir = wdir / "translation" / "chunks" / c["chunk_id"]
-        ja = (cdir / "ja.txt").read_text(encoding="utf-8")
-        ko_path = cdir / "ko.txt"
-        if not ko_path.exists():
-            return {"status": "translation_pending", "missing_chunk": c["chunk_id"]}
-        ko = ko_path.read_text(encoding="utf-8")
-        ko_parts.append(ko.rstrip())
-        bilingual.append(f"## Chunk {c['chunk_id']}\n\n### 원문\n\n{ja.rstrip()}\n\n### 번역\n\n{ko.rstrip()}")
-    out = wdir / "translation" / "output"
-    out.mkdir(parents=True, exist_ok=True)
-    ko_file = out / "ko.txt"
-    bi_file = out / "ja-ko.md"
-    ko_file.write_text("\n\n".join(ko_parts).rstrip() + "\n", encoding="utf-8")
-    bi_file.write_text("\n\n---\n\n".join(bilingual).rstrip() + "\n", encoding="utf-8")
-    zip_file = out / f"{item['work_id']}-translation.zip"
-    with zipfile.ZipFile(zip_file, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.write(ko_file, "ko.txt")
-        zf.write(bi_file, "ja-ko.md")
-        glossary = wdir / "glossary.json"
-        if glossary.exists():
-            zf.write(glossary, "glossary.json")
+    pending = [c for c in manifest.get("chunks", []) if c.get("status") != "done"]
+    if pending:
+        return {"status": "translation_pending", "missing_chunk": pending[0].get("chunk_id")}
+    package = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "source_pipeline.py"), "build-output", "--work-dir", item["workspace"], "--work", item["work_id"]],
+        cwd=ROOT, check=True, text=True, capture_output=True,
+    )
+    output = json.loads(package.stdout)
+    if output.get("status") != "complete":
+        return output
     subprocess.run([sys.executable, str(ROOT / "scripts" / "source_pipeline.py"), "build-parallel", "--work-dir", item["workspace"], "--work", item["work_id"]], cwd=ROOT, check=True, text=True, capture_output=True)
-    item.update({"status": "complete", "updated_at": now(), "completed_at": now(), "chunks_done": len(manifest.get("chunks", [])), "chunks_total": len(manifest.get("chunks", [])), "artifacts": [str(ko_file.relative_to(ROOT)), str(bi_file.relative_to(ROOT)), str(zip_file.relative_to(ROOT))]})
+    item.update({
+        "status": "complete", "updated_at": now(), "completed_at": now(),
+        "chunks_done": len(manifest.get("chunks", [])), "chunks_total": len(manifest.get("chunks", [])),
+        "artifacts": output.get("artifacts", []),
+    })
     save_queue(queue)
     log_event(task="full_translation", action="finalize", status="done", message=f"Full translation complete: {item['title']}", public_details={"title": item["title"], "chunks": item["chunks_total"]})
     return item

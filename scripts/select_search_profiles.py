@@ -13,6 +13,7 @@ from automation_log import log_event, new_run_id
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "config" / "search-profiles.json"
 STATE = ROOT / "data" / "profile-rotation-state.json"
+PREFERENCE_MODEL = ROOT / "workspace" / "preference-model.json"
 
 
 def load(path: Path, fallback: dict) -> dict:
@@ -90,7 +91,13 @@ def main() -> int:
             details={"mode": mode, "profile_ids": [x.get("profile_id") for x in chosen]},
             public_details={"mode": mode, "count": len(chosen)},
         )
-    print(json.dumps({"mode": mode, "profiles": chosen}, ensure_ascii=False, indent=2))
+    preference_profiles = load(PREFERENCE_MODEL, {"profiles": {}}).get("profiles", {})
+    output_profiles = []
+    for profile in chosen:
+        row = json.loads(json.dumps(profile, ensure_ascii=False))
+        row["preference_learning"] = preference_profiles.get(profile.get("profile_id"), {})
+        output_profiles.append(row)
+    print(json.dumps({"mode": mode, "profiles": output_profiles}, ensure_ascii=False, indent=2))
     return 0
 
 

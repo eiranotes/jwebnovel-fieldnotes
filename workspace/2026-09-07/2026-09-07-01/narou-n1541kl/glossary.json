@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "月下快": "つきしたかい",
+    "月下元": "つきしたはじめ",
+    "月下愛": "つきしたあい"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 3,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

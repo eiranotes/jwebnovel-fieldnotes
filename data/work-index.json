@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T12:45:13.978928+00:00",
+  "updated_at": "2026-09-07T13:50:19.480057+00:00",
   "works": [
     {
       "canonical_key": "kakuyomu:16818622172225120257",
@@ -124,6 +124,39 @@
       "platform_instances": []
     },
     {
+      "canonical_key": "title-author:この世界に来た俺は全員発狂する次は俺の番だ:鍵野扉星かぎのとぼし",
+      "title": "この世界に来た“俺”は全員発狂する——次は俺の番だ",
+      "author": "鍵野　扉星(かぎの　とぼし)",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n2344jq/",
+      "length_chars": 332859,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "shortlist",
+          "rank": "B1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n2344jq/"
+        }
+      ],
+      "work_id": "narou-n2344jq",
+      "workspace": "workspace/2026-09-07/2026-09-07-01/narou-n2344jq",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
+      "chunks_total": 3,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title:これはデスゲームを見守る簡単なお仕事です1入社編",
       "title": "これはデスゲームを見守る簡単なお仕事です。①-入社編-",
       "author": null,
@@ -144,6 +177,39 @@
         }
       ],
       "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:アイテムストレージをモンスター化したら世界中の全てを喰らい尽くす神話級の相棒バケモノが生まれました:びーぜろ",
+      "title": "アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！",
+      "author": "びーぜろ",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/2912051599410128857",
+      "length_chars": 378809,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "shortlist",
+          "rank": "A2"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/2912051599410128857"
+        }
+      ],
+      "work_id": "kakuyomu-2912051599410128857",
+      "workspace": "workspace/2026-09-07/2026-09-07-01/kakuyomu-2912051599410128857",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
+      "chunks_total": 3,
+      "full_translation": null
     },
     {
       "canonical_key": "title-author:デスゲーム界の十傑世界最強の10人によるタイマン:キタナベ",
@@ -208,6 +274,39 @@
       "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n9369ff",
       "pipeline_status": "translation_complete",
       "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title-author:モンスター系ダンジョン配信者ニンゲン嫌いの僕はモンスターを布教しながら最強となる:おしり炒飯",
+      "title": "モンスター系ダンジョン配信者〜ニンゲン嫌いの僕は、モンスターを布教しながら最強となる〜",
+      "author": "おしり炒飯",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/2912051599435130574",
+      "length_chars": 325731,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "shortlist",
+          "rank": "A1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/2912051599435130574"
+        }
+      ],
+      "work_id": "kakuyomu-2912051599435130574",
+      "workspace": "workspace/2026-09-07/2026-09-07-01/kakuyomu-2912051599435130574",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
       "chunks_total": 2,
       "full_translation": null
     },
@@ -322,6 +421,39 @@
       "full_translation": null
     },
     {
+      "canonical_key": "title-author:狂人が治癒スキルを獲得しました:葉月水",
+      "title": "狂人が治癒スキルを獲得しました。",
+      "author": "葉月水",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n1541kl/",
+      "length_chars": 793634,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "shortlist",
+          "rank": "A3"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n1541kl/"
+        }
+      ],
+      "work_id": "narou-n1541kl",
+      "workspace": "workspace/2026-09-07/2026-09-07-01/narou-n1541kl",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
+      "chunks_total": 3,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title:現代最強のデスゲーマー異世界デスゲームでも無双する",
       "title": "現代最強のデスゲーマー、異世界デスゲームでも無双する",
       "author": null,
@@ -337,6 +469,28 @@
       "classifications": [
         {
           "entry_id": "2026-09-06-02",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
+      "canonical_key": "title:異世界でのっぺらぼうになったおっさんの話",
+      "title": "異世界でのっぺらぼうになったおっさんの話",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
           "bucket": "deprioritized",
           "rank": null
         }
@@ -498,6 +652,61 @@
       "platform_instances": []
     },
     {
+      "canonical_key": "title-author:貴方に傅いて:クォーツ",
+      "title": "貴方に傅いて",
+      "author": "クォーツ",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n8004jx/",
+      "length_chars": 368776,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "shortlist",
+          "rank": "B2"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n8004jx/"
+        }
+      ],
+      "work_id": "narou-n8004jx",
+      "workspace": "workspace/2026-09-07/2026-09-07-01/narou-n8004jx",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
+      "chunks_total": 3,
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title:転生した辺境男爵家の少年は魔術具で世界を変える",
+      "title": "転生した辺境男爵家の少年は、魔術具で世界を変える",
+      "author": null,
+      "platform": null,
+      "url": null,
+      "length_chars": null,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": []
+    },
+    {
       "canonical_key": "title-author:逆さの茶笠:千華",
       "title": "逆さの茶笠",
       "author": "千華",
@@ -551,6 +760,33 @@
         }
       ],
       "platform_instances": []
+    },
+    {
+      "canonical_key": "narou:n5096lc",
+      "title": "魔物使い、はじめました",
+      "author": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n5096lc/",
+      "length_chars": null,
+      "first_seen_entry": "2026-09-07-01",
+      "last_seen_entry": "2026-09-07-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-07-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-07-01",
+          "bucket": "queue",
+          "rank": null
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n5096lc/"
+        }
+      ]
     }
   ]
 }

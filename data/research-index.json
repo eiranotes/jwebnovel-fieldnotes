@@ -76,5 +76,37 @@
     "doc": "docs/entries/2026-09-06-02.md",
     "data": "data/entries/2026-09-06-02.json",
     "length_policy": "default_with_high_fit_exception"
+  },
+  {
+    "entry_id": "2026-09-07-01",
+    "date": "2026-09-07",
+    "sequence": 1,
+    "title": "퀴즈왕식 극단적 소재 전개",
+    "summary": "『異世界クイズ王』의 전문 집착·광기·단일 소재 극단화를 기준으로 새 후보 5편을 선별.",
+    "reference_works": [
+      "異世界クイズ王"
+    ],
+    "criteria_terms": [
+      "300k+",
+      "남성 주인공 선호",
+      "비출판",
+      "중간 인지도",
+      "소재 극단화",
+      "광기 서술",
+      "전문성"
+    ],
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [],
+    "min_chars": 300000,
+    "length_policy": "profile_300k_with_high_fit_exception",
+    "status": "complete",
+    "candidate_count": 6,
+    "shortlist_count": 5,
+    "page": "entries/2026-09-07-01.html",
+    "doc": "docs/entries/2026-09-07-01.md",
+    "data": "data/entries/2026-09-07-01.json"
   }
 ]

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-07/2026-09-07-01/narou-n2344jq/merged/ja.txt",
+  "source_sha256": "9533e7bf98a9eaf4322b328330f380b0a8f216e54a1b52564babb9bec9a66cdc",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 3,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "pending",
+      "source_start_char": 0,
+      "source_end_char": 8999,
+      "ja_chars": 8999,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0002",
+      "order": 2,
+      "status": "pending",
+      "source_start_char": 8999,
+      "source_end_char": 17976,
+      "ja_chars": 8977,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0003",
+      "order": 3,
+      "status": "pending",
+      "source_start_char": 17976,
+      "source_end_char": 18257,
+      "ja_chars": 281,
+      "ko_chars": 0,
+      "translated_at": null,
+      "review_status": "pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-07T13:40:53.615998+00:00"
+}

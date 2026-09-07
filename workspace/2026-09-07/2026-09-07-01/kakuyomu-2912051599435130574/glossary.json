@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {},
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 0,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

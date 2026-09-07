@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T13:10:17.919788+00:00",
+  "updated_at": "2026-09-07T13:41:04.517952+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -698,6 +698,163 @@
       "message": "Saved 1 profiles",
       "details": {
         "profiles": 1
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:39:06.119239+00:00",
+      "run_id": "pipeline-20260907T133906-66f05055",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "started",
+      "message": "Pipeline started for 2026-09-07-01",
+      "details": {
+        "entry_id": "2026-09-07-01",
+        "top_n": 5
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:14.032247+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "started",
+      "message": "Pipeline started for 2026-09-07-01",
+      "details": {
+        "entry_id": "2026-09-07-01",
+        "top_n": 5
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:14.146152+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing モンスター系ダンジョン配信者〜ニンゲン嫌いの僕は、モンスターを布教しながら最強となる〜",
+      "details": {
+        "title": "モンスター系ダンジョン配信者〜ニンゲン嫌いの僕は、モンスターを布教しながら最強となる〜"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:24.129904+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared モンスター系ダンジョン配信者〜ニンゲン嫌いの僕は、モンスターを布教しながら最強となる〜",
+      "details": {
+        "title": "モンスター系ダンジョン配信者〜ニンゲン嫌いの僕は、モンスターを布教しながら最強となる〜",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:24.165996+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！",
+      "details": {
+        "title": "アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:33.752120+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！",
+      "details": {
+        "title": "アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:33.754833+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 狂人が治癒スキルを獲得しました。",
+      "details": {
+        "title": "狂人が治癒スキルを獲得しました。"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:43.748364+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 狂人が治癒スキルを獲得しました。",
+      "details": {
+        "title": "狂人が治癒スキルを獲得しました。",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:43.750468+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing この世界に来た“俺”は全員発狂する——次は俺の番だ",
+      "details": {
+        "title": "この世界に来た“俺”は全員発狂する——次は俺の番だ"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:53.695937+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared この世界に来た“俺”は全員発狂する——次は俺の番だ",
+      "details": {
+        "title": "この世界に来た“俺”は全員発狂する——次は俺の番だ",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:40:53.774628+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 貴方に傅いて",
+      "details": {
+        "title": "貴方に傅いて"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:41:04.030803+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 貴方に傅いて",
+      "details": {
+        "title": "貴方に傅いて",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:41:04.517952+00:00",
+      "run_id": "pipeline-20260907T134014-dc391d45",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "done",
+      "message": "Pipeline finished: 5 processed, 0 errors",
+      "details": {
+        "entry_id": "2026-09-07-01",
+        "processed": 5,
+        "errors": 0
       }
     }
   ]

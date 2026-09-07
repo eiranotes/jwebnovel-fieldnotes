@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T13:23:35.752271+00:00",
-  "phase": "pipeline_ready_configuration_pending",
+  "updated_at": "2026-09-07T13:50:19.388311+00:00",
+  "phase": "scheduled",
   "schedule": {
     "cadence": "daily",
     "timezone": "Asia/Seoul",
-    "time": null,
-    "status": "awaiting_user_time"
+    "time": "06:00",
+    "status": "ready"
   },
   "criteria": {
     "status": "ready",
@@ -22,16 +22,16 @@
   "source_acquisition": {
     "status": "automatic_first_n_private_local",
     "public_fulltext": false,
-    "acquired_works": 12,
+    "acquired_works": 17,
     "worker": "workers/novel-download"
   },
   "translation": {
     "mode": "resumable_chunk_queue",
     "target_chunk_chars": 9000,
-    "pending_chunks": 0,
+    "pending_chunks": 14,
     "completed_chunks": 26,
     "works_waiting_for_source": 0,
-    "works_ready": 12,
+    "works_ready": 17,
     "full_requests": {
       "queued": 0,
       "translating": 0,
@@ -47,13 +47,13 @@
     }
   },
   "last_run": {
-    "entry_id": "2026-09-06-01",
-    "started_at": "2026-09-07T10:29:33.053784+00:00",
-    "finished_at": "2026-09-07T10:30:45.845433+00:00",
-    "top_n": 7,
+    "entry_id": "2026-09-07-01",
+    "started_at": "2026-09-07T13:40:14.032241+00:00",
+    "finished_at": "2026-09-07T13:41:04.046577+00:00",
+    "top_n": 5,
     "episodes_per_work": 5,
-    "processed": 7,
+    "processed": 5,
     "errors": []
   },
-  "next_action": "set exact daily time"
+  "next_action": "run daily pipeline on schedule"
 }

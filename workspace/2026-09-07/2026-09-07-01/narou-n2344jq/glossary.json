@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "渇探流": "かたる",
+    "医里渇探流": "いざと　かたる",
+    "医里全才都": "いざと　たもつ"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 3,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

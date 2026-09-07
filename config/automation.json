@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "enabled": false,
+  "enabled": true,
   "cadence": "daily",
   "timezone": "Asia/Seoul",
-  "time": null,
+  "time": "06:00",
   "entry_mode": "one_entry_per_search_profile_per_day",
   "top_candidates_for_source_pipeline": 5,
   "source_acquisition": {

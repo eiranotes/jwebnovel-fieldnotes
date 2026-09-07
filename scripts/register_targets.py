@@ -34,7 +34,11 @@ def load_registry() -> dict:
 
 
 def canonical_key(item: dict) -> str:
-    return f"{item.get('title','').strip().lower()}|{item.get('author','').strip().lower()}"
+    # Registry metadata predates the current author-normalization rule; some valid rows carry
+    # explicit null authors. Canonicalization must be total over those historical records.
+    title = str(item.get('title') or '').strip().lower()
+    author = str(item.get('author') or '').strip().lower()
+    return f"{title}|{author}"
 
 
 def main() -> int:

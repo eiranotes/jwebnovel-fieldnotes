@@ -20,7 +20,7 @@
     "selected_profile_ids": [
       "quiz-king-style"
     ],
-    "explicit_selection_mode": "once",
+    "explicit_selection_mode": "sticky",
     "when_none": "round_robin",
     "rotation_batch_size": 1,
     "options": [

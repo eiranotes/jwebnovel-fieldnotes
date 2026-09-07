@@ -17,9 +17,10 @@ from automation_store import atomic_json,read_json
 
 
 class FixtureModel:
-    def __init__(self,root):self.root=root;self.calls=[]
+    def __init__(self,root,sequence=None):self.root=root;self.calls=[];self.sequence=sequence
     def execute(self,work_id,role,payload,**kwargs):
         self.calls.append(payload['kind'])
+        if self.sequence is not None:self.sequence.append(payload['kind'])
         if payload['kind']=='project_source_probe':
             packs=[]
             for descriptor in payload['sources']:
@@ -59,19 +60,42 @@ class ProjectTranslationIntegration(unittest.TestCase):
                     source.build_parallel(ns)
                     if outcome['done']==outcome['total']:source.build_output(ns)
                 return outcome
-            backend=FixtureModel(root)
+            sequence=[]
+            backend=FixtureModel(root,sequence)
+            def sync(packs,**kwargs):
+                sequence.append('source_sync')
+                self.assertEqual([p['source_name'] for p in packs],['GLOBAL_CONTEXT','WORK_example'])
+                self.assertEqual(kwargs['root'],root)
+                self.assertEqual(kwargs['alias'],'fieldnotes')
+                self.assertIs(kwargs['instructions'],True)
+                return {'state':'complete'}
             with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common',side_effect=lambda:context.build_common(root)),patch.object(driver,'build_work',side_effect=lambda w:context.build_work(w,root)),patch.object(driver,'script_json',side_effect=complete):
                 for _ in range(2):
                     capture=io.StringIO()
                     with contextlib.redirect_stdout(capture):
                         source.next_task(SimpleNamespace(work_dir=str(work),entry='test',work='example',context_tail=700,context_head=500))
                     task=read_json(Path(capture.getvalue().strip()))
-                    outcome=driver.process_task(task,backend=backend)
+                    outcome=driver.process_task(task,backend=backend,source_sync=sync)
                     self.assertEqual(outcome['backend'],'webgpt_project')
             self.assertEqual(backend.calls,['project_source_probe','translate_chunk','project_source_probe','translate_chunk'])
+            self.assertEqual(sequence,['source_sync','project_source_probe','translate_chunk','source_sync','project_source_probe','translate_chunk'])
             self.assertEqual(read_json(work/'state.json')['chunks_done'],2)
             self.assertTrue((work/'translation/parallel/index.html').exists())
             self.assertTrue((work/'translation/output/example-translation.zip').exists())
             text=(work/'translation/output/ja-ko-alternating.txt').read_text()
             self.assertIn('원문: 風が吹く。\n번역: 바람이 분다.',text)
             self.assertIn('원문: 雨が降る。\n번역: 비가 내린다.',text)
+
+    def test_guide_revision_changes_when_glossary_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();work=root/'workspace/books/example';work.mkdir(parents=True)
+            templates=root/'templates/project-context';templates.mkdir(parents=True)
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+                (templates/name).write_text(name)
+            atomic_json(work/'metadata.json',{'work_id':'example','title':'Fixture'})
+            atomic_json(work/'glossary.json',{'people':{}})
+            with patch.object(driver,'ROOT',root):
+                before=driver.guide_revision(work)
+                atomic_json(work/'glossary.json',{'people':{'紅':'쿠레나이'}})
+                after=driver.guide_revision(work)
+            self.assertNotEqual(before,after)

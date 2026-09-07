@@ -14,6 +14,7 @@ from types import SimpleNamespace
 from automation_store import AutomationError, atomic_json, digest, locked, now, read_json, within
 from project_backend import ProjectBackend
 from project_context import build_common, build_work, public_pack, source_probe_task, verify_source_probe
+from project_sources import synchronize as synchronize_project_sources
 from source_pipeline import validate_segment_translations, validate_glossary_update
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -30,18 +31,19 @@ def script_json(script: str, arguments: list[str]) -> dict:
 
 
 def guide_revision(work_dir: Path) -> str:
-    files=[work_dir/'metadata.json',*(work_dir/name for name in ('translation-guide.md','character-guide.md','style-guide.md')),
+    files=[work_dir/'metadata.json',work_dir/'glossary.json',*(work_dir/name for name in ('translation-guide.md','character-guide.md','style-guide.md')),
            ROOT/'templates/project-context/PROJECT_INSTRUCTIONS.md',ROOT/'templates/project-context/GLOBAL_CONTEXT.md']
     return digest({str(path.name):digest(path.read_bytes()) for path in files if path.exists()})
 
 
-def process_task(task: dict, backend=None) -> dict:
+def process_task(task: dict, backend=None, source_sync=None) -> dict:
     work_dir = within(ROOT.resolve(), task['work_dir'])
     if not work_dir.is_relative_to(ROOT.resolve()/'workspace'):
         raise AutomationError('PATH_OUTSIDE_WORKSPACE')
     work_id, chunk_id = task['work_id'], task['chunk_id']
     config = read_json(ROOT/'config/project-translation.json')
-    if config.get('backend') != 'webgpt_project' or config.get('allow_fallback') is not False:
+    if (config.get('backend') != 'webgpt_project' or config.get('allow_fallback') is not False or
+            config.get('activation') != 'verified_live'):
         raise AutomationError('PROJECT_POLICY_INVALID')
     with locked(work_dir/'translation/project-run.lock'):
         source = (work_dir/'translation/chunks'/chunk_id/'ja.txt').read_text(encoding='utf-8')
@@ -58,6 +60,13 @@ def process_task(task: dict, backend=None) -> dict:
                     raise AutomationError('CONTEXT_CACHE_TAMPERED')
         else:
             common, work = build_common(), build_work(work_dir)
+        source_sync = source_sync or synchronize_project_sources
+        # Every context revision must be provider-listed before any worker is allowed to prove
+        # retrieval or translate. synchronize() is exact-filename idempotent and persists an
+        # accepted/uncertain operation instead of guessing after transport loss, so running this
+        # on every chunk safely becomes a no-op for an unchanged revision and uploads a new WORK
+        # snapshot after glossary/guide changes.
+        source_sync([common,work],root=ROOT,alias=config['project_alias'],instructions=True)
         # Repeat the probe in this worker/operation before using cached context. Do not count a
         # successful old worker probe as proof that a replacement chat inherited the sources.
         proof_task=source_probe_task(work_id,common,work)

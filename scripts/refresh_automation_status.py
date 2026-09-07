@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 ROOT=Path(__file__).resolve().parent.parent
 status_path=ROOT/'data/automation-status.json'; cfg=json.loads((ROOT/'config/automation.json').read_text()); profiles=json.loads((ROOT/'config/search-profiles.json').read_text())
+project_cfg=json.loads((ROOT/'config/project-translation.json').read_text()) if (ROOT/'config/project-translation.json').exists() else {}
 status=json.loads(status_path.read_text())
 fullq=json.loads((ROOT/'data/full-translation-queue.json').read_text()) if (ROOT/'data/full-translation-queue.json').exists() else {'requests':[]}
 pending=done=waiting=ready=acquired=0
@@ -20,7 +21,9 @@ for meta in (ROOT/'workspace').glob('*/*/*/metadata.json'):
 status['updated_at']=datetime.now(timezone.utc).isoformat(); status['schedule'].update({'time':cfg.get('time'),'status':'ready' if cfg.get('time') and cfg.get('enabled') else 'awaiting_user_time'})
 enabled_profiles=[x for x in profiles.get('profiles',[]) if x.get('enabled')]
 status['criteria'].update({'status':'ready' if profiles.get('criteria_ready') and enabled_profiles else 'awaiting_user_answers','profile_count':len(enabled_profiles)})
-status['translation'].update({'pending_chunks':pending,'completed_chunks':done,'works_waiting_for_source':waiting,'works_ready':ready})
+status['translation'].update({'pending_chunks':pending,'completed_chunks':done,'works_waiting_for_source':waiting,'works_ready':ready,
+ 'backend':{'name':project_cfg.get('backend'),'activation':project_cfg.get('activation'),'project_alias':project_cfg.get('project_alias'),
+            'require_source_probe':project_cfg.get('require_source_probe') is True,'allow_fallback':project_cfg.get('allow_fallback')}})
 status['translation']['full_requests']={
  'queued':sum(1 for x in fullq.get('requests',[]) if x.get('status') in {'queued','acquiring','acquisition_error'}),
  'translating':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='translation_pending'),

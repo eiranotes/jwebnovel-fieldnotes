@@ -209,7 +209,7 @@ def command_complete(args) -> int:
             capture_output=True,
         )
         payload["output"] = json.loads(package.stdout)
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True)
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True, text=True, capture_output=True)
     payload["completed_at"] = datetime.now(timezone.utc).isoformat()
     log_event(task="translation_queue", action="complete", status="done", run_id=run_id, message=f"Completed {args.work} / {args.chunk}", details=payload, public_details={"work_id": args.work, "chunk": args.chunk, "done": payload.get("done"), "total": payload.get("total")})
     print(json.dumps(payload, ensure_ascii=False, indent=2))

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse, hashlib, html, json, re, shutil, sys, zipfile
+import argparse, copy, hashlib, html, json, re, shutil, sys, zipfile
+from automation_store import AutomationError, atomic_bytes, atomic_json, digest, locked, now, read_json
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -244,21 +245,19 @@ def sentence_segments(text: str) -> list[dict]:
 
 def validate_segment_translations(source_segments: list[dict], translations) -> list[dict]:
     required = [x for x in source_segments if x.get('kind') == 'sentence']
-    if not isinstance(translations, list):
-        raise SystemExit('segment_translations must be an array')
-    by_id = {}
-    for row in translations:
-        if not isinstance(row, dict):
-            continue
-        sid = str(row.get('id') or '').strip()
-        ko = str(row.get('ko') or '').strip()
-        if sid and ko:
-            by_id[sid] = ko
-    missing = [x['id'] for x in required if x['id'] not in by_id]
-    extras = sorted(set(by_id) - {x['id'] for x in required})
-    if missing or extras:
-        raise SystemExit(f'segment translation mismatch: missing={missing[:10]} extras={extras[:10]}')
-    return [{'id': x['id'], 'paragraph': x['paragraph'], 'ja': x['ja'], 'ko': by_id[x['id']]} for x in required]
+    if not isinstance(translations, list) or len(translations) != len(required):
+        raise AutomationError('SEGMENT_COUNT_MISMATCH')
+    pairs = []
+    seen = set()
+    for source, row in zip(required, translations):
+        if not isinstance(row, dict) or not isinstance(row.get('id'), str) or not isinstance(row.get('ko'), str):
+            raise AutomationError('INVALID_SEGMENT_ROW')
+        sid, ko = row['id'], row['ko'].strip()
+        if sid in seen or sid != source['id'] or not ko:
+            raise AutomationError('SEGMENT_ID_ORDER_OR_EMPTY')
+        seen.add(sid)
+        pairs.append({'id': sid, 'paragraph': source['paragraph'], 'ja': source['ja'], 'ko': ko})
+    return pairs
 
 
 def korean_text_from_pairs(pairs: list[dict]) -> str:
@@ -382,6 +381,7 @@ def next_task(args):
     segments = sentence_segments(ja)
     task = {
         'status':'pending','entry_id':args.entry or metadata.get('entry_id'),'work_id':safe_id(args.work or metadata.get('work_id') or wdir.name),'work_dir':str(wdir.relative_to(ROOT)) if wdir.is_relative_to(ROOT) else str(wdir),'chunk_id':cid,
+        'source_sha256':manifest.get('source_sha256'),'chunk_sha256':sha256_bytes(ja.encode('utf-8')),
         'source_ja':ja,'source_segments':segments,'previous_source_tail':prev_tail,'next_source_head':next_head,
         'glossary':glossary,
         'instructions':[
@@ -412,34 +412,95 @@ def deep_merge_glossary(base: dict, update: dict):
     return base
 
 
+def validate_glossary_update(base: dict, update) -> dict:
+    if not isinstance(update, dict):
+        raise AutomationError('INVALID_GLOSSARY_UPDATE')
+    for bucket in ('people', 'places', 'terms', 'ruby_notes'):
+        values = update.get(bucket, {})
+        if not isinstance(values, dict):
+            raise AutomationError('INVALID_GLOSSARY_BUCKET')
+        for key, value in values.items():
+            if not isinstance(key, str) or not key or not isinstance(value, (str, dict)):
+                raise AutomationError('INVALID_GLOSSARY_ENTRY')
+            if key in base.get(bucket, {}) and base[bucket][key] != value:
+                raise AutomationError('GLOSSARY_CONFLICT', f'{bucket}:{key}')
+    if not isinstance(update.get('decisions', []), list):
+        raise AutomationError('INVALID_GLOSSARY_DECISIONS')
+    return deep_merge_glossary(copy.deepcopy(base), update)
+
+
+def complete_chunk(wdir: Path, cid: str, result: dict) -> dict:
+    if not re.fullmatch(r'[0-9]{4,8}', cid) or not isinstance(result, dict):
+        raise AutomationError('INVALID_COMPLETION')
+    with locked(wdir / 'translation' / '.complete.lock'):
+        cdir = wdir / 'translation/chunks' / cid
+        manifest_path = wdir / 'translation/manifest.json'
+        manifest = read_json(manifest_path)
+        chunk = next((c for c in manifest['chunks'] if c['chunk_id'] == cid), None)
+        if chunk is None:
+            raise AutomationError('UNKNOWN_CHUNK')
+        ja = (cdir / 'ja.txt').read_text(encoding='utf-8')
+        source_hash = digest(ja.encode('utf-8'))
+        if result.get('chunk_id', cid) != cid or result.get('chunk_sha256', source_hash) != source_hash:
+            raise AutomationError('SOURCE_CHANGED')
+        metadata = read_json(wdir / 'metadata.json', {})
+        if 'work_id' in result and result['work_id'] != metadata.get('work_id'):
+            raise AutomationError('WORK_ID_MISMATCH')
+        pairs = validate_segment_translations(sentence_segments(ja), result.get('segment_translations'))
+        ko = korean_text_from_pairs(pairs)
+        if not ko:
+            raise AutomationError('EMPTY_TRANSLATION')
+        result_hash = digest(result)
+        journal_path = wdir / 'translation/commits' / f'{cid}.json'
+        journal = read_json(journal_path, {})
+        for other in journal_path.parent.glob('*.json'):
+            if other != journal_path and read_json(other).get('state') != 'committed':
+                raise AutomationError('PENDING_COMMIT_REQUIRES_RECOVERY', other.stem)
+        if journal:
+            if journal.get('result_hash') != result_hash or journal.get('source_hash') != source_hash:
+                raise AutomationError('COMPLETION_CONFLICT')
+            if journal.get('state') == 'committed':
+                done = sum(c.get('status') == 'done' for c in manifest['chunks'])
+                return {'chunk':cid,'done':done,'total':manifest['chunk_count'],'repeated':True}
+        elif chunk.get('status') == 'done':
+            previous = read_json(cdir / 'pairs.json', {}).get('pairs')
+            if previous != pairs:
+                raise AutomationError('ALREADY_COMPLETED_DIFFERENT_RESULT')
+            done = sum(c.get('status') == 'done' for c in manifest['chunks'])
+            return {'chunk':cid,'done':done,'total':manifest['chunk_count'],'repeated':True}
+        else:
+            glossary = read_json(wdir / 'glossary.json')
+            updated = validate_glossary_update(glossary, result.get('glossary_update') or {})
+            meta = read_json(cdir / 'meta.json')
+            meta.update(status='done',ko_chars=len(ko),translated_at=now(),review_status='auto_pending')
+            journal = {'version':1,'state':'prepared','result_hash':result_hash,'source_hash':source_hash,
+                       'result':result,'pairs':pairs,'ko':ko,'meta':meta,
+                       'previous_glossary_hash':digest(glossary),'glossary':updated}
+            atomic_json(journal_path,journal)
+        # Resume an interrupted commit without duplicating glossary decisions. Other chunks
+        # cannot commit while this intent is pending, and independent edits are not overwritten.
+        current_glossary = read_json(wdir / 'glossary.json')
+        if digest(current_glossary) not in (journal['previous_glossary_hash'], digest(journal['glossary'])):
+            raise AutomationError('GLOSSARY_CHANGED_DURING_COMMIT')
+        atomic_bytes(cdir / 'ko.txt',(journal['ko']+'\n').encode('utf-8'))
+        atomic_json(cdir / 'pairs.json',{'schema_version':'1.0','chunk_id':cid,'pairs':journal['pairs']})
+        atomic_bytes(cdir / 'pairs.txt',alternating_text_from_pairs(journal['pairs']).encode('utf-8'))
+        atomic_json(cdir / 'meta.json',journal['meta'])
+        atomic_json(wdir / 'glossary.json',journal['glossary'])
+        chunk.update(journal['meta'])
+        atomic_json(manifest_path,manifest)
+        done = sum(c.get('status') == 'done' for c in manifest['chunks'])
+        state = read_json(wdir / 'state.json',{})
+        state.update(chunks_done=done,status='translation_complete' if done == manifest['chunk_count'] else 'translation_pending',updated_at=now())
+        atomic_json(wdir / 'state.json',state)
+        journal.update(state='committed',committed_at=now())
+        atomic_json(journal_path,journal)
+        return {'chunk':cid,'done':done,'total':manifest['chunk_count']}
+
+
 def complete(args):
-    wdir = resolve_work_dir(args)
-    result = json.loads(Path(args.result).read_text(encoding='utf-8'))
-    cid = args.chunk
-    cdir = wdir/'translation/chunks'/cid
-    ja = (cdir/'ja.txt').read_text(encoding='utf-8')
-    source_segment_rows = sentence_segments(ja)
-    pairs = validate_segment_translations(source_segment_rows, result.get('segment_translations'))
-    ko = korean_text_from_pairs(pairs)
-    if not ko: raise SystemExit('translated Korean text is empty')
-    (cdir/'ko.txt').write_text(ko+'\n', encoding='utf-8')
-    (cdir/'pairs.json').write_text(json.dumps({'schema_version':'1.0','chunk_id':cid,'pairs':pairs}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    (cdir/'pairs.txt').write_text(alternating_text_from_pairs(pairs), encoding='utf-8')
-    meta = json.loads((cdir/'meta.json').read_text(encoding='utf-8'))
-    meta.update({'status':'done','ko_chars':len(ko),'translated_at':datetime.now(timezone.utc).isoformat(),'review_status':'auto_pending'})
-    (cdir/'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    glossary_path = wdir/'glossary.json'; glossary = json.loads(glossary_path.read_text(encoding='utf-8'))
-    glossary = deep_merge_glossary(glossary, result.get('glossary_update') or {})
-    glossary_path.write_text(json.dumps(glossary, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    mpath = wdir/'translation/manifest.json'; manifest=json.loads(mpath.read_text(encoding='utf-8'))
-    for c in manifest['chunks']:
-        if c['chunk_id']==cid: c.update(meta)
-    mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    done=sum(1 for c in manifest['chunks'] if c.get('status')=='done')
-    state_path=wdir/'state.json'; state=json.loads(state_path.read_text(encoding='utf-8'))
-    state.update({'chunks_done':done,'status':'translation_complete' if done==manifest['chunk_count'] else 'translation_pending','updated_at':datetime.now(timezone.utc).isoformat()})
-    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    print(json.dumps({'chunk':cid,'done':done,'total':manifest['chunk_count']}, ensure_ascii=False))
+    result = read_json(Path(args.result))
+    print(json.dumps(complete_chunk(resolve_work_dir(args), args.chunk, result), ensure_ascii=False))
 
 
 def build_parallel(args):

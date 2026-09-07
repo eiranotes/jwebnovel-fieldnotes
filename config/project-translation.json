@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "backend": "webgpt_project",
+  "project_alias": "fieldnotes",
+  "project_name": "Fieldnotes",
+  "require_source_probe": true,
+  "allow_fallback": false,
+  "worker_reuse": "project_work_role",
+  "worker_timeout_seconds": 600,
+  "context_rollover_policy": "broker_context_ceiling",
+  "activation": "blocked_until_project_and_live_e2e_verified"
+}

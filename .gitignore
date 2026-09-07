@@ -29,3 +29,11 @@ workspace/**/*.log
 workspace/**/translation/parallel/
 workspace/project-context/
 workspace/automation-runs/
+workspace/**/translation/commits/
+workspace/**/translation/project-context.json
+workspace/**/translation/project-run.lock
+workspace/**/translation/project-result-*.json
+workspace/**/translation/chunks/*/pairs.json
+workspace/**/translation/chunks/*/pairs.txt
+workspace/**/translation/.complete.lock
+workspace/**/translation/*.lock

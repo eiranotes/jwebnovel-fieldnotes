@@ -17,7 +17,7 @@ from automation_store import atomic_json,read_json
 
 
 class FixtureModel:
-    def __init__(self,root,sequence=None,probe_unavailable=0):self.root=root;self.calls=[];self.sequence=sequence;self.probe_unavailable=probe_unavailable
+    def __init__(self,root,sequence=None,probe_unavailable=0):self.root=root;self.calls=[];self.sequence=sequence;self.probe_unavailable=probe_unavailable;self.translation_payloads=[]
     def execute(self,work_id,role,payload,**kwargs):
         self.calls.append(payload['kind'])
         if self.sequence is not None:self.sequence.append(payload['kind'])
@@ -30,11 +30,15 @@ class FixtureModel:
                 manifest=read_json(self.root/'workspace/project-context'/descriptor['source_name']/'current.json')
                 packs.append({'filename':manifest['filename'],'source_probe':manifest['source_probe']})
             return {'status':'ready','work_id':work_id,'sources':packs}
+        self.translation_payloads.append(payload)
+        assert 'source_ja' not in payload
+        assert 'source_segments' not in payload
+        local_task=read_json(Path(payload['local_source_task']['path']))
         proof={'status':'ready','work_id':work_id,'sources':[]}
         for descriptor in payload['project_sources']:
             manifest=read_json(self.root/'workspace/project-context'/descriptor['source_name']/'current.json')
             proof['sources'].append({'filename':manifest['filename'],'source_probe':manifest['source_probe']})
-        return {'project_source_proof':proof,'segment_translations':[{'id':s['id'],'ko':{'風が吹く。':'바람이 분다.','雨が降る。':'비가 내린다.'}[s['ja']]} for s in payload['source_segments'] if s['kind']=='sentence'],'glossary_update':{}}
+        return {'project_source_proof':proof,'local_source_proof':local_task['local_source_probe'],'segment_translations':[{'id':s['id'],'ko':{'風が吹く。':'바람이 분다.','雨が降る。':'비가 내린다.'}[s['ja']]} for s in local_task['source_segments'] if s['kind']=='sentence'],'glossary_update':{}}
 
 
 class ProjectTranslationIntegration(unittest.TestCase):
@@ -82,6 +86,13 @@ class ProjectTranslationIntegration(unittest.TestCase):
                     self.assertEqual(outcome['backend'],'webgpt_project')
             self.assertEqual(backend.calls,['project_source_probe','translate_chunk','project_source_probe','translate_chunk'])
             self.assertEqual(sequence,['source_sync','project_source_probe','translate_chunk','source_sync','project_source_probe','translate_chunk'])
+            self.assertEqual(len(backend.translation_payloads),2)
+            for payload in backend.translation_payloads:
+                self.assertTrue(Path(payload['local_source_task']['path']).is_absolute())
+                serialized=json.dumps(payload,ensure_ascii=False)
+                self.assertNotIn('風が吹く。',serialized)
+                self.assertNotIn('雨が降る。',serialized)
+                self.assertNotIn('source_segments',payload)
             self.assertEqual(read_json(work/'state.json')['chunks_done'],2)
             self.assertTrue((work/'translation/parallel/index.html').exists())
             self.assertTrue((work/'translation/output/example-translation.zip').exists())

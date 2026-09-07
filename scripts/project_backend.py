@@ -86,11 +86,43 @@ class ProjectBackend:
             raise AutomationError("PROJECT_TARGET_NOT_VERIFIED")
         return {key: project[key] for key in ("alias", "name", "url")}
 
+    def _worker_instructions(self, work_id: str, payload: dict) -> str:
+        base = "Return only a JSON object matching response_contract, not a stringified object. Use the exact named Project Sources."
+        if payload.get("kind") != "translate_chunk":
+            return base + " Do not use local tools or agents."
+
+        reference = payload.get("local_source_task")
+        if not isinstance(reference, dict):
+            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
+        raw_path = reference.get("path")
+        expected_sha256 = reference.get("sha256")
+        if not isinstance(raw_path, str) or not Path(raw_path).is_absolute() or not isinstance(expected_sha256, str) or not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
+            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
+        path = Path(raw_path).expanduser().resolve()
+        workspace = (self.root / "workspace").resolve()
+        if (str(path) != raw_path or not path.is_relative_to(workspace) or path.parent.name != "tasks" or
+                path.parent.parent.name != "translation" or not re.fullmatch(r"[0-9]{4,8}\.json", path.name)):
+            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
+        if not path.is_file() or digest(path.read_bytes()) != expected_sha256:
+            raise AutomationError("LOCAL_SOURCE_CHANGED")
+        document = read_json(path)
+        probe = document.get("local_source_probe") if isinstance(document, dict) else None
+        if (not isinstance(document, dict) or document.get("work_id") != work_id or document.get("chunk_id") != path.stem or
+                payload.get("chunk_id") != path.stem or not isinstance(probe, str) or not re.fullmatch(r"[a-f0-9]{32}", probe)):
+            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
+        return (
+            base
+            + " For this translate_chunk task only, use Chat On Steroids Core `read` to read exactly task.local_source_task.path before translating."
+            + " Do not read any other local path and do not use any other local tool, including exec, apply_patch, write_stdin, or agents."
+            + " Never modify local files."
+        )
+
     def execute(self, work_id: str, role: str, payload: dict, *, alias="fieldnotes", operation_id: str | None = None):
         if role not in ("translator", "reviewer", "discovery"):
             raise AutomationError("INVALID_WORKER_ROLE")
         if not isinstance(work_id, str) or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,79}", work_id):
             raise AutomationError("INVALID_WORK_ID")
+        worker_instructions = self._worker_instructions(work_id, payload)
         operation_id = operation_id or digest({"work":work_id,"role":role,"alias":alias,"payload":payload})
         if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", operation_id):
             raise AutomationError("INVALID_OPERATION_ID")
@@ -132,7 +164,7 @@ class ProjectBackend:
                     raise AutomationError("WORKER_BUSY")
                 prompt = json.dumps({"operation_id":operation_id,"work_id":work_id,"task":payload,
                     "response_contract":{"operation_id":operation_id,"work_id":work_id,"payload":"the task's requested JSON result"},
-                    "instructions":"Return only a JSON object matching response_contract, not a stringified object. Use the exact named Project Sources. Do not use local tools or agents."}, ensure_ascii=False)
+                    "instructions":worker_instructions}, ensure_ascii=False)
                 if len(prompt) > 250_000:
                     raise AutomationError("TASK_TOO_LARGE")
                 state = {"version":1,"operation_id":operation_id,"fingerprint":fingerprint,"target":target,

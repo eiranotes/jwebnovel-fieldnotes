@@ -74,3 +74,14 @@ Regression suite after the projection change: **21/21 PASS**, `git diff --check`
 
 ## Final verdict
 PASS for Priority 4. A previously unseen work now flows through automatic immutable Project Source sync, provider indexing readiness, exact Project worker reuse, fresh source proof, real translation, validation, transactional completion and public status/index projection. Daily scheduling remains intentionally disabled until search criteria and an exact Asia/Seoul time are supplied.
+
+## Local-source transport follow-up
+The translation task transport was tightened after the production smoke. `source_pipeline.py` already persisted the complete private chunk task under `translation/tasks/<chunk>.json`, so duplicating `source_ja` and `source_segments` into the WebGPT chat was unnecessary.
+
+The production driver now validates that local task against canonical `ja.txt`, sends only an absolute workspace-fenced path plus SHA-256, and requires the Project worker to use Chat On Steroids Core `read` on that exact path. `project_backend.py` rejects references outside `workspace/`, references outside a `translation/tasks/` directory, cross-work/chunk references, changed file hashes and task files without a valid local probe. Other local tools and all local writes remain forbidden. Project Source probes continue to forbid every local tool so they still prove provider-side Project Source retrieval independently.
+
+`source_pipeline.py` now stores a stable random `local_source_probe` in the private task JSON. It is intentionally absent from the chat payload and reused only while the canonical chunk hash is unchanged. `translate_project.py` rejects the result with `LOCAL_SOURCE_PROOF_MISMATCH` unless the worker returns that exact hidden value.
+
+Live transport smoke on the installed runtime used Project worker `worker-32`, conversation `6a9e5a0f-8928-83ee-8d3f-0020b2d1394a`. The recorder captured exactly one local tool call: Core `read` of `/Volumes/DevDrive/Projects/fieldnotes/workspace/automation-runs/local-read-e2e/translation/tasks/0001.json`. The worker then returned the hidden probe and the local harness printed `LOCAL_READ_E2E_OK`. No exec, patch, write, agents or second local-path call was recorded. Fieldnotes regression tests are **23/23 PASS**.
+
+A follow-up attempt to commit a real `sakasano-chagasa` chunk was stopped by the Core write/exec safety gate before the production script ran, so this follow-up changes no real translation progress. The transport itself is live-verified; the existing production translation state remains unchanged.

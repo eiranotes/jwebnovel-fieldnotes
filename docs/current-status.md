@@ -20,6 +20,7 @@ Updated: 2026-09-07
 | glossary / proper-name continuity | implemented |
 | ChatGPT Project translation backend | **verified live; fail-closed, source-proof required** |
 | Project Source sync per work/revision | implemented before worker execution |
+| private source transport | **verified live: exact Core `read` of local task; chapter text omitted from chat payload** |
 | local JA/KO parallel viewer | implemented |
 | public fulltext publishing | disabled |
 | GitHub Pages automation status | implemented |
@@ -37,6 +38,8 @@ Updated: 2026-09-07
 Each work has tracked `metadata.json` and `state.json`. The integrated runner writes the selected first five public episodes to `source_inbox/` and immediately prepares the local translation queue. Manual TXT/ZIP remains a fallback. Source/translation fulltext stays gitignored.
 
 Current Project translation state: **3 completed chunks, 7 pending chunks across 4 works**. `beni-death-gamer` completed through one reusable real Project worker with fresh source proof on both chunks; `haikei-ashita-no-watashi` then completed its first chunk through the normal production runner with automatic Project Source synchronization. Both Kakuyomu and Narou acquisition paths were exercised.
+
+Translation transport now keeps private chapter content in the gitignored local task JSON. The WebGPT task contains only an exact absolute path, its SHA-256, Project Source descriptors and the result contract. A live Project worker (`worker-32`) was recorded calling Core `read` on exactly that file and returning a hidden local-only probe; no other local tool was called. The external driver still owns validation and all writes.
 
 ## Required before enabling the daily automation
 

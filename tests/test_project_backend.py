@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from automation_store import AutomationError
+from automation_store import AutomationError,digest
 from project_backend import ProjectBackend,parse_envelope
 
 
@@ -69,4 +69,23 @@ class BackendTests(unittest.TestCase):
     def test_unknown_project_never_submits_to_general_chat(self):
         with self.assertRaisesRegex(AutomationError,'PROJECT_TARGET_NOT_VERIFIED'):
             self.backend().execute('example','translator',{'number':1},alias='unknown')
+        self.assertEqual(self.bridge.workers,[])
+    def test_translate_task_allows_only_exact_hash_validated_core_read(self):
+        path=self.root/'workspace/books/example/translation/tasks/0001.json';path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({'work_id':'example','chunk_id':'0001','local_source_probe':'0123456789abcdef0123456789abcdef','source_ja':'private fixture'})+'\n',encoding='utf-8')
+        payload={'number':1,'kind':'translate_chunk','chunk_id':'0001','local_source_task':{'path':str(path.resolve()),'sha256':digest(path.read_bytes())}}
+        self.assertEqual(self.backend().execute('example','translator',payload),{'test_result':1})
+        spawn=next(body for route,body in self.bridge.calls if route.endswith('/spawn'))
+        prompt=json.loads(spawn['workers'][0]['task'])
+        self.assertIn('Chat On Steroids Core `read`',prompt['instructions'])
+        self.assertIn('Do not read any other local path',prompt['instructions'])
+        self.assertIn('exec, apply_patch, write_stdin, or agents',prompt['instructions'])
+        self.assertEqual(prompt['task']['local_source_task']['path'],str(path.resolve()))
+    def test_translate_task_rejects_outside_or_changed_local_reference_before_spawn(self):
+        outside=self.root/'outside.json';outside.write_text('{}')
+        with self.assertRaisesRegex(AutomationError,'LOCAL_SOURCE_REFERENCE_INVALID'):
+            self.backend().execute('example','translator',{'kind':'translate_chunk','local_source_task':{'path':str(outside.resolve()),'sha256':digest(outside.read_bytes())}})
+        path=self.root/'workspace/books/example/translation/tasks/0001.json';path.parent.mkdir(parents=True);path.write_text(json.dumps({'work_id':'example','chunk_id':'0001','local_source_probe':'0123456789abcdef0123456789abcdef'}))
+        with self.assertRaisesRegex(AutomationError,'LOCAL_SOURCE_CHANGED'):
+            self.backend().execute('example','translator',{'kind':'translate_chunk','chunk_id':'0001','local_source_task':{'path':str(path.resolve()),'sha256':'0'*64}})
         self.assertEqual(self.bridge.workers,[])

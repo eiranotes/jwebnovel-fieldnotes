@@ -43,3 +43,6 @@ Every durable automation boundary writes JSONL under ignored `workspace/automati
 
 ### D014 — Phone delivery uses a loopback console behind Tailscale Serve
 The private control server binds only to `127.0.0.1:18765`; Tailscale Serve exposes it at `/fieldnotes` on the user's tailnet. Direct `workspace/` browsing is denied and downloads use an artifact allowlist. macOS blocks `launchd` background access to this external DevDrive, so the server runs as a detached interactive-session process and must be restarted once after a Mac reboot.
+
+### D015 — Translation source stays local and workers read one immutable task artifact
+Copyrighted chapter text is no longer serialized into the Project-worker chat payload. The driver sends an absolute, workspace-fenced reference plus SHA-256 for the canonical `translation/tasks/<chunk>.json`; a `translate_chunk` worker may use Chat On Steroids Core `read` on that exact path only. The task file carries the source text, sentence ids, adjacent context, glossary and a stable random `local_source_probe` that is never sent in the prompt. A translation result is rejected unless it returns that hidden probe, so a model cannot satisfy the commit contract merely by claiming that it read the local file. Project Source verification remains a separate no-local-tools proof path.

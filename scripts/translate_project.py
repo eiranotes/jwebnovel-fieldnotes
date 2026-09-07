@@ -16,7 +16,7 @@ from automation_store import AutomationError, atomic_json, digest, locked, now, 
 from project_backend import ProjectBackend
 from project_context import build_common, build_work, public_pack, source_probe_task, verify_source_probe
 from project_sources import synchronize as synchronize_project_sources
-from source_pipeline import validate_segment_translations, validate_glossary_update
+from source_pipeline import sentence_segments, validate_segment_translations, validate_glossary_update
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -68,9 +68,25 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
             config.get('activation') != 'verified_live'):
         raise AutomationError('PROJECT_POLICY_INVALID')
     with locked(work_dir/'translation/project-run.lock'):
-        source = (work_dir/'translation/chunks'/chunk_id/'ja.txt').read_text(encoding='utf-8')
-        if source != task.get('source_ja') or digest(source.encode()) != task.get('chunk_sha256',digest(source.encode())):
+        source_path = (work_dir/'translation/chunks'/chunk_id/'ja.txt').resolve()
+        source = source_path.read_text(encoding='utf-8')
+        source_hash = digest(source.encode())
+        local_task_path = (work_dir/'translation/tasks'/f'{chunk_id}.json').resolve()
+        local_task = read_json(local_task_path)
+        expected_segments = sentence_segments(source)
+        local_source_probe = local_task.get('local_source_probe') if isinstance(local_task,dict) else None
+        if (source != task.get('source_ja') or source_hash != task.get('chunk_sha256',source_hash) or
+                local_task.get('work_id') != work_id or local_task.get('chunk_id') != chunk_id or
+                local_task.get('source_ja') != source or local_task.get('chunk_sha256') != source_hash or
+                local_task.get('source_segments') != expected_segments or task.get('source_segments') != expected_segments or
+                not isinstance(local_source_probe,str) or len(local_source_probe) != 32 or any(c not in '0123456789abcdef' for c in local_source_probe)):
             raise AutomationError('SOURCE_CHANGED')
+        local_source_task = {
+            'path': str(local_task_path),
+            'sha256': digest(local_task_path.read_bytes()),
+            'encoding': 'utf-8',
+            'format': 'fieldnotes_translation_task_json_v1',
+        }
         backend = backend or ProjectBackend(ROOT,timeout=int(config.get('worker_timeout_seconds',600)))
         context_path = work_dir/'translation/project-context.json'
         pinned = read_json(context_path,{})
@@ -96,19 +112,32 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
             max_attempts=int(config.get('source_probe_max_attempts',6)),
             retry_seconds=float(config.get('source_probe_retry_seconds',10)))
         atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':verification})
-        payload={k:v for k,v in task.items() if k not in ('queue','work_dir')}
-        payload.update(kind='translate_chunk',project_sources=[public_pack(common),public_pack(work)],
-                       runtime_glossary=task.get('glossary',{}),
-                       source_policy='Pinned published context plus current canonical glossary; do not claim a new upload.',
-                       project_source_proof_contract=proof_task['output_contract'],
-                       source_proof_instruction='In this translation result include project_source_proof containing a fresh ready/work_id/sources proof read from the exact named Project Sources. Do not copy expected values from the task (they are not provided).')
+        # Copyrighted chapter text and sentence rows stay local. The WebGPT worker gets only an
+        # immutable reference to the already-generated private task JSON, then reads that exact
+        # artifact through Core. This removes source duplication from the chat transport while
+        # preserving the existing sentence-id/alignment contract in one canonical local file.
+        payload={
+            'kind':'translate_chunk','entry_id':task.get('entry_id'),'work_id':work_id,'chunk_id':chunk_id,
+            'chunk_sha256':source_hash,'local_source_task':local_source_task,
+            'project_sources':[public_pack(common),public_pack(work)],
+            'source_policy':'Pinned Project Sources plus one exact read-only local translation task; do not claim a new upload.',
+            'translation_instruction':'Read local_source_task.path with Chat On Steroids Core read. The JSON contains the private chapter text, sentence-id map, adjacent-source context, glossary, instructions, output contract, and a local read probe. Translate every sentence segment from that file and preserve its exact ids/order.',
+            'output_contract':{'local_source_proof':'value read from the local task JSON',
+                               'segment_translations':[{'id':'exact sentence id from local task','ko':'string'}],
+                               'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]},
+                               'project_source_proof':'fresh proof required below'},
+            'project_source_proof_contract':proof_task['output_contract'],
+            'source_proof_instruction':'In this translation result include project_source_proof containing a fresh ready/work_id/sources proof read from the exact named Project Sources. Do not copy expected values from the task (they are not provided).',
+        }
         result=backend.execute(work_id,'translator',payload,alias=config['project_alias'])
         if not isinstance(result,dict):raise AutomationError('INVALID_TRANSLATION_RESULT')
         # A rollover between preflight and translation must not inherit an old chat's proof.
         verify_source_probe(result.get('project_source_proof'),work_id,[common,work])
+        if result.get('local_source_proof') != local_source_probe:
+            raise AutomationError('LOCAL_SOURCE_PROOF_MISMATCH')
         validate_segment_translations(task['source_segments'],result.get('segment_translations'))
         validate_glossary_update(read_json(work_dir/'glossary.json'),result.get('glossary_update') or {})
-        result={**result,'work_id':work_id,'chunk_id':chunk_id,'chunk_sha256':digest(source.encode())}
+        result={**result,'work_id':work_id,'chunk_id':chunk_id,'chunk_sha256':source_hash}
         result_path=work_dir/'translation'/f'project-result-{chunk_id}.json'
         atomic_json(result_path,result)
         args=['complete','--chunk',chunk_id,'--result',str(result_path)]

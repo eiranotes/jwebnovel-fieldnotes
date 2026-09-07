@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse, copy, hashlib, html, json, re, shutil, sys, zipfile
+import argparse, copy, hashlib, html, json, re, secrets, shutil, sys, zipfile
 from automation_store import AutomationError, atomic_bytes, atomic_json, digest, locked, now, read_json
 from pathlib import Path
 from datetime import datetime, timezone
@@ -379,9 +379,27 @@ def next_task(args):
     metadata_path = wdir / 'metadata.json'
     metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
     segments = sentence_segments(ja)
+    chunk_hash = sha256_bytes(ja.encode('utf-8'))
+    outdir = wdir/'translation/tasks'; outdir.mkdir(parents=True, exist_ok=True)
+    outfile = outdir/f'{cid}.json'
+    # This value is deliberately absent from the chat payload. A worker can return it only after
+    # reading this private local task, which lets the driver distinguish a real local read from a
+    # model merely claiming that it used Core. Keep it stable while the canonical chunk is stable
+    # so retries/resume retain one operation identity.
+    local_source_probe = ''
+    if outfile.exists():
+        try:
+            previous = json.loads(outfile.read_text(encoding='utf-8'))
+            candidate = previous.get('local_source_probe','')
+            if previous.get('chunk_sha256') == chunk_hash and isinstance(candidate,str) and re.fullmatch(r'[a-f0-9]{32}',candidate):
+                local_source_probe = candidate
+        except Exception:
+            pass
+    if not local_source_probe:
+        local_source_probe = secrets.token_hex(16)
     task = {
         'status':'pending','entry_id':args.entry or metadata.get('entry_id'),'work_id':safe_id(args.work or metadata.get('work_id') or wdir.name),'work_dir':str(wdir.relative_to(ROOT)) if wdir.is_relative_to(ROOT) else str(wdir),'chunk_id':cid,
-        'source_sha256':manifest.get('source_sha256'),'chunk_sha256':sha256_bytes(ja.encode('utf-8')),
+        'source_sha256':manifest.get('source_sha256'),'chunk_sha256':chunk_hash,'local_source_probe':local_source_probe,
         'source_ja':ja,'source_segments':segments,'previous_source_tail':prev_tail,'next_source_head':next_head,
         'glossary':glossary,
         'instructions':[
@@ -393,9 +411,8 @@ def next_task(args):
             'The sentence mapping is used to build an alternating original/translation TXT, so one-to-one alignment is mandatory.',
             'Do not summarize.'
         ],
-        'output_contract':{'segment_translations':[{'id':'s000001','ko':'string'}],'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}}
+        'output_contract':{'local_source_proof':'copy local_source_probe from this local task','segment_translations':[{'id':'s000001','ko':'string'}],'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}}
     }
-    outdir = wdir/'translation/tasks'; outdir.mkdir(parents=True, exist_ok=True)
     outfile = outdir/f'{cid}.json'; outfile.write_text(json.dumps(task, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(str(outfile))
 

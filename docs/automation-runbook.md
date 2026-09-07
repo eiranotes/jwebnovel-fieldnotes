@@ -108,7 +108,13 @@ python3 scripts/translation_queue.py complete \
 ```
 
 This also rebuilds the local parallel view and refreshes global automation status.
-When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, `ja-ko-alternating.txt`, and a ZIP; the private console exposes them in **파일받기**. `ja-ko-alternating.txt` is ordered sentence-by-sentence as `원문 → 번역 → 원문 → 번역`.
+When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, `<원문 제목> - 번역본.txt`, and a ZIP; the private console exposes them in **파일받기**. `<원문 제목> - 번역본.txt` is ordered sentence-by-sentence as `원문 → 번역 → 원문 → 번역`.
+
+The production model path is owned by `scripts/translate_project.py`:
+
+1. Primary: one reusable ChatGPT Project conversation per `(work_id, translator)` with fresh Project-source proof and an exact Core read of the local task JSON.
+2. Fallback: only for configured terminal/pre-submit failure codes, local Codex reads the same task and prepares a WebGPT instruction; Oracle launches WebGPT from a throwaway copy of the signed-in Chrome profile. The fallback result returns to the same hidden-probe, sentence-id, glossary and transactional completion validators.
+3. Ambiguous delivery (`WORKER_RESULT_TIMEOUT`, uncertain submission/transport) never falls back or resubmits automatically.
 
 Per-work fallback:
 
@@ -170,7 +176,7 @@ python3 scripts/full_translation.py run-next
 python3 scripts/full_translation.py next-task
 ```
 
-This route is separate from the five-episode sample workspace. It acquires all currently listed episodes, merges the whole source, chunks it, then creates `ko.txt`, `ja-ko.md`, and a ZIP after every chunk is translated.
+This route is separate from the five-episode sample workspace. It acquires all currently listed episodes, merges the whole source, chunks it, then creates `ko.txt`, `ja-ko.md`, `<원문 제목> - 번역본.txt`, and a ZIP after every chunk is translated.
 
 Normal daily operation does not need to call those three commands separately: `python3 scripts/translation_queue.py next` routes queued full translations first. Complete such a returned task with:
 

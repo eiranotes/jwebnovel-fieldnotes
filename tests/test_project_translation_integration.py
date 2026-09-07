@@ -13,7 +13,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 import source_pipeline as source
 import project_context as context
 import translate_project as driver
-from automation_store import atomic_json,read_json
+from automation_store import AutomationError,atomic_json,read_json
 
 
 class FixtureModel:
@@ -42,6 +42,23 @@ class FixtureModel:
             manifest=read_json(self.root/'workspace/project-context'/descriptor['source_name']/'current.json')
             proof['sources'].append({'filename':manifest['filename'],'source_probe':manifest['source_probe']})
         return {'project_source_proof':proof,'local_source_proof':local_task['local_source_probe'],'segment_translations':[{'id':s['id'],'ko':{'風が吹く。':'바람이 분다.','雨が降る。':'비가 내린다.'}[s['ja']]} for s in local_task['source_segments'] if s['kind']=='sentence'],'glossary_update':{}}
+
+
+class FixtureFallback:
+    def __init__(self):self.calls=[]
+    def execute(self,work_id,payload,operation_id=None):
+        self.calls.append((work_id,payload,operation_id))
+        local_task=read_json(Path(payload['local_source_task']['path']))
+        return {'local_source_proof':local_task['local_source_probe'],
+                'segment_translations':[{'id':s['id'],'ko':'바람이 분다.'} for s in local_task['source_segments'] if s['kind']=='sentence'],
+                'glossary_update':{}}
+
+
+class UnavailablePrimary:
+    def __init__(self):self.calls=[]
+    def execute(self,work_id,role,payload,**kwargs):
+        self.calls.append(payload['kind'])
+        raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
 
 
 class ProjectTranslationIntegration(unittest.TestCase):
@@ -99,9 +116,40 @@ class ProjectTranslationIntegration(unittest.TestCase):
             self.assertEqual(read_json(work/'state.json')['chunks_done'],2)
             self.assertTrue((work/'translation/parallel/index.html').exists())
             self.assertTrue((work/'translation/output/example-translation.zip').exists())
-            text=(work/'translation/output/ja-ko-alternating.txt').read_text()
+            text=(work/'translation/output/Fixture - 번역본.txt').read_text()
             self.assertIn('원문: 風が吹く。\n번역: 바람이 분다.',text)
             self.assertIn('원문: 雨が降る。\n번역: 비가 내린다.',text)
+
+    def test_primary_project_failure_uses_codex_webgpt_fallback_then_normal_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();work=root/'workspace/2026-09-07/test/fallback-example';work.mkdir(parents=True)
+            actual=Path(__file__).resolve().parents[1]
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+                destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
+                destination.write_text((actual/'templates/project-context'/name).read_text())
+            atomic_json(root/'config/project-translation.json',read_json(actual/'config/project-translation.json'))
+            atomic_json(work/'metadata.json',{'work_id':'fallback-example','entry_id':'test','title':'Fallback Fixture'})
+            atomic_json(work/'glossary.json',{'people':{},'decisions':[]})
+            atomic_json(work/'state.json',{'status':'translation_pending'})
+            cdir=work/'translation/chunks/0001';cdir.mkdir(parents=True);(cdir/'ja.txt').write_text('風が吹く。\n')
+            atomic_json(cdir/'meta.json',{'chunk_id':'0001','order':1,'status':'pending'})
+            atomic_json(work/'translation/manifest.json',{'chunk_count':1,'chunks':[{'chunk_id':'0001','order':1,'status':'pending'}]})
+            def complete(script,args):
+                result=read_json(Path(args[args.index('--result')+1]))
+                return source.complete_chunk(work,'0001',result)
+            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common',side_effect=lambda:context.build_common(root)),patch.object(driver,'build_work',side_effect=lambda w:context.build_work(w,root)),patch.object(driver,'script_json',side_effect=complete):
+                capture=io.StringIO()
+                with contextlib.redirect_stdout(capture):
+                    source.next_task(SimpleNamespace(work_dir=str(work),entry='test',work='fallback-example',context_tail=700,context_head=500))
+                task=read_json(Path(capture.getvalue().strip()))
+                primary=UnavailablePrimary();fallback=FixtureFallback()
+                result=driver.process_task(task,backend=primary,source_sync=lambda *a,**k:{'state':'complete'},fallback_backend=fallback)
+            self.assertEqual(result['backend'],'codex_webgpt')
+            self.assertEqual(result['fallback_reason'],'PROJECT_SOURCE_UNAVAILABLE')
+            self.assertEqual(primary.calls,['project_source_probe'])
+            self.assertEqual(len(fallback.calls),1)
+            self.assertNotIn('project_source_proof_contract',fallback.calls[0][1])
+            self.assertEqual(read_json(work/'state.json')['chunks_done'],1)
 
     def test_guide_revision_changes_when_glossary_changes(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -157,3 +205,9 @@ class ProjectTranslationIntegration(unittest.TestCase):
             self.assertEqual(proof['work_id'],'example')
             self.assertEqual(backend.calls,['project_source_probe','project_source_probe'])
             sleep.assert_called_once_with(3)
+
+    def test_fallback_policy_rejects_ambiguous_submission_states(self):
+        config={'fallback':{'enabled':True,'backend':'codex_webgpt','trigger_codes':['PROJECT_WORKER_BOOTSTRAP_FAILED']}}
+        self.assertTrue(driver.fallback_allowed(config,AutomationError('PROJECT_WORKER_BOOTSTRAP_FAILED')))
+        self.assertFalse(driver.fallback_allowed(config,AutomationError('OPERATION_SUBMISSION_UNCERTAIN')))
+        self.assertFalse(driver.fallback_allowed(config,AutomationError('WORKER_RESULT_TIMEOUT')))

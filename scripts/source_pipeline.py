@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse, copy, hashlib, html, json, re, secrets, shutil, sys, zipfile
 from automation_store import AutomationError, atomic_bytes, atomic_json, digest, locked, now, read_json
 from pathlib import Path
+
+from artifact_naming import alternating_translation_filename
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -552,18 +554,21 @@ def build_output(args):
         alternating_parts.append(alternating_text_from_pairs(pairs).rstrip())
     out = wdir/'translation/output'
     out.mkdir(parents=True, exist_ok=True)
-    ko_file, bi_file, alt_file = out/'ko.txt', out/'ja-ko.md', out/'ja-ko-alternating.txt'
-    ko_file.write_text('\n\n'.join(ko_parts).rstrip()+'\n', encoding='utf-8')
-    bi_file.write_text('\n\n---\n\n'.join(bilingual).rstrip()+'\n', encoding='utf-8')
-    alt_file.write_text('\n\n'.join(alternating_parts).rstrip()+'\n', encoding='utf-8')
     metadata_path = wdir/'metadata.json'
     metadata = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
     work_id = safe_id(getattr(args, 'work', None) or metadata.get('work_id') or wdir.name)
+    title = str(metadata.get('title') or work_id)
+    ko_file = out/'ko.txt'
+    bi_file = out/'ja-ko.md'
+    alt_file = out/alternating_translation_filename(title)
+    ko_file.write_text('\n\n'.join(ko_parts).rstrip()+'\n', encoding='utf-8')
+    bi_file.write_text('\n\n---\n\n'.join(bilingual).rstrip()+'\n', encoding='utf-8')
+    alt_file.write_text('\n\n'.join(alternating_parts).rstrip()+'\n', encoding='utf-8')
     zip_file = out/f'{work_id}-translation.zip'
     with zipfile.ZipFile(zip_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(ko_file, 'ko.txt')
         zf.write(bi_file, 'ja-ko.md')
-        zf.write(alt_file, 'ja-ko-alternating.txt')
+        zf.write(alt_file, alt_file.name)
         glossary = wdir/'glossary.json'
         if glossary.exists(): zf.write(glossary, 'glossary.json')
     artifacts = [ko_file, bi_file, alt_file, zip_file]

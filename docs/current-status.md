@@ -18,9 +18,12 @@ Updated: 2026-09-07
 | source inbox / normalize / merge | implemented |
 | resumable chunk queue | implemented |
 | glossary / proper-name continuity | implemented |
-| ChatGPT Project translation backend | **verified live; fail-closed, source-proof required** |
+| ChatGPT Project translation backend | **verified live; one Project chat per work, source-proof required** |
 | Project retrieval anchor | **verified live: stable `GLOBAL_CONTEXT`; work-specific context comes from exact local task read** |
 | private source transport | **verified live: exact Core `read` of local task; chapter text omitted from chat payload** |
+| fresh Project chat bootstrap | **verified live after stale generated-draft recovery fix** |
+| translation fallback | **verified live: local Codex planner → throwaway-profile Oracle/WebGPT → same validator/commit path** |
+| translation output naming | **`<원문 제목> - 번역본.txt` for sentence-alternating JA/KO output** |
 | local JA/KO parallel viewer | implemented |
 | public fulltext publishing | disabled |
 | GitHub Pages automation status | implemented |
@@ -51,4 +54,4 @@ Translation transport now keeps private chapter content in the gitignored local 
 
 ## Current blocker detail
 
-Discovery, target registration, first-five acquisition, source preparation, chunking, stable Project-source retrieval proof, exact local task reads, translation, transactional completion, private-runtime delivery and public status projection are connected. Project translator reuse is now a Project/role-level pool: a new work first reuses a sleeping compatible Project translator instead of requiring a fresh Project chat. This was live-verified while `CGSSessionScreenIsLocked=Yes` by completing both `sakasano-chagasa` chunks through `worker-34`, whose original target was `redo`. Remaining configuration inputs for the scheduled daily job are still the final search profiles and exact daily schedule time.
+Discovery, target registration, first-five acquisition, source preparation, chunking, stable Project-source retrieval proof, exact local task reads, translation, transactional completion, private-runtime delivery and public status projection are connected. Final worker ownership is `(Project, work_id, role)`: the same work reuses its exact Project conversation and a different work creates a different conversation. Live isolation smoke created `fresh-chat-e2e-20260907a` as worker-43, reused worker-43 for its next turn, and created `fresh-chat-e2e-20260907b` separately as worker-44. The configured `codex_webgpt` fallback is allowed only for explicit terminal/pre-submit failure codes; ambiguous submission/timeouts stay blocked. Remaining configuration inputs for the scheduled daily job are still the final search profiles and exact daily schedule time.

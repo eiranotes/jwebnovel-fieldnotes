@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T08:01:50.561585+00:00",
+  "updated_at": "2026-09-07T09:34:09.799306+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -42,7 +42,8 @@
       "activation": "verified_live",
       "project_alias": "fieldnotes",
       "require_source_probe": true,
-      "allow_fallback": false
+      "allow_fallback": true,
+      "fallback_backend": "codex_webgpt"
     }
   },
   "last_run": {

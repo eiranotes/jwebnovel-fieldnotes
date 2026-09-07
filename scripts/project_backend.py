@@ -9,6 +9,7 @@ import urllib.request
 from pathlib import Path
 
 from automation_store import AutomationError, atomic_json, digest, locked, now, read_json
+from local_translation_task import validate_local_source_task
 
 
 class BridgeClient:
@@ -97,49 +98,15 @@ class ProjectBackend:
         return {key: project[key] for key in ("alias", "name", "url")}
 
     def _worker_instructions(self, work_id: str, payload: dict) -> str:
-        base = (
-            "Return only a JSON object matching response_contract, not a stringified object. "
-            "Use the exact named Project Sources. The response_contract work_id and task.work_id "
-            "are authoritative for this turn; ignore any older work_id from prior turns in this reused Project chat."
-        )
+        base = "Return only a JSON object matching response_contract, not a stringified object. Use the exact named Project Sources."
         if payload.get("kind") != "translate_chunk":
             return base + " Do not use local tools or agents."
-
-        reference = payload.get("local_source_task")
-        if not isinstance(reference, dict):
-            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
-        raw_path = reference.get("path")
-        expected_sha256 = reference.get("sha256")
-        if not isinstance(raw_path, str) or not Path(raw_path).is_absolute() or not isinstance(expected_sha256, str) or not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
-            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
-        path = Path(raw_path).expanduser().resolve()
-        workspace = (self.root / "workspace").resolve()
-        if (str(path) != raw_path or not path.is_relative_to(workspace) or path.parent.name != "tasks" or
-                path.parent.parent.name != "translation" or not re.fullmatch(r"[0-9]{4,8}\.json", path.name)):
-            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
-        if not path.is_file() or digest(path.read_bytes()) != expected_sha256:
-            raise AutomationError("LOCAL_SOURCE_CHANGED")
-        document = read_json(path)
-        probe = document.get("local_source_probe") if isinstance(document, dict) else None
-        if (not isinstance(document, dict) or document.get("work_id") != work_id or document.get("chunk_id") != path.stem or
-                payload.get("chunk_id") != path.stem or not isinstance(probe, str) or not re.fullmatch(r"[a-f0-9]{32}", probe)):
-            raise AutomationError("LOCAL_SOURCE_REFERENCE_INVALID")
+        validate_local_source_task(self.root, work_id, payload)
         return (
             base
             + " For this translate_chunk task only, use Chat On Steroids Core `read` to read exactly task.local_source_task.path before translating."
             + " Do not read any other local path and do not use any other local tool, including exec, apply_patch, write_stdin, or agents."
             + " Never modify local files."
-        )
-
-    @staticmethod
-    def _worker_matches_project_role(worker: dict, project: dict, role: str) -> bool:
-        target = worker.get("projectTarget") if isinstance(worker, dict) else None
-        return bool(
-            isinstance(target, dict)
-            and target.get("alias") == project.get("alias")
-            and target.get("name") == project.get("name")
-            and target.get("url") == project.get("url")
-            and target.get("role") == role
         )
 
     def execute(self, work_id: str, role: str, payload: dict, *, alias="fieldnotes", operation_id: str | None = None):
@@ -152,15 +119,9 @@ class ProjectBackend:
         if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", operation_id):
             raise AutomationError("INVALID_OPERATION_ID")
         directory = self.root / "workspace" / "automation-runs" / "backend" / work_id / role
-        pool_directory = self.root / "workspace" / "automation-runs" / "backend" / "_shared" / alias / role
         state_path = directory / f"{operation_id}.json"
         mapping_path = directory / "worker.json"
-        # Project translator chats are now a role-level pool rather than permanently bound to
-        # one novel. The task-local JSON already contains the work-specific glossary, source,
-        # neighboring context and hidden read proof, while Project Sources are global policy.
-        # Serializing the role-level claim avoids two independent works racing to wake the same
-        # sleeping Project chat.
-        with locked(pool_directory / ".lock"), locked(directory / ".lock"):
+        with locked(directory / ".lock"):
             previous = read_json(state_path, {})
             fingerprint = digest({"work":work_id,"role":role,"alias":alias,"payload":payload})
             if previous and previous.get("fingerprint") != fingerprint:
@@ -210,11 +171,11 @@ class ProjectBackend:
                 mapping = read_json(mapping_path, {})
                 workers = status.get("workers", [])
                 mapped_worker = next((w for w in workers if w.get("id") == mapping.get("worker_id") and w.get("createdAt") == mapping.get("created_at")), None)
-                compatible = [w for w in workers if self._worker_matches_project_role(w, project, role)]
-                sleeping = [w for w in compatible if w.get("state") == "sleeping" and w.get("revivable") is True]
+                exact = [w for w in workers if w.get("projectTarget") == target]
+                sleeping = [w for w in exact if w.get("state") == "sleeping" and w.get("revivable") is True]
                 worker = mapped_worker if mapped_worker in sleeping else (max(sleeping, key=lambda w: int(w.get("createdAt") or 0)) if sleeping else None)
                 reusable = worker is not None
-                if not reusable and any(w.get("state") in ("active","invited","waking","detached") for w in compatible):
+                if not reusable and any(w.get("state") in ("active","invited","waking","detached") for w in exact):
                     raise AutomationError("WORKER_BUSY")
                 prompt = json.dumps({"operation_id":operation_id,"work_id":work_id,"task":payload,
                     "response_contract":{"operation_id":operation_id,"work_id":work_id,"payload":"the task's requested JSON result"},
@@ -235,12 +196,11 @@ class ProjectBackend:
                             "label":f"{work_id[:40]}-{role}","task":prompt,
                             "target":{"type":"chatgpt_project","project":alias,"workId":work_id,"role":role}}]}, method="POST")
                         selected = response["workers"][0]
-                    if not selected.get("createdAt") or not self._worker_matches_project_role(selected, project, role):
+                    if not selected.get("createdAt") or selected.get("projectTarget") != target:
                         raise AutomationError("WORKER_TARGET_NOT_VERIFIED")
                     state.update(state="accepted",worker_id=selected["id"],created_at=selected["createdAt"])
                     atomic_json(state_path,state)
-                    atomic_json(mapping_path,{"worker_id":selected["id"],"created_at":selected["createdAt"],"target":target,
-                                              "worker_target":selected.get("projectTarget")})
+                    atomic_json(mapping_path,{"worker_id":selected["id"],"created_at":selected["createdAt"],"target":target})
                 except Exception:
                     # Even a lost successful HTTP response can leave an actual chat. Do not
                     # send twice, create another chat, or call a non-Project backend silently.
@@ -251,7 +211,7 @@ class ProjectBackend:
             while time.monotonic() < deadline:
                 status = self.bridge.request("/automation-agents/status")
                 worker = next((w for w in status.get("workers",[]) if w.get("id") == state["worker_id"] and w.get("createdAt") == state["created_at"]), None)
-                if not worker or not self._worker_matches_project_role(worker, project, role):
+                if not worker or worker.get("projectTarget") != target:
                     raise AutomationError("WORKER_TARGET_NOT_VERIFIED")
                 if worker.get("state") == "failed":
                     error_code = "PROJECT_WORKER_BOOTSTRAP_FAILED" if not worker.get("conversationId") else "PROJECT_WORKER_FAILED"

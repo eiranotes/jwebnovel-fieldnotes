@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Process the existing translation queue through a verified Project worker, without fallback."""
+"""Translate the durable queue through a work-specific Project chat with a verified fallback lane."""
 from __future__ import annotations
 
 import argparse
@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from automation_store import AutomationError, atomic_json, digest, locked, now, read_json, within
+from codex_webgpt_backend import CodexWebGptBackend
 from project_backend import ProjectBackend
 from project_context import build_common, build_work, public_pack, source_probe_task, verify_source_probe
 from project_sources import synchronize as synchronize_project_sources
@@ -68,14 +69,37 @@ def prove_project_sources(backend, work_id: str, chunk_id: str, packs: list[dict
     raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
 
 
-def process_task(task: dict, backend=None, source_sync=None) -> dict:
+def fallback_allowed(config: dict, error: AutomationError) -> bool:
+    fallback=config.get('fallback') if isinstance(config.get('fallback'),dict) else {}
+    return bool(
+        fallback.get('enabled') is True
+        and fallback.get('backend') == 'codex_webgpt'
+        and error.code in set(fallback.get('trigger_codes') or [])
+    )
+
+
+def validate_translation_result(result: dict, task: dict, work_dir: Path, local_source_probe: str,
+                                *, work_id: str, project_packs: list[dict] | None = None) -> dict:
+    if not isinstance(result,dict):
+        raise AutomationError('INVALID_TRANSLATION_RESULT')
+    if project_packs is not None:
+        verify_source_probe(result.get('project_source_proof'),work_id,project_packs)
+    if result.get('local_source_proof') != local_source_probe:
+        raise AutomationError('LOCAL_SOURCE_PROOF_MISMATCH')
+    validate_segment_translations(task['source_segments'],result.get('segment_translations'))
+    validate_glossary_update(read_json(work_dir/'glossary.json'),result.get('glossary_update') or {})
+    return result
+
+
+def process_task(task: dict, backend=None, source_sync=None, fallback_backend=None) -> dict:
     work_dir = within(ROOT.resolve(), task['work_dir'])
     if not work_dir.is_relative_to(ROOT.resolve()/'workspace'):
         raise AutomationError('PATH_OUTSIDE_WORKSPACE')
     work_id, chunk_id = task['work_id'], task['chunk_id']
     config = read_json(ROOT/'config/project-translation.json')
-    if (config.get('backend') != 'webgpt_project' or config.get('allow_fallback') is not False or
-            config.get('activation') != 'verified_live'):
+    fallback_cfg=config.get('fallback') if isinstance(config.get('fallback'),dict) else {}
+    if (config.get('backend') != 'webgpt_project' or config.get('activation') != 'verified_live' or
+            (fallback_cfg.get('enabled') is True and fallback_cfg.get('backend') != 'codex_webgpt')):
         raise AutomationError('PROJECT_POLICY_INVALID')
     with locked(work_dir/'translation/project-run.lock'):
         source_path = (work_dir/'translation/chunks'/chunk_id/'ja.txt').resolve()
@@ -97,7 +121,7 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
             'encoding': 'utf-8',
             'format': 'fieldnotes_translation_task_json_v1',
         }
-        backend = backend or ProjectBackend(ROOT,timeout=int(config.get('worker_timeout_seconds',600)))
+        primary_backend = backend
         context_path = work_dir/'translation/project-context.json'
         pinned = read_json(context_path,{})
         revision=guide_revision(work_dir)
@@ -116,41 +140,47 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         # Project. A historical UI listing may skip a redundant upload; the model probe below
         # still catches provider deletion/index loss fail-closed.
         project_packs=[common]
-        source_sync(project_packs,root=ROOT,alias=config['project_alias'],instructions=False)
-        # Repeat the probe in this worker/operation before using cached context. Do not count a
-        # successful old worker probe as proof that a replacement chat inherited the sources.
         proof_task=source_probe_task(work_id,*project_packs)
-        verification=prove_project_sources(backend,work_id,chunk_id,project_packs,alias=config['project_alias'],
-            max_attempts=int(config.get('source_probe_max_attempts',6)),
-            retry_seconds=float(config.get('source_probe_retry_seconds',10)))
-        atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':verification})
-        # Copyrighted chapter text and sentence rows stay local. The WebGPT worker gets only an
-        # immutable reference to the already-generated private task JSON, then reads that exact
-        # artifact through Core. This removes source duplication from the chat transport while
-        # preserving the existing sentence-id/alignment contract in one canonical local file.
-        payload={
+        base_payload={
             'kind':'translate_chunk','entry_id':task.get('entry_id'),'work_id':work_id,'chunk_id':chunk_id,
             'chunk_sha256':source_hash,'local_source_task':local_source_task,
-            'project_sources':[public_pack(pack) for pack in project_packs],
-            'source_policy':'Pinned Project Sources plus one exact read-only local translation task; do not claim a new upload.',
-            'translation_instruction':'Read local_source_task.path with Chat On Steroids Core read. The JSON contains the private chapter text, sentence-id map, adjacent-source context, glossary, instructions, output contract, and a local read probe. Translate every sentence segment from that file and preserve its exact ids/order.',
+            'translation_instruction':'Read the exact local task JSON. It contains the private chapter text, sentence-id map, adjacent-source context, glossary, instructions, output contract, and a local read probe. Translate every sentence segment and preserve its exact ids/order.',
             'output_contract':{'local_source_proof':'value read from the local task JSON',
                                'segment_translations':[{'id':'exact sentence id from local task','ko':'string'}],
-                               'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]},
-                               'project_source_proof':'fresh proof required below'},
+                               'glossary_update':{'people':{},'places':{},'terms':{},'ruby_notes':{},'decisions':[]}},
+        }
+        primary_payload={
+            **base_payload,
+            'project_sources':[public_pack(pack) for pack in project_packs],
+            'source_policy':'Pinned Project Sources plus one exact read-only local translation task; do not claim a new upload.',
+            'output_contract':{**base_payload['output_contract'],'project_source_proof':'fresh proof required below'},
             'project_source_proof_contract':proof_task['output_contract'],
             'source_proof_instruction':'In this translation result include project_source_proof containing a fresh ready/work_id/sources proof read from the exact named Project Sources. Do not copy expected values from the task (they are not provided).',
         }
-        result=backend.execute(work_id,'translator',payload,alias=config['project_alias'])
-        if not isinstance(result,dict):raise AutomationError('INVALID_TRANSLATION_RESULT')
-        # A rollover between preflight and translation must not inherit an old chat's proof.
-        verify_source_probe(result.get('project_source_proof'),work_id,project_packs)
-        if result.get('local_source_proof') != local_source_probe:
-            raise AutomationError('LOCAL_SOURCE_PROOF_MISMATCH')
-        validate_segment_translations(task['source_segments'],result.get('segment_translations'))
-        validate_glossary_update(read_json(work_dir/'glossary.json'),result.get('glossary_update') or {})
+        selected_backend='webgpt_project';fallback_reason=None
+        try:
+            if primary_backend is None:
+                primary_backend=ProjectBackend(ROOT,timeout=int(config.get('worker_timeout_seconds',600)))
+            source_sync(project_packs,root=ROOT,alias=config['project_alias'],instructions=False)
+            verification=prove_project_sources(primary_backend,work_id,chunk_id,project_packs,alias=config['project_alias'],
+                max_attempts=int(config.get('source_probe_max_attempts',6)),
+                retry_seconds=float(config.get('source_probe_retry_seconds',10)))
+            atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':verification,'backend':'webgpt_project'})
+            result=primary_backend.execute(work_id,'translator',primary_payload,alias=config['project_alias'])
+            validate_translation_result(result,task,work_dir,local_source_probe,work_id=work_id,project_packs=project_packs)
+        except AutomationError as primary_error:
+            if not fallback_allowed(config,primary_error):
+                raise
+            selected_backend='codex_webgpt';fallback_reason=primary_error.code
+            fallback_backend = fallback_backend or CodexWebGptBackend(
+                ROOT,timeout=int(fallback_cfg.get('timeout_seconds',900)))
+            fallback_operation_id='fallback-'+digest({'work':work_id,'chunk':chunk_id,'source':source_hash,'reason':primary_error.code})
+            result=fallback_backend.execute(work_id,base_payload,operation_id=fallback_operation_id)
+            validate_translation_result(result,task,work_dir,local_source_probe,work_id=work_id)
+            atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':None,
+                                      'backend':'codex_webgpt','primary_error':primary_error.code})
         result={**result,'work_id':work_id,'chunk_id':chunk_id,'chunk_sha256':source_hash}
-        result_path=work_dir/'translation'/f'project-result-{chunk_id}.json'
+        result_path=work_dir/'translation'/f'translation-result-{chunk_id}.json'
         atomic_json(result_path,result)
         args=['complete','--chunk',chunk_id,'--result',str(result_path)]
         if task.get('full_translation_request_id'):
@@ -158,7 +188,7 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         else:
             args += ['--entry',task['entry_id'],'--work',work_id]
         outcome=script_json('translation_queue.py',args)
-        return {'status':'complete','backend':'webgpt_project','work_id':work_id,'chunk':chunk_id,
+        return {'status':'complete','backend':selected_backend,'fallback_reason':fallback_reason,'work_id':work_id,'chunk':chunk_id,
                 'context_versions':[p['context_version'] for p in (common,work)],'completion':outcome}
 
 

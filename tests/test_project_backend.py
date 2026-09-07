@@ -55,19 +55,26 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(len([r for r,b in self.bridge.calls if r.endswith('/message')]),1)
         self.assertEqual(b.execute('example','translator',{'number':2}),{'test_result':2})
         self.assertEqual(len([r for r,b in self.bridge.calls if r.endswith('/message')]),1)
-    def test_new_work_reuses_sleeping_project_translator_pool_instead_of_spawning(self):
+    def test_new_work_gets_its_own_project_chat(self):
         b=self.backend()
         self.assertEqual(b.execute('alpha','translator',{'number':1}),{'test_result':1})
-        first_target=self.bridge.workers[0]['projectTarget']
-        self.assertEqual(first_target['workId'],'alpha')
         self.assertEqual(b.execute('beta','translator',{'number':2}),{'test_result':2})
+        self.assertEqual(len(self.bridge.workers),2)
+        self.assertEqual(len([r for r,_ in self.bridge.calls if r.endswith('/spawn')]),2)
+        self.assertEqual([w['projectTarget']['workId'] for w in self.bridge.workers],['alpha','beta'])
+        self.assertEqual(b.execute('beta','translator',{'number':3}),{'test_result':3})
+        self.assertEqual(len(self.bridge.workers),2)
+        self.assertEqual(len([r for r,_ in self.bridge.calls if r.endswith('/message')]),1)
+
+    def test_missing_mapping_recovers_only_exact_work_chat(self):
+        b=self.backend()
+        self.assertEqual(b.execute('alpha','translator',{'number':1}),{'test_result':1})
+        mapping=self.root/'workspace/automation-runs/backend/alpha/translator/worker.json'
+        mapping.unlink()
+        self.assertEqual(b.execute('alpha','translator',{'number':2}),{'test_result':2})
         self.assertEqual(len(self.bridge.workers),1)
         self.assertEqual(len([r for r,_ in self.bridge.calls if r.endswith('/spawn')]),1)
         self.assertEqual(len([r for r,_ in self.bridge.calls if r.endswith('/message')]),1)
-        sent=next(body for route,body in reversed(self.bridge.calls) if route.endswith('/message'))
-        prompt=json.loads(sent['text'])
-        self.assertEqual(prompt['work_id'],'beta')
-        self.assertIn('authoritative for this turn',prompt['instructions'])
     def test_timeout_resumes_result_wait_without_repeating_submit(self):
         self.bridge.finish=False;b=self.backend(timeout=0.003)
         with self.assertRaisesRegex(AutomationError,'WORKER_RESULT_TIMEOUT'):b.execute('example','translator',{'number':1})

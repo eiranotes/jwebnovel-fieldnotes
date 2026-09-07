@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 from xml.sax.saxutils import escape as xml_escape
 
 from automation_log import log_event
+from artifact_naming import alternating_translation_filename
 from rebuild_work_index import canonical
 
 
@@ -257,17 +258,13 @@ def _taste_registry_by_key() -> dict[str, dict]:
     return {canonical(w): w for w in registry.get("works", []) if w.get("title")}
 
 
-def _safe_text_filename(value: str) -> str:
-    cleaned = "".join("_" if ch in '/\\:*?\"<>|\r\n\t' else ch for ch in str(value or "")).strip(" ._")
-    return (cleaned or "untitled")[:100]
-
-
 def _taste_work_text(item: dict, registry_by_key: dict[str, dict]) -> tuple[str, str] | None:
     reg = registry_by_key.get(str(item.get("canonical_key") or ""))
     if not reg or not reg.get("workspace"):
         return None
     workspace = (ROOT / reg["workspace"]).resolve()
-    alternating = (workspace / "translation" / "output" / "ja-ko-alternating.txt").resolve()
+    title = str(reg.get("title") or item.get("title") or reg.get("work_id") or "untitled")
+    alternating = (workspace / "translation" / "output" / alternating_translation_filename(title)).resolve()
     if alternating.is_file() and alternating.is_relative_to(workspace) and alternating.stat().st_size > 0:
         return alternating.read_text(encoding="utf-8"), "JA/KO"
     return None
@@ -291,7 +288,7 @@ def taste_reading_files(date: str) -> list[dict]:
             + "=" * 72 + "\n\n"
         )
         body = header + text.strip() + "\n"
-        filename = f"{index:02d}_{_safe_text_filename(item.get('title') or '')}_교차번역.txt"
+        filename = alternating_translation_filename(str(item.get("title") or "untitled"))
         rows.append({"filename": filename, "body": body, "language": language, "item": item})
     return rows
 
@@ -536,7 +533,7 @@ class Handler(SimpleHTTPRequestHandler):
             data = target.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", mime)
-            self.send_header("Content-Disposition", f'attachment; filename="{target.name}"')
+            self.send_header("Content-Disposition", _content_disposition(target.name))
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
             self.wfile.write(data)

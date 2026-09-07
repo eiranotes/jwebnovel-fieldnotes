@@ -46,6 +46,7 @@ def sync_registry_progress(root: Path=ROOT) -> bool:
 def refresh(root: Path=ROOT) -> dict:
     status_path=root/'data/automation-status.json'; cfg=read_json(root/'config/automation.json'); profiles=read_json(root/'config/search-profiles.json')
     project_cfg=read_json(root/'config/project-translation.json',{})
+    fallback_cfg=project_cfg.get('fallback') if isinstance(project_cfg.get('fallback'),dict) else {}
     status=read_json(status_path)
     fullq=read_json(root/'data/full-translation-queue.json',{'requests':[]})
     sync_registry_progress(root)
@@ -64,7 +65,9 @@ def refresh(root: Path=ROOT) -> dict:
     status['criteria'].update({'status':'ready' if profiles.get('criteria_ready') and enabled_profiles else 'awaiting_user_answers','profile_count':len(enabled_profiles)})
     status['translation'].update({'pending_chunks':pending,'completed_chunks':done,'works_waiting_for_source':waiting,'works_ready':ready,
      'backend':{'name':project_cfg.get('backend'),'activation':project_cfg.get('activation'),'project_alias':project_cfg.get('project_alias'),
-                'require_source_probe':project_cfg.get('require_source_probe') is True,'allow_fallback':project_cfg.get('allow_fallback')}})
+                'require_source_probe':project_cfg.get('require_source_probe') is True,
+                'allow_fallback':fallback_cfg.get('enabled') is True,
+                'fallback_backend':fallback_cfg.get('backend')}})
     status['translation']['full_requests']={
      'queued':sum(1 for x in fullq.get('requests',[]) if x.get('status') in {'queued','acquiring','acquisition_error'}),
      'translating':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='translation_pending'),

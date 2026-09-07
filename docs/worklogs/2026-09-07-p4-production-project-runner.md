@@ -106,7 +106,7 @@ Live results:
 
 After these fixes the Fieldnotes regression suite is **28/28 PASS** and `git diff --check` passes. Public projection reports **8 completed chunks / 2 pending chunks**. `runtime_sync.py push` copied the completed private artifacts into `~/HermesWorkspace/project/fieldnotes-runtime`; the live private console inventory exposes `ko.txt`, alternating JA/KO, parallel view and ZIP artifacts for Beni, Deathgame, Redo and Haikei. A real `/fieldnotes/api/download` of `redo-translation.zip` returned 94,746 bytes and matched the runtime-mirror SHA-256 exactly.
 
-## Cross-work Project translator pool
+## Temporary cross-work Project translator pool — superseded
 The remaining `sakasano-chagasa` blocker demonstrated that binding one Project chat permanently to one work would make every unseen work depend on a fresh browser bootstrap. That is unnecessary after work-specific metadata, glossary, adjacent context and chapter text moved into the exact local task JSON.
 
 `ProjectBackend` now serializes translator use at the Project/role level and reuses the newest sleeping, revivable worker whose Project alias/name/url and role match, even when that worker's original `projectTarget.workId` belongs to another work. The current turn's `response_contract.work_id` and `task.work_id` are explicitly authoritative. Operation state remains per-work, local task path/hash/probe validation remains per-work/chunk, and the global Project-source proof is still fresh on every chunk. Concurrent works cannot race for the same pooled chat because the role pool has its own single-writer lock.
@@ -114,3 +114,12 @@ The remaining `sakasano-chagasa` blocker demonstrated that binding one Project c
 Live verification was performed without unlocking the Mac. `sakasano-chagasa` selected existing `worker-34` / conversation `6a9e62f6-caf0-83e8-bc0c-006f3254bbf8`, whose original Project target was `redo`. No fresh worker was created. The fresh source probe completed through that reused chat, followed by chunk `0001` and chunk `0002`; both passed exact local-read proof, Project-source proof, validation and transactional completion. The final ZIP was generated and mirrored into the private runtime.
 
 Final candidate projection: **10 completed chunks / 0 pending chunks** across all five works. Regression suite: **29/29 PASS**, `git diff --check` PASS, repository validator PASS, and the `sakasano-chagasa` output ZIP passes `unzip -t`.
+
+## Final work-specific chat and fallback architecture
+The cross-work pool above was only a recovery workaround. It was removed after the fresh Project bootstrap failure was traced to the extension's stale-draft classifier: generated drafts containing `(Fieldnotes Project worker: ...)` were not recognized as automation-owned. After the first failed send, the Project landing composer retained that generated payload and every later attempt misclassified it as text the user was writing.
+
+The extension now recognizes Fieldnotes Project and automated WebGPT bootstrap text as generated automation drafts while preserving arbitrary user drafts. Live smoke after extension reload created `fresh-chat-e2e-20260907a` as worker-43/conversation `6a9e8277-3020-83ee-92dc-69c158ff4459`, reused worker-43 for a second turn, and created a different work (`fresh-chat-e2e-20260907b`) as separate worker-44. Final `ProjectBackend` ownership is therefore back to one conversation per `(Project, work_id, role)`; a missing local mapping may recover only an exact-target historical worker.
+
+The production driver also gained a fail-closed `codex_webgpt` fallback. Local Codex acts only as an orchestration planner; Oracle then runs actual WebGPT using a throwaway copy of the signed-in Chrome profile, avoiding both the unauthenticated Oracle manual-login profile and live-cookie token rotation. A real synthetic fallback returned the hidden local probe and `風が吹く。 → 바람이 분다.` through the same result envelope. Fallback shares local-task path/SHA/work/chunk validation and the normal segment/glossary/transactional commit validators. Ambiguous delivery/timeouts are intentionally absent from the fallback trigger set.
+
+User-visible sentence-alternating output naming is centralized as `<원문 제목> - 번역본.txt`; all five completed candidate outputs were rebuilt under that name and the legacy `ja-ko-alternating.txt` files were migrated away.

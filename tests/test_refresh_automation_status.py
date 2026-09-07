@@ -17,7 +17,8 @@ class RefreshAutomationStatusTests(unittest.TestCase):
                 (root/folder).mkdir(parents=True,exist_ok=True)
             atomic_json(root/'config/automation.json',{'enabled':False,'time':None})
             atomic_json(root/'config/search-profiles.json',{'criteria_ready':False,'profiles':[]})
-            atomic_json(root/'config/project-translation.json',{'backend':'webgpt_project','activation':'verified_live','project_alias':'fieldnotes','require_source_probe':True,'allow_fallback':False})
+            atomic_json(root/'config/project-translation.json',{'backend':'webgpt_project','activation':'verified_live','project_alias':'fieldnotes','require_source_probe':True,
+                'fallback':{'enabled':True,'backend':'codex_webgpt'}})
             atomic_json(root/'data/automation-status.json',{'schedule':{},'criteria':{},'translation':{},'source_acquisition':{}})
             atomic_json(root/'data/work-registry.json',{'works':[{'work_id':'example','workspace':'workspace/2026-09-07/entry/example','status':'translation_pending'}]})
             atomic_json(root/'workspace/2026-09-07/entry/example/state.json',{'status':'translation_complete','chunks_done':2,'chunks_total':2,'updated_at':'now'})
@@ -31,6 +32,8 @@ class RefreshAutomationStatusTests(unittest.TestCase):
             self.assertEqual(status['translation']['completed_chunks'],2)
             self.assertEqual(status['translation']['pending_chunks'],0)
             self.assertEqual(status['translation']['backend']['activation'],'verified_live')
+            self.assertTrue(status['translation']['backend']['allow_fallback'])
+            self.assertEqual(status['translation']['backend']['fallback_backend'],'codex_webgpt')
 
     def test_registry_projection_refuses_workspace_escape(self):
         with tempfile.TemporaryDirectory() as directory:

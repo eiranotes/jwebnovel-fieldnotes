@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T09:34:09.799306+00:00",
+  "updated_at": "2026-09-07T13:23:35.752271+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -9,10 +9,10 @@
     "status": "awaiting_user_time"
   },
   "criteria": {
-    "status": "awaiting_user_answers",
+    "status": "ready",
     "default_min_chars": 300000,
     "length_exception": "high_fit_only",
-    "profile_count": 0
+    "profile_count": 1
   },
   "discovery": {
     "narou": "official_api_only",
@@ -22,16 +22,16 @@
   "source_acquisition": {
     "status": "automatic_first_n_private_local",
     "public_fulltext": false,
-    "acquired_works": 5,
+    "acquired_works": 12,
     "worker": "workers/novel-download"
   },
   "translation": {
     "mode": "resumable_chunk_queue",
     "target_chunk_chars": 9000,
     "pending_chunks": 0,
-    "completed_chunks": 10,
+    "completed_chunks": 26,
     "works_waiting_for_source": 0,
-    "works_ready": 5,
+    "works_ready": 12,
     "full_requests": {
       "queued": 0,
       "translating": 0,
@@ -47,13 +47,13 @@
     }
   },
   "last_run": {
-    "entry_id": "2026-09-06-02",
-    "started_at": "2026-09-06T07:59:55.244892+00:00",
-    "finished_at": "2026-09-06T07:59:56.304423+00:00",
-    "top_n": 5,
+    "entry_id": "2026-09-06-01",
+    "started_at": "2026-09-07T10:29:33.053784+00:00",
+    "finished_at": "2026-09-07T10:30:45.845433+00:00",
+    "top_n": 7,
     "episodes_per_work": 5,
-    "processed": 5,
+    "processed": 7,
     "errors": []
   },
-  "next_action": "collect search criteria and exact daily time"
+  "next_action": "set exact daily time"
 }

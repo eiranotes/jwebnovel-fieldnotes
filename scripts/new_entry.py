@@ -82,6 +82,8 @@ def main() -> int:
             "deeper_samples": ["S1", "S2"],
             "adaptive_s3": True,
         },
+        "learning_lessons_applied": [],
+        "discovery_incidents_observed": [],
         "results": {
             "shortlist": [],
             "queue": [],
@@ -129,6 +131,10 @@ TBD
 TBD
 
 ## Harvest log
+
+TBD
+
+## Applied learning lessons / new incidents
 
 TBD
 

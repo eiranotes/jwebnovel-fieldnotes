@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T08:01:50.647756+00:00",
+  "updated_at": "2026-09-07T12:45:13.978928+00:00",
   "works": [
     {
-      "canonical_key": "title:eighteenyearswar三大陸千年紀",
+      "canonical_key": "kakuyomu:16818622172225120257",
       "title": "Eighteen Years' War ～三大陸千年紀～",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818622172225120257",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -19,10 +19,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "B3"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16818622172225120257"
+        }
+      ],
+      "work_id": "kakuyomu-16818622172225120257",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/kakuyomu-16818622172225120257",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
     },
     {
       "canonical_key": "title-author:redoリドゥ:くろぬか",
@@ -58,11 +69,11 @@
       "full_translation": null
     },
     {
-      "canonical_key": "title:うちの師匠は猫で魔王",
+      "canonical_key": "narou:n8361ja",
       "title": "うちの師匠は猫で魔王！",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n8361ja/",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -74,10 +85,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "A2"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n8361ja/"
+        }
+      ],
+      "work_id": "narou-n8361ja",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n8361ja",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
+      "chunks_total": 3,
+      "full_translation": null
     },
     {
       "canonical_key": "title:おばあちゃん家のデスゲーム屋さん",
@@ -157,11 +179,11 @@
       "full_translation": null
     },
     {
-      "canonical_key": "title:マリーパスファインダーseries",
+      "canonical_key": "narou:n9369ff",
       "title": "マリー・パスファインダー series",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n9369ff/",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -173,10 +195,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "B2"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n9369ff/"
+        }
+      ],
+      "work_id": "narou-n9369ff",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n9369ff",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
     },
     {
       "canonical_key": "title:一番好きな子を殺さないと脱出できない百合デスゲーム",
@@ -201,11 +234,11 @@
       "platform_instances": []
     },
     {
-      "canonical_key": "title:一騎当戦東方無双の剣鬼異国に渡りて戦を喰らう",
+      "canonical_key": "kakuyomu:16817330656026243259",
       "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16817330656026243259",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -217,10 +250,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "B4"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16817330656026243259"
+        }
+      ],
+      "work_id": "kakuyomu-16817330656026243259",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/kakuyomu-16817330656026243259",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
     },
     {
       "canonical_key": "title:完結彼はデスゲームで最善の結果を求めるようです",
@@ -300,11 +344,11 @@
       "platform_instances": []
     },
     {
-      "canonical_key": "title:神の女王と解放者",
+      "canonical_key": "narou:n5290ek",
       "title": "神の女王と解放者",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n5290ek/",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -316,10 +360,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "A1"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n5290ek/"
+        }
+      ],
+      "work_id": "narou-n5290ek",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n5290ek",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
     },
     {
       "canonical_key": "title-author:紅さんはデスゲーマー:ニッケン",
@@ -355,11 +410,11 @@
       "full_translation": null
     },
     {
-      "canonical_key": "title:終末の歌姫と滅びの子",
+      "canonical_key": "narou:n8655kq",
       "title": "終末の歌姫と滅びの子",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n8655kq/",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -371,17 +426,28 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "A3"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n8655kq/"
+        }
+      ],
+      "work_id": "narou-n8655kq",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n8655kq",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
+      "chunks_total": 3,
+      "full_translation": null
     },
     {
-      "canonical_key": "title:花嫁騎士勇者を寝取られたわたしは魔王の城を目指す",
+      "canonical_key": "narou:n8514ea",
       "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～",
       "author": null,
-      "platform": null,
-      "url": null,
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n8514ea/",
       "length_chars": null,
       "first_seen_entry": "2026-09-06-01",
       "last_seen_entry": "2026-09-06-01",
@@ -393,10 +459,21 @@
         {
           "entry_id": "2026-09-06-01",
           "bucket": "shortlist",
-          "rank": null
+          "rank": "B1"
         }
       ],
-      "platform_instances": []
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n8514ea/"
+        }
+      ],
+      "work_id": "narou-n8514ea",
+      "workspace": "workspace/2026-09-06/2026-09-06-01/narou-n8514ea",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
     },
     {
       "canonical_key": "title:見てるこっちが怖いデスゲーム",

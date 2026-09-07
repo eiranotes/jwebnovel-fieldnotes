@@ -1,0 +1,12 @@
+{
+  "chunk_id": "0001",
+  "order": 1,
+  "status": "done",
+  "source_start_char": 0,
+  "source_end_char": 8971,
+  "ja_chars": 8971,
+  "ko_chars": 10229,
+  "translated_at": "2026-09-07T12:29:23.079429+00:00",
+  "review_status": "auto_pending",
+  "terms_added": []
+}

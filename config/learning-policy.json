@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0",
+  "private_store": "workspace/learning/operational-lessons.json",
+  "purpose": "Accumulate verified operational and discovery lessons without publishing user taste, source text, or model output.",
+  "domains": ["translation", "discovery"],
+  "promotion": {
+    "min_resolved_successes": 1,
+    "max_regression_rate": 0.25,
+    "active_context_limit": 24
+  },
+  "guardrails": [
+    "Current explicit search criteria always outrank learned discovery lessons.",
+    "User taste feedback is learned separately and may only rerank candidates that passed hard filters.",
+    "A transport or delivery ambiguity never becomes permission to resubmit model work.",
+    "Only verified resolutions become active lessons; a new error signature starts as observed.",
+    "Never store copyrighted source text, translated chapter text, full model answers, credentials, or private URLs in the lesson store."
+  ],
+  "seed_lessons": [
+    {
+      "lesson_id": "translation.local-bridge-429",
+      "domain": "translation",
+      "scope": "transport",
+      "signature": "rate_limited",
+      "resolution": "Treat the Steroids loopback 429 as pre-route local throttling: retry the same local request with bounded backoff and keep Project polling at 3 seconds. Do not create a replacement chat.",
+      "guard": "Applies only to the local bridge error code rate_limited, not ChatGPT provider 429 or ambiguous network failure.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.provider-rate-limit",
+      "domain": "translation",
+      "scope": "scheduler",
+      "signature": "CHATGPT_CONVERSATION_RATE_LIMITED",
+      "resolution": "Stop launching new work globally. Keep already accepted operations durable. A pre-send failure may retry after cooldown; an after-send or uncertain delivery must not be resubmitted automatically.",
+      "guard": "Never infer pre-send safety from a missing answer alone.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.web-concurrency",
+      "domain": "translation",
+      "scope": "scheduler",
+      "signature": "browser_worker_concurrency",
+      "resolution": "Use at most two distinct works concurrently, stagger new launches by at least 30 seconds, keep each work sequential, and prefer an existing work conversation before opening a third work.",
+      "guard": "This is the verified ChatGPT web transport profile for the current Mac/Steroids setup.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.invalid-json-repair",
+      "domain": "translation",
+      "scope": "model_output",
+      "signature": "INVALID_MODEL_JSON",
+      "resolution": "Ask the same accepted work conversation once to re-emit the same operation envelope with JSON syntax corrected. Do not reread source, retranslate, or silently switch backend before that repair attempt finishes.",
+      "guard": "Only one repair turn per malformed answer hash. Uncertain repair delivery remains blocked.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.glossary-conflict",
+      "domain": "translation",
+      "scope": "validator",
+      "signature": "glossary_value_conflict",
+      "resolution": "Keep the existing canonical glossary value, record the model proposal as a conflict decision, and commit an otherwise valid translation.",
+      "guard": "Structural glossary errors still fail closed.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.identityless-uncertain",
+      "domain": "translation",
+      "scope": "durability",
+      "signature": "identityless_uncertain_spawn",
+      "resolution": "Retry only when local state has no worker/conversation identity and an exact broker status read proves there is no worker for the target. Otherwise preserve uncertainty and never resubmit automatically.",
+      "guard": "Broker lookup failure is not proof of absence.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "translation.project-ownership",
+      "domain": "translation",
+      "scope": "architecture",
+      "signature": "project_work_chat_ownership",
+      "resolution": "Use one Fieldnotes ChatGPT Project. Create one conversation per work and reuse that conversation for all chunks of the work. Keep Project Sources common; work source, glossary, ruby, context, and hidden proof live in the exact local task JSON.",
+      "guard": "Never reuse a different work conversation as evidence or context.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.request-isolation",
+      "domain": "discovery",
+      "scope": "criteria",
+      "signature": "criteria_leak_between_requests",
+      "resolution": "Start every discovery from its own request snapshot/profile. Do not inherit hard filters, references, or exclusions from another entry unless the current profile explicitly carries them.",
+      "guard": "Global defaults and approved preference signals are the only cross-request inputs.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.wide-then-deep",
+      "domain": "discovery",
+      "scope": "sampling",
+      "signature": "expensive_early_sampling",
+      "resolution": "Collect structured metadata broadly first, apply hard filters and dedupe, then spend body sampling on the strongest surviving candidates. Increase sample depth adaptively only when ranking uncertainty remains.",
+      "guard": "Do not fill a target count by deep-reading low-fit works.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.strict-dedupe",
+      "domain": "discovery",
+      "scope": "candidate_pool",
+      "signature": "repeat_or_crosspost_candidate",
+      "resolution": "Rebuild and consult the persistent seen index before sampling/ranking. Collapse cross-posts using normalized title+author when possible and keep strict seen-index exclusion by default.",
+      "guard": "A user-requested revisit may override dedupe explicitly.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.length-exception-lane",
+      "domain": "discovery",
+      "scope": "filtering",
+      "signature": "underlength_high_fit",
+      "resolution": "When the request has no explicit length threshold, use 300k characters as the default main-lane floor but keep a small separate LENGTH EXCEPTION lane for unusually strong non-length fit.",
+      "guard": "Never mix short exceptions into the main shortlist merely to fill quota.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.canonical-url",
+      "domain": "discovery",
+      "scope": "persistence",
+      "signature": "candidate_missing_url_in_json",
+      "resolution": "Persist every actionable shortlist candidate's canonical platform URL in the JSON entry itself. HTML is a view, not the source of truth used by registration/acquisition.",
+      "guard": "Do not rely on presentation-only links for downstream automation.",
+      "confidence": 1.0
+    },
+    {
+      "lesson_id": "discovery.no-quota-padding",
+      "domain": "discovery",
+      "scope": "ranking",
+      "signature": "low_fit_quota_padding",
+      "resolution": "Return fewer candidates and report the gap when the qualified pool is small. Use marginal-yield stopping rather than promoting weak candidates to hit a fixed count.",
+      "guard": "Explicit user requests for a fixed count may broaden collection, but must not hide criteria violations.",
+      "confidence": 1.0
+    }
+  ]
+}

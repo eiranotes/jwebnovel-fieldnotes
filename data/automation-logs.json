@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T08:01:41.391152+00:00",
+  "updated_at": "2026-09-07T13:10:17.919788+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -274,6 +274,430 @@
         "chunk": "0002",
         "done": 2,
         "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:33.053789+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "started",
+      "message": "Pipeline started for 2026-09-06-01",
+      "details": {
+        "entry_id": "2026-09-06-01",
+        "top_n": 7
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:33.518288+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 神の女王と解放者",
+      "details": {
+        "title": "神の女王と解放者"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:44.062854+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 神の女王と解放者",
+      "details": {
+        "title": "神の女王と解放者",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:44.130109+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing うちの師匠は猫で魔王！",
+      "details": {
+        "title": "うちの師匠は猫で魔王！"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:54.220069+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared うちの師匠は猫で魔王！",
+      "details": {
+        "title": "うちの師匠は猫で魔王！",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:29:54.285936+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 終末の歌姫と滅びの子",
+      "details": {
+        "title": "終末の歌姫と滅びの子"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:04.390793+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 終末の歌姫と滅びの子",
+      "details": {
+        "title": "終末の歌姫と滅びの子",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:04.394640+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～",
+      "details": {
+        "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:15.475792+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～",
+      "details": {
+        "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:15.478988+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing マリー・パスファインダー series",
+      "details": {
+        "title": "マリー・パスファインダー series"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:25.226885+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared マリー・パスファインダー series",
+      "details": {
+        "title": "マリー・パスファインダー series",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:25.322120+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing Eighteen Years' War ～三大陸千年紀～",
+      "details": {
+        "title": "Eighteen Years' War ～三大陸千年紀～"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:36.083464+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared Eighteen Years' War ～三大陸千年紀～",
+      "details": {
+        "title": "Eighteen Years' War ～三大陸千年紀～",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:36.098906+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～",
+      "details": {
+        "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:45.822431+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～",
+      "details": {
+        "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～",
+        "episodes": 5,
+        "chunks": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:30:48.081314+00:00",
+      "run_id": "pipeline-20260907T102933-6e0df0ef",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "done",
+      "message": "Pipeline finished: 7 processed, 0 errors",
+      "details": {
+        "entry_id": "2026-09-06-01",
+        "processed": 7,
+        "errors": 0
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:33:14.842669+00:00",
+      "run_id": "translate-next-20260907T103314-146dbcd2",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 神の女王と解放者 / 0001",
+      "details": {
+        "title": "神の女王と解放者",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:38:03.774062+00:00",
+      "run_id": "translate-next-20260907T103803-c2e00f5c",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 神の女王と解放者 / 0001",
+      "details": {
+        "title": "神の女王と解放者",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:41:59.036879+00:00",
+      "run_id": "translate-complete-20260907T104158-73f53b11",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n5290ek / 0001",
+      "details": {
+        "work_id": "narou-n5290ek",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T10:59:51.786134+00:00",
+      "run_id": "translate-complete-20260907T105950-2c2b97f5",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n5290ek / 0002",
+      "details": {
+        "work_id": "narou-n5290ek",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T11:59:19.681215+00:00",
+      "run_id": "translate-complete-20260907T115918-eed095e6",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8361ja / 0001",
+      "details": {
+        "work_id": "narou-n8361ja",
+        "chunk": "0001",
+        "done": 1,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:05:12.085518+00:00",
+      "run_id": "translate-complete-20260907T120511-70ed7a65",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8361ja / 0002",
+      "details": {
+        "work_id": "narou-n8361ja",
+        "chunk": "0002",
+        "done": 2,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:07:14.382016+00:00",
+      "run_id": "translate-complete-20260907T120713-ef7249b3",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8361ja / 0003",
+      "details": {
+        "work_id": "narou-n8361ja",
+        "chunk": "0003",
+        "done": 3,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:18:18.766212+00:00",
+      "run_id": "translate-complete-20260907T121817-6993b2ca",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8514ea / 0001",
+      "details": {
+        "work_id": "narou-n8514ea",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:28:59.549518+00:00",
+      "run_id": "translate-complete-20260907T122858-b0d6b54d",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8655kq / 0002",
+      "details": {
+        "work_id": "narou-n8655kq",
+        "chunk": "0002",
+        "done": 2,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:29:23.814106+00:00",
+      "run_id": "translate-complete-20260907T122922-880741c2",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n9369ff / 0001",
+      "details": {
+        "work_id": "narou-n9369ff",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:33:31.232873+00:00",
+      "run_id": "translate-complete-20260907T123330-38b4e4ae",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n9369ff / 0002",
+      "details": {
+        "work_id": "narou-n9369ff",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:37:02.255779+00:00",
+      "run_id": "translate-complete-20260907T123700-6d761df9",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed kakuyomu-16818622172225120257 / 0001",
+      "details": {
+        "work_id": "kakuyomu-16818622172225120257",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:39:15.461969+00:00",
+      "run_id": "translate-complete-20260907T123913-c163f181",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed kakuyomu-16818622172225120257 / 0002",
+      "details": {
+        "work_id": "kakuyomu-16818622172225120257",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:40:10.788593+00:00",
+      "run_id": "translate-complete-20260907T124008-0530036d",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed narou-n8655kq / 0003",
+      "details": {
+        "work_id": "narou-n8655kq",
+        "chunk": "0003",
+        "done": 3,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:42:51.800814+00:00",
+      "run_id": "translate-complete-20260907T124250-5e8ceb29",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed kakuyomu-16817330656026243259 / 0001",
+      "details": {
+        "work_id": "kakuyomu-16817330656026243259",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T12:45:14.007241+00:00",
+      "run_id": "translate-complete-20260907T124512-4848afdb",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed kakuyomu-16817330656026243259 / 0002",
+      "details": {
+        "work_id": "kakuyomu-16817330656026243259",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T13:10:17.919788+00:00",
+      "run_id": "private-console-20260907T131017-24a20f5d",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 1 profiles",
+      "details": {
+        "profiles": 1
       }
     }
   ]

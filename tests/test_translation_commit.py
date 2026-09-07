@@ -34,10 +34,17 @@ class CommitTests(unittest.TestCase):
         second=pipeline.complete_chunk(self.work,'0001',self.result)
         self.assertEqual(first['done'],1);self.assertTrue(second['repeated'])
         self.assertEqual(len(read_json(self.work/'glossary.json')['decisions']),1)
-    def test_conflicting_glossary_does_not_write_translation(self):
+    def test_conflicting_glossary_keeps_canonical_value_and_commits_translation(self):
         self.result['glossary_update']['people']={'A':'다른표기'}
-        with self.assertRaisesRegex(AutomationError,'GLOSSARY_CONFLICT'):pipeline.complete_chunk(self.work,'0001',self.result)
-        self.assertFalse((self.work/'translation/chunks/0001/ko.txt').exists())
+        outcome=pipeline.complete_chunk(self.work,'0001',self.result)
+        self.assertEqual(outcome['done'],1)
+        self.assertTrue((self.work/'translation/chunks/0001/ko.txt').exists())
+        glossary=read_json(self.work/'glossary.json')
+        self.assertEqual(glossary['people']['A'],'에이')
+        self.assertIn(
+            {'type':'conflict','bucket':'people','key':'A','kept':'에이','proposed':'다른표기'},
+            glossary['decisions'],
+        )
     def test_interrupted_commit_replays_prepared_artifacts(self):
         real=pipeline.atomic_json;failed=False
         def fail_once(path,value,*args,**kwargs):

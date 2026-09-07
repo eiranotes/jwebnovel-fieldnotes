@@ -14,6 +14,8 @@
 
 탐색 결과에 대한 실제 사용자 반응을 누적해 추천 정확도를 높이되, 현재 검색 요청이나 명시적 조건을 자동으로 훼손하지 않는다.
 
+이 문서의 **취향 학습**과 `workspace/learning/operational-lessons.json`의 **운영/탐색 교훈 학습**은 분리한다. 전자는 “사용자가 무엇을 좋아하는가”를 배우고, 후자는 “어떤 오류가 반복됐고 어떤 해결책이 실제로 검증됐는가 / 어떤 탐색 절차가 오탐을 줄였는가”를 배운다. 운영 교훈은 `config/learning-policy.json`의 guard를 통과한 active lesson만 사용한다.
+
 ## 신호 계층
 
 1. **Explicit verdict** — `love / like / neutral / dislike / exclude`

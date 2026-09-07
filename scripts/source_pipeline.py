@@ -281,17 +281,65 @@ def korean_text_from_pairs(pairs: list[dict]) -> str:
     return '\n\n'.join(x for x in paragraphs if x).strip()
 
 
-def alternating_text_from_pairs(pairs: list[dict]) -> str:
-    rows = []
-    last_para = None
+def _join_korean_display(parts: list[str]) -> str:
+    """Join sentence-level Korean rows back into one readable source paragraph.
+
+    Sentence ids stay one-to-one in pairs.json for validation.  This helper is only a
+    presentation layer, so punctuation-only fragments created by the sentence splitter do
+    not acquire ugly spaces (``안녕 !``), while ordinary adjacent sentences do
+    (``미안. 정말 미안해.``).
+    """
+    text = ''
+    no_space_before = tuple('.,!?;:…。，、！？；：)]}〉》」』】〕〗〙〛’”')
+    no_space_after = tuple('([{〈《「『【〔〖〘〚‘“')
+    for raw in parts:
+        part = str(raw or '').strip()
+        if not part:
+            continue
+        if not text:
+            text = part
+            continue
+        if part.startswith(no_space_before) or text.endswith(no_space_after):
+            text += part
+        else:
+            text += ' ' + part
+    return text
+
+
+def display_paragraphs_from_pairs(pairs: list[dict]) -> list[dict]:
+    """Collapse validated sentence rows to the original paragraph boundary for reading."""
+    groups: list[dict] = []
+    current = None
     for row in pairs:
-        if last_para is not None and row.get('paragraph') != last_para:
-            rows.append('')
-        rows.append(f"원문: {row['ja']}")
-        rows.append(f"번역: {row['ko']}")
-        rows.append('')
-        last_para = row.get('paragraph')
-    return '\n'.join(rows).rstrip() + '\n'
+        para = row.get('paragraph')
+        if current is None or para != current['paragraph']:
+            current = {'paragraph': para, 'ja': [], 'ko': []}
+            groups.append(current)
+        current['ja'].append(str(row.get('ja') or '').strip())
+        current['ko'].append(str(row.get('ko') or '').strip())
+    return [
+        {
+            'paragraph': group['paragraph'],
+            'ja': ''.join(group['ja']).strip(),
+            'ko': _join_korean_display(group['ko']).strip(),
+        }
+        for group in groups
+        if any(group['ja']) or any(group['ko'])
+    ]
+
+
+def alternating_text_from_pairs(pairs: list[dict]) -> str:
+    # Human-facing TXT intentionally has no repetitive "원문:" / "번역:" prefixes.  The
+    # source paragraph is followed by its Korean paragraph, then a blank line between blocks.
+    blocks = []
+    for group in display_paragraphs_from_pairs(pairs):
+        if group['ja'] and group['ko']:
+            blocks.append(f"{group['ja']}\n{group['ko']}")
+        elif group['ja']:
+            blocks.append(group['ja'])
+        elif group['ko']:
+            blocks.append(group['ko'])
+    return '\n\n'.join(blocks).rstrip() + '\n'
 
 
 def init_translation(wdir: Path, merged: Path, target: int, hard_max: int) -> dict:
@@ -424,7 +472,10 @@ def deep_merge_glossary(base: dict, update: dict):
         base.setdefault(bucket,{})
         for k,v in (update.get(bucket) or {}).items():
             if k in base[bucket] and base[bucket][k] != v:
-                base.setdefault('decisions',[]).append({'type':'conflict','key':k,'kept':base[bucket][k],'proposed':v})
+                base.setdefault('decisions',[]).append({
+                    'type':'conflict','bucket':bucket,'key':k,
+                    'kept':base[bucket][k],'proposed':v,
+                })
             else:
                 base[bucket][k]=v
     base.setdefault('decisions',[]).extend(update.get('decisions') or [])
@@ -441,8 +492,10 @@ def validate_glossary_update(base: dict, update) -> dict:
         for key, value in values.items():
             if not isinstance(key, str) or not key or not isinstance(value, (str, dict)):
                 raise AutomationError('INVALID_GLOSSARY_ENTRY')
-            if key in base.get(bucket, {}) and base[bucket][key] != value:
-                raise AutomationError('GLOSSARY_CONFLICT', f'{bucket}:{key}')
+            # A model proposing a different spelling/note is not sufficient reason to throw
+            # away an otherwise fully validated translation.  The canonical glossary already
+            # has precedence; deep_merge_glossary keeps that value and records the proposal as a
+            # reviewable conflict decision.  Structural/type errors remain fail-closed above.
     if not isinstance(update.get('decisions', []), list):
         raise AutomationError('INVALID_GLOSSARY_DECISIONS')
     return deep_merge_glossary(copy.deepcopy(base), update)

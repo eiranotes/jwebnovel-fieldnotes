@@ -53,6 +53,7 @@ https://ncode.syosetu.com/n2066cv/
 - `docs/entries/YYYY-MM-DD-NN.md` — 사람이 읽는 조사 기록
 - `entries/YYYY-MM-DD-NN.html` — 해당 날짜 조사 페이지
 - `docs/search-protocol.md` — 요청과 무관하게 재사용하는 탐색 프로토콜
+- `docs/canonical-pipeline.md` — 전체 파이프라인/정본/실패복구/학습 구조의 최상위 기준 문서
 - `docs/entry-format.md` — 엔트리 스키마와 판정 필드 정의
 - `templates/research-request.json` — 다음 요청을 구조화할 때 쓰는 템플릿
 - `scripts/new_entry.py` — 날짜별 다음 sequence의 조사 뼈대를 생성
@@ -88,6 +89,8 @@ Daily discovery/translation automation scaffolding lives in:
 - `docs/automation-runbook.md` — source/merge/chunk/translation commands
 - `docs/daily-automation-prompt.md` — execution contract for the scheduled ChatGPT/Steroids job
 - `docs/current-status.md` — current blockers and top-5 work paths
+- `config/learning-policy.json` — verified operational/discovery lesson policy and seed rules
+- `scripts/learning_store.py` — private lesson evidence ledger CLI
 - `data/work-registry.json` — machine-readable work path/status registry
 - `data/work-index.json` — all previously seen works, canonicalized for duplicate suppression
 - `data/automation-logs.json` — public-safe automation event summaries

@@ -12,7 +12,7 @@ from project_backend import ProjectBackend,parse_envelope
 
 class FakeBridge:
     """Transport fixture only: no claim that the provider created or answered a real chat."""
-    def __init__(self):self.workers=[];self.calls=[];self.finish=True;self.lost_reply=False;self.fail_bootstrap_once=False
+    def __init__(self):self.workers=[];self.calls=[];self.finish=True;self.lost_reply=False;self.fail_bootstrap_once=False;self.reject_spawn_before_worker_once=False;self.rate_limit_once=False;self.rate_limit_after_send_once=False;self.invalid_json_once=False
     def request(self,route,body=None,method='GET'):
         self.calls.append((route,copy.deepcopy(body)))
         project={'alias':'fieldnotes','name':'Fieldnotes','url':'https://chatgpt.com/g/g-p-test-fieldnotes/project'}
@@ -20,6 +20,9 @@ class FakeBridge:
         if route.endswith('/status'):return {'workers':copy.deepcopy(self.workers)}
         if route.endswith('/spawn'):
             request=body['workers'][0];target=request['target'];prompt=json.loads(request['task'])
+            if self.reject_spawn_before_worker_once:
+                self.reject_spawn_before_worker_once=False
+                raise AutomationError('spawn_failed')
             if self.fail_bootstrap_once:
                 self.fail_bootstrap_once=False
                 worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'failed',
@@ -27,10 +30,28 @@ class FakeBridge:
                         'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
                 self.workers.append(worker)
                 return {'workers':[copy.deepcopy(worker)]}
+            if self.rate_limit_once:
+                self.rate_limit_once=False
+                worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'failed',
+                        'revivable':False,'conversationId':None,'complete':False,'answer':None,
+                        'brokerResult':'the browser could not start the chat — CHATGPT_CONVERSATION_RATE_LIMITED: Too Many Requests',
+                        'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
+                self.workers.append(worker);return {'workers':[copy.deepcopy(worker)]}
+            if self.rate_limit_after_send_once:
+                self.rate_limit_after_send_once=False
+                worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'failed',
+                        'revivable':False,'conversationId':None,'complete':False,'answer':None,
+                        'brokerResult':'CHATGPT_CONVERSATION_RATE_LIMITED_AFTER_SEND: Too Many Requests',
+                        'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
+                self.workers.append(worker);return {'workers':[copy.deepcopy(worker)]}
             worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'sleeping' if self.finish else 'active',
                     'revivable':True,'conversationId':'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee','complete':self.finish,
                     'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
+            worker['last_prompt']=prompt
             worker['answer']=json.dumps({'operation_id':prompt['operation_id'],'work_id':prompt['work_id'],'payload':{'test_result':prompt['task']['number']}})
+            if self.invalid_json_once:
+                self.invalid_json_once=False
+                worker['answer']=worker['answer'][:-1]
             self.workers.append(worker)
             if self.lost_reply:raise AutomationError('BRIDGE_TRANSPORT_UNCERTAIN')
             return {'workers':[copy.deepcopy(worker)]}
@@ -38,6 +59,14 @@ class FakeBridge:
             worker=next(w for w in self.workers if w['id']==body['to'])
             assert body['expectedCreatedAt']==worker['createdAt']
             prompt=json.loads(body['text'])
+            if prompt.get('kind')=='fieldnotes_json_repair':
+                original=worker['last_prompt']
+                worker.update(state='sleeping',complete=True,answer=json.dumps({
+                    'operation_id':original['operation_id'],'work_id':original['work_id'],
+                    'payload':{'test_result':original['task']['number']},
+                }))
+                return {'ok':True}
+            worker['last_prompt']=prompt
             worker.update(state='sleeping',complete=True,answer=json.dumps({'operation_id':prompt['operation_id'],'work_id':prompt['work_id'],'payload':{'test_result':prompt['task']['number']}}))
             return {'ok':True}
         raise AssertionError(route)
@@ -86,6 +115,22 @@ class BackendTests(unittest.TestCase):
         with self.assertRaises(AutomationError):b.execute('example','translator',{'number':1})
         with self.assertRaisesRegex(AutomationError,'OPERATION_SUBMISSION_UNCERTAIN'):b.execute('example','translator',{'number':1})
         self.assertEqual(len(self.bridge.workers),1)
+    def test_identityless_uncertain_with_no_exact_broker_worker_is_safe_to_retry(self):
+        self.bridge.reject_spawn_before_worker_once=True;b=self.backend()
+        with self.assertRaisesRegex(AutomationError,'spawn_failed'):
+            b.execute('example','translator',{'number':11})
+        self.assertEqual(self.bridge.workers,[])
+        self.assertEqual(b.execute('example','translator',{'number':11}),{'test_result':11})
+        self.assertEqual(len(self.bridge.workers),1)
+    def test_invalid_json_gets_one_same_worker_repair_turn(self):
+        self.bridge.invalid_json_once=True;b=self.backend()
+        self.assertEqual(b.execute('example','translator',{'number':12}),{'test_result':12})
+        self.assertEqual(len(self.bridge.workers),1)
+        messages=[body for route,body in self.bridge.calls if route.endswith('/message')]
+        self.assertEqual(len(messages),1)
+        repair=json.loads(messages[0]['text'])
+        self.assertEqual(repair['kind'],'fieldnotes_json_repair')
+        self.assertEqual(repair['work_id'],'example')
     def test_old_answer_rejected(self):
         with self.assertRaisesRegex(AutomationError,'RESULT_OPERATION_MISMATCH'):
             parse_envelope(json.dumps({'operation_id':'old','work_id':'example','payload':{}}),'new','example')
@@ -110,6 +155,20 @@ class BackendTests(unittest.TestCase):
         self.assertIsNone(self.bridge.workers[0]['conversationId'])
         self.assertEqual(b.execute('example','translator',{'number':1}),{'test_result':1})
         self.assertEqual(len(self.bridge.workers),2)
+    def test_presend_chatgpt_rate_limit_stops_now_but_is_retryable_after_cooldown(self):
+        self.bridge.rate_limit_once=True;b=self.backend()
+        with self.assertRaisesRegex(AutomationError,'CHATGPT_CONVERSATION_RATE_LIMITED'):
+            b.execute('example','translator',{'number':8})
+        self.assertEqual(b.execute('example','translator',{'number':8}),{'test_result':8})
+        self.assertEqual(len(self.bridge.workers),2)
+
+    def test_postsend_chatgpt_rate_limit_is_submission_uncertain(self):
+        self.bridge.rate_limit_after_send_once=True;b=self.backend()
+        with self.assertRaisesRegex(AutomationError,'CHATGPT_CONVERSATION_RATE_LIMITED'):
+            b.execute('example','translator',{'number':9})
+        with self.assertRaisesRegex(AutomationError,'OPERATION_SUBMISSION_UNCERTAIN'):
+            b.execute('example','translator',{'number':9})
+        self.assertEqual(len(self.bridge.workers),1)
     def test_legacy_generic_worker_failure_is_retryable_only_when_exact_worker_never_had_chat(self):
         self.bridge.fail_bootstrap_once=True;b=self.backend()
         with self.assertRaisesRegex(AutomationError,'PROJECT_WORKER_BOOTSTRAP_FAILED'):

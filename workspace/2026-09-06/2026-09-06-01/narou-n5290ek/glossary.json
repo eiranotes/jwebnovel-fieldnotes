@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "people": {
+    "アイス＝クーデルン": "아이스=쿠데른",
+    "フェニィ＝ボロス": "페니=보로스",
+    "フェニィ": "페니"
+  },
+  "places": {
+    "アズ": "아즈",
+    "コベット": "코베트",
+    "排斥の森": "배척의 숲",
+    "ハド軍国": "하드 군국"
+  },
+  "terms": {
+    "死滅の女王": "사멸의 여왕",
+    "軍国": "군국",
+    "帝国": "제국",
+    "洗脳術": "세뇌술",
+    "解術": "해제술",
+    "忘却術": "망각술",
+    "肉体治療術": "육체 치료술",
+    "精神安定術": "정신 안정술",
+    "炎術": "화염술",
+    "魔爪術": "마조술",
+    "魔獣": "마수",
+    "神持ち": "신을 지닌 자",
+    "麻痺術": "마비술",
+    "悪魔": "악마",
+    "身体治癒術": "신체 치유술",
+    "治癒術": "치유술",
+    "加護": "가호",
+    "武神の加護": "무신의 가호",
+    "武神持ち": "무신의 가호를 지닌 자",
+    "炎神の加護": "염신의 가호",
+    "炎神持ち": "염신의 가호를 지닌 자",
+    "水神の加護": "수신의 가호",
+    "火神の加護": "화신의 가호",
+    "治癒の加護": "치유의 가호",
+    "後継機": "후계기",
+    "研究所": "연구소",
+    "魔力操作": "마력 조작",
+    "建国王": "건국왕"
+  },
+  "ruby_notes": {
+    "傍": "かたわ",
+    "禍々": "まがまが",
+    "屠": "ほふ",
+    "躊躇": "ためら",
+    "薪": "たきぎ"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 5,
+      "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "proper_name_transliteration",
+      "source": "アイス＝クーデルン",
+      "ko": "아이스=쿠데른",
+      "basis": "explicit katakana in current source; no ruby supplied"
+    },
+    {
+      "type": "proper_name_transliteration",
+      "source": "フェニィ＝ボロス",
+      "ko": "페니=보로스",
+      "basis": "explicit katakana in current source; no ruby supplied"
+    },
+    {
+      "type": "term_translation",
+      "source": "解術",
+      "ko": "해제술",
+      "basis": "source explicitly defines it as a technique that removes mental interference such as 洗脳術 and 忘却術"
+    },
+    {
+      "type": "place_transliteration",
+      "source": "ハド軍国",
+      "ko": "하드 군국",
+      "basis": "explicit katakana in current source"
+    },
+    {
+      "type": "term_translation",
+      "source": "後継機",
+      "ko": "후계기",
+      "basis": "source describes a successor model capable of complex commands with less magic"
+    },
+    {
+      "type": "term_translation",
+      "source": "炎神の加護",
+      "ko": "염신의 가호",
+      "basis": "distinguished in source from 火神の加護"
+    }
+  ]
+}

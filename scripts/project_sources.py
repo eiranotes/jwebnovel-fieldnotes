@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote
 from automation_store import AutomationError, atomic_json, digest, locked, now, read_json, within
 from project_backend import BridgeClient
-from project_context import build_common, build_work, public_pack
+from project_context import build_common_packs, public_pack
 ROOT=Path(__file__).resolve().parent.parent
 
 
@@ -114,11 +114,10 @@ def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='field
 
 
 def main() -> int:
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--work-dir',required=True);parser.add_argument('--with-instructions',action='store_true')
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--with-instructions',action='store_true')
     args=parser.parse_args()
-    work=within(ROOT/'workspace',ROOT/args.work_dir)
     try:
-        result=synchronize([build_common(),build_work(work)],instructions=args.with_instructions)
+        result=synchronize(build_common_packs(),instructions=args.with_instructions)
         print(json.dumps({'status':result['state'],'command_id':result['command_id'],'sources':result['sources'],'retrieval_verified':False},ensure_ascii=False,indent=2));return 0
     except AutomationError as error:
         print(json.dumps({'status':'blocked','error':error.code}));return 1

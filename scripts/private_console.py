@@ -70,6 +70,25 @@ def validate_profiles(data: dict) -> dict:
         seen.add(pid)
         profile["profile_id"] = pid
         profile["name"] = name
+        refs = profile.get("reference_works") or []
+        if not isinstance(refs, list):
+            raise ValueError("reference_works must be an array")
+        normalized_refs = []
+        for ref in refs:
+            if isinstance(ref, dict):
+                title = str(ref.get("title") or "").strip()
+                url = str(ref.get("url") or "").strip()
+                if title or url:
+                    normalized_refs.append({k:v for k,v in (("title",title),("url",url)) if v})
+                continue
+            value = str(ref or "").strip()
+            if not value:
+                continue
+            if value.startswith("https://") and normalized_refs and isinstance(normalized_refs[-1], str):
+                normalized_refs[-1] = {"title": normalized_refs[-1], "url": value}
+            else:
+                normalized_refs.append(value)
+        profile["reference_works"] = normalized_refs
         hard = profile.setdefault("hard_filters", {})
         hard["min_chars"] = max(0, int(hard.get("min_chars", data.get("defaults", {}).get("min_chars", 300000)) or 0))
         profile.setdefault("output", {})["shortlist_count"] = max(1, int(profile.get("output", {}).get("shortlist_count", 10) or 10))

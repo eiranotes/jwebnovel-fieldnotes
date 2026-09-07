@@ -66,7 +66,7 @@ class ProjectTranslationIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/2026-09-07/test/example';work.mkdir(parents=True)
             actual=Path(__file__).resolve().parents[1]
-            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
                 destination.write_text((actual/'templates/project-context'/name).read_text())
             atomic_json(root/'config/project-translation.json',read_json(actual/'config/project-translation.json'))
@@ -91,12 +91,12 @@ class ProjectTranslationIntegration(unittest.TestCase):
             backend=FixtureModel(root,sequence)
             def sync(packs,**kwargs):
                 sequence.append('source_sync')
-                self.assertEqual([p['source_name'] for p in packs],['GLOBAL_CONTEXT'])
+                self.assertEqual([p['source_name'] for p in packs],['GLOBAL_CONTEXT','WORK_translation_rules','WORK_user_instructions'])
                 self.assertEqual(kwargs['root'],root)
                 self.assertEqual(kwargs['alias'],'fieldnotes')
                 self.assertIs(kwargs['instructions'],False)
                 return {'state':'complete'}
-            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common',side_effect=lambda:context.build_common(root)),patch.object(driver,'build_work',side_effect=lambda w:context.build_work(w,root)),patch.object(driver,'script_json',side_effect=complete):
+            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common_packs',side_effect=lambda:context.build_common_packs(root)),patch.object(driver,'script_json',side_effect=complete):
                 for _ in range(2):
                     capture=io.StringIO()
                     with contextlib.redirect_stdout(capture):
@@ -104,8 +104,8 @@ class ProjectTranslationIntegration(unittest.TestCase):
                     task=read_json(Path(capture.getvalue().strip()))
                     outcome=driver.process_task(task,backend=backend,source_sync=sync)
                     self.assertEqual(outcome['backend'],'webgpt_project')
-            self.assertEqual(backend.calls,['project_source_probe','translate_chunk','project_source_probe','translate_chunk'])
-            self.assertEqual(sequence,['source_sync','project_source_probe','translate_chunk','source_sync','project_source_probe','translate_chunk'])
+            self.assertEqual(backend.calls,['translate_chunk','translate_chunk'])
+            self.assertEqual(sequence,['source_sync','translate_chunk','source_sync','translate_chunk'])
             self.assertEqual(len(backend.translation_payloads),2)
             for payload in backend.translation_payloads:
                 self.assertTrue(Path(payload['local_source_task']['path']).is_absolute())
@@ -117,14 +117,16 @@ class ProjectTranslationIntegration(unittest.TestCase):
             self.assertTrue((work/'translation/parallel/index.html').exists())
             self.assertTrue((work/'translation/output/example-translation.zip').exists())
             text=(work/'translation/output/Fixture - 번역본.txt').read_text()
-            self.assertIn('원문: 風が吹く。\n번역: 바람이 분다.',text)
-            self.assertIn('원문: 雨が降る。\n번역: 비가 내린다.',text)
+            self.assertIn('風が吹く。\n바람이 분다.',text)
+            self.assertIn('雨が降る。\n비가 내린다.',text)
+            self.assertNotIn('원문:', text)
+            self.assertNotIn('번역:', text)
 
     def test_primary_project_failure_uses_codex_webgpt_fallback_then_normal_commit(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/2026-09-07/test/fallback-example';work.mkdir(parents=True)
             actual=Path(__file__).resolve().parents[1]
-            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
                 destination.write_text((actual/'templates/project-context'/name).read_text())
             atomic_json(root/'config/project-translation.json',read_json(actual/'config/project-translation.json'))
@@ -137,7 +139,7 @@ class ProjectTranslationIntegration(unittest.TestCase):
             def complete(script,args):
                 result=read_json(Path(args[args.index('--result')+1]))
                 return source.complete_chunk(work,'0001',result)
-            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common',side_effect=lambda:context.build_common(root)),patch.object(driver,'build_work',side_effect=lambda w:context.build_work(w,root)),patch.object(driver,'script_json',side_effect=complete):
+            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common_packs',side_effect=lambda:context.build_common_packs(root)),patch.object(driver,'script_json',side_effect=complete):
                 capture=io.StringIO()
                 with contextlib.redirect_stdout(capture):
                     source.next_task(SimpleNamespace(work_dir=str(work),entry='test',work='fallback-example',context_tail=700,context_head=500))
@@ -146,7 +148,7 @@ class ProjectTranslationIntegration(unittest.TestCase):
                 result=driver.process_task(task,backend=primary,source_sync=lambda *a,**k:{'state':'complete'},fallback_backend=fallback)
             self.assertEqual(result['backend'],'codex_webgpt')
             self.assertEqual(result['fallback_reason'],'PROJECT_SOURCE_UNAVAILABLE')
-            self.assertEqual(primary.calls,['project_source_probe'])
+            self.assertEqual(primary.calls,['translate_chunk'])
             self.assertEqual(len(fallback.calls),1)
             self.assertNotIn('project_source_proof_contract',fallback.calls[0][1])
             self.assertEqual(read_json(work/'state.json')['chunks_done'],1)
@@ -155,7 +157,7 @@ class ProjectTranslationIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/books/example';work.mkdir(parents=True)
             templates=root/'templates/project-context';templates.mkdir(parents=True)
-            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 (templates/name).write_text(name)
             atomic_json(work/'metadata.json',{'work_id':'example','title':'Fixture'})
             atomic_json(work/'glossary.json',{'people':{}})
@@ -169,12 +171,12 @@ class ProjectTranslationIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/books/example';work.mkdir(parents=True)
             actual=Path(__file__).resolve().parents[1]
-            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
                 destination.write_text((actual/'templates/project-context'/name).read_text())
             atomic_json(work/'metadata.json',{'work_id':'example','title':'Fixture'})
             atomic_json(work/'glossary.json',{'people':{}})
-            common=context.build_common(root);pack=context.build_work(work,root)
+            packs=context.build_common_packs(root)
             backend=FixtureModel(root,probe_unavailable=2)
             ids=[]
             original=backend.execute
@@ -183,7 +185,7 @@ class ProjectTranslationIntegration(unittest.TestCase):
                 return original(*args,**kwargs)
             backend.execute=execute
             with patch.object(driver.time,'sleep') as sleep:
-                proof=driver.prove_project_sources(backend,'example','0001',[common,pack],alias='fieldnotes',max_attempts=3,retry_seconds=7)
+                proof=driver.prove_project_sources(backend,'example','0001',packs,alias='fieldnotes',max_attempts=3,retry_seconds=7,conversation_title='260907-Fixture')
             self.assertEqual(proof['work_id'],'example')
             self.assertEqual(len(set(ids)),3)
             self.assertEqual(sleep.call_count,2)
@@ -193,15 +195,15 @@ class ProjectTranslationIntegration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/books/example';work.mkdir(parents=True)
             actual=Path(__file__).resolve().parents[1]
-            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
                 destination.write_text((actual/'templates/project-context'/name).read_text())
             atomic_json(work/'metadata.json',{'work_id':'example','title':'Fixture'})
             atomic_json(work/'glossary.json',{'people':{}})
-            common=context.build_common(root)
+            packs=context.build_common_packs(root)
             backend=FixtureModel(root,probe_bootstrap_failures=1)
             with patch.object(driver.time,'sleep') as sleep:
-                proof=driver.prove_project_sources(backend,'example','0001',[common],alias='fieldnotes',max_attempts=3,retry_seconds=10)
+                proof=driver.prove_project_sources(backend,'example','0001',packs,alias='fieldnotes',max_attempts=3,retry_seconds=10,conversation_title='260907-Fixture')
             self.assertEqual(proof['work_id'],'example')
             self.assertEqual(backend.calls,['project_source_probe','project_source_probe'])
             sleep.assert_called_once_with(3)

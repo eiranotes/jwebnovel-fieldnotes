@@ -5,6 +5,8 @@ let state = null;
 let writable = false;
 let feedbackTargetKey = null;
 let feedbackScope = '__global__';
+let profileAutosaveTimer = null;
+let profileWriteChain = Promise.resolve();
 
 const feedbackReasons = [
   ['premise','소재'],['tone','톤'],['prose','문체'],['pacing','전개'],['protagonist','주인공'],
@@ -109,10 +111,20 @@ function collectProfiles() {
   const original = structuredClone(state.profiles);
   original.profiles = $$('.profile-card').map(card => {
     const get = field => card.querySelector(`[data-field="${field}"]`);
-    const refs = get('reference_works').value.split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{
-      const [title,url] = line.split('|').map(x=>x.trim());
-      return url ? {title,url} : title;
-    });
+    const refLines = get('reference_works').value.split('\n').map(x=>x.trim()).filter(Boolean);
+    const refs = [];
+    for (const line of refLines) {
+      const parts = line.split('|').map(x=>x.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        refs.push({title:parts[0], url:parts[1]});
+        continue;
+      }
+      if (/^https:\/\//i.test(line) && refs.length && typeof refs[refs.length-1] === 'string') {
+        refs[refs.length-1] = {title:refs[refs.length-1], url:line};
+        continue;
+      }
+      refs.push(line);
+    }
     const old = (state.profiles.profiles||[]).find(x=>x.profile_id===card.dataset.id) || {};
     return {
       ...old,
@@ -124,6 +136,46 @@ function collectProfiles() {
     };
   });
   return original;
+}
+
+function selectedProfileIds() {
+  return $$('.profile-card')
+    .filter(card=>card.querySelector('[data-role="selected"]')?.checked)
+    .map(card=>card.querySelector('[data-field="profile_id"]')?.value.trim())
+    .filter(Boolean);
+}
+
+async function persistProfileState({saveSelection=false, silent=false}={}) {
+  if (!writable) return;
+  const config = collectProfiles();
+  const selected = selectedProfileIds();
+  // "다음 탐색" is an execution choice. Treating a checked but disabled profile as invalid
+  // made the UI silently discard the user's choice. Selecting a profile now activates it in
+  // the same durable write so the next-run resolver can actually see it.
+  for (const profile of config.profiles || []) {
+    if (selected.includes(profile.profile_id)) profile.enabled = true;
+  }
+  state.profiles = await api('api/profiles',{method:'POST',body:JSON.stringify(config)});
+  if (saveSelection) {
+    const selection = await api('api/selection',{method:'POST',body:JSON.stringify({
+      selected_profile_ids:selected,
+      explicit_selection_mode:$('#explicit-mode').value,
+      when_none:$('#fallback-mode').value,
+      rotation_batch_size:Number($('#rotation-batch').value||1)
+    })});
+    state.profiles.selection = {...(state.profiles.selection||{}), ...selection};
+  }
+  if (!silent) toast(saveSelection ? `다음 탐색 선택 저장: ${selected.length?selected.length+'개':'fallback'}` : '탐색 조건 저장됨');
+}
+
+function queueProfileAutosave({saveSelection=false}={}) {
+  if (!writable) return;
+  clearTimeout(profileAutosaveTimer);
+  profileAutosaveTimer = setTimeout(()=>{
+    profileWriteChain = profileWriteChain
+      .then(()=>persistProfileState({saveSelection, silent:true}))
+      .catch(error=>toast(`자동 저장 실패: ${error.message}`,true));
+  }, 700);
 }
 
 function renderWorks() {
@@ -242,6 +294,7 @@ $('#add-profile').addEventListener('click',()=>{
   const id=`profile-${Date.now().toString(36)}`;
   state.profiles.profiles.push({profile_id:id,name:'새 탐색 조건',enabled:true,reference_works:[],hard_filters:{platforms:['Narou','Kakuyomu'],min_chars:300000,genres:[],must:[],must_not:[],commercial_publication:'profile_specific',adult_r18:'exclude'},soft_preferences:{serialization_priority:[],freshness:null,visibility:null,protagonist:null,pov:null,style:[],pacing:[],romance_tolerance:null,element_preferences:[]},output:{shortlist_count:10,source_pipeline_top_n:5,length_exception_max:2,when_candidates_are_insufficient:'output_fewer_and_report_gap'},translation:{enqueue_top_n:true,priority:'oldest_pending_first'}});
   renderProfiles();
+  queueProfileAutosave();
 });
 
 $('#profile-list').addEventListener('click',event=>{
@@ -249,21 +302,37 @@ $('#profile-list').addEventListener('click',event=>{
     const card=event.target.closest('.profile-card');
     state.profiles.profiles=state.profiles.profiles.filter(p=>p.profile_id!==card.dataset.id);
     renderProfiles();
+    queueProfileAutosave({saveSelection:true});
   }
 });
 
+$('#profile-list').addEventListener('input',event=>{
+  if (event.target.matches('input, textarea')) queueProfileAutosave();
+});
+
+$('#profile-list').addEventListener('change',event=>{
+  if (event.target.matches('[data-role="selected"]')) {
+    const card = event.target.closest('.profile-card');
+    const enabled = card?.querySelector('[data-field="enabled"]');
+    if (event.target.checked && enabled) enabled.checked = true;
+    queueProfileAutosave({saveSelection:true});
+    return;
+  }
+  if (event.target.matches('input, textarea, select')) queueProfileAutosave();
+});
+
+['fallback-mode','explicit-mode','rotation-batch'].forEach(id=>{
+  $(`#${id}`).addEventListener('change',()=>queueProfileAutosave({saveSelection:true}));
+});
+
 $('#save-profiles').addEventListener('click',async()=>{
-  try{ state.profiles=await api('api/profiles',{method:'POST',body:JSON.stringify(collectProfiles())}); renderProfiles(); toast('탐색 조건 저장됨'); }
+  try{ await persistProfileState({silent:false}); renderProfiles(); }
   catch(error){ toast(error.message,true); }
 });
 
 $('#save-selection').addEventListener('click',async()=>{
   try{
-    const config=collectProfiles();
-    state.profiles=await api('api/profiles',{method:'POST',body:JSON.stringify(config)});
-    const selected=$$('.profile-card').filter(c=>c.querySelector('[data-role="selected"]').checked).map(c=>c.querySelector('[data-field="profile_id"]').value.trim());
-    await api('api/selection',{method:'POST',body:JSON.stringify({selected_profile_ids:selected,explicit_selection_mode:$('#explicit-mode').value,when_none:$('#fallback-mode').value,rotation_batch_size:Number($('#rotation-batch').value||1)})});
-    toast(`다음 탐색 선택 저장: ${selected.length?selected.length+'개':'fallback'}`);
+    await persistProfileState({saveSelection:true, silent:false});
     await loadState();
   } catch(error){ toast(error.message,true); }
 });

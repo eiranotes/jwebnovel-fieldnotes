@@ -33,8 +33,13 @@ The LaunchAgent no longer needs external-volume permission at boot.
 `python3 scripts/runtime_sync.py push`
 
 - canonical → runtime
+- runtime marker의 마지막 동기화 hash와 양쪽 현재 hash를 비교한다
+- runtime만 바뀌었으면 먼저 canonical에 import하고, canonical만 바뀌었으면 runtime으로 배포한다
+- 양쪽이 마지막 동기화 이후 서로 다르게 바뀌었으면 어느 쪽도 덮어쓰지 않고 `conflict`로 중단한다
 - refreshes console code, configs, public state, worker code/venv and local workspace artifacts
 - run this after a daily job or after implementation changes
+
+`workspace/learning/`도 mutable private state로 양방향 보존한다. 따라서 phone/private runtime에서 누적된 operational lesson evidence가 code refresh 때문에 사라지지 않는다.
 
 `python3 scripts/runtime_sync.py install`
 

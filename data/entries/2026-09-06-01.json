@@ -37,13 +37,13 @@
   ],
   "results": {
     "shortlist": [
-      {"class": "A1", "title": "神の女王と解放者", "similarity_score": 89},
-      {"class": "A2", "title": "うちの師匠は猫で魔王！", "similarity_score": 86},
-      {"class": "A3", "title": "終末の歌姫と滅びの子", "similarity_score": 79},
-      {"class": "B1", "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～", "similarity_score": 72},
-      {"class": "B2", "title": "マリー・パスファインダー series", "similarity_score": 70},
-      {"class": "B3", "title": "Eighteen Years' War ～三大陸千年紀～", "similarity_score": 68},
-      {"class": "B4", "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～", "similarity_score": 67}
+      {"class": "A1", "rank": "A1", "title": "神の女王と解放者", "platform": "Narou", "url": "https://ncode.syosetu.com/n5290ek/", "similarity_score": 89},
+      {"class": "A2", "rank": "A2", "title": "うちの師匠は猫で魔王！", "platform": "Narou", "url": "https://ncode.syosetu.com/n8361ja/", "similarity_score": 86},
+      {"class": "A3", "rank": "A3", "title": "終末の歌姫と滅びの子", "platform": "Narou", "url": "https://ncode.syosetu.com/n8655kq/", "similarity_score": 79},
+      {"class": "B1", "rank": "B1", "title": "花嫁騎士 ～勇者を寝取られたわたしは魔王の城を目指す～", "platform": "Narou", "url": "https://ncode.syosetu.com/n8514ea/", "similarity_score": 72},
+      {"class": "B2", "rank": "B2", "title": "マリー・パスファインダー series", "platform": "Narou", "url": "https://ncode.syosetu.com/n9369ff/", "similarity_score": 70},
+      {"class": "B3", "rank": "B3", "title": "Eighteen Years' War ～三大陸千年紀～", "platform": "Kakuyomu", "url": "https://kakuyomu.jp/works/16818622172225120257", "similarity_score": 68},
+      {"class": "B4", "rank": "B4", "title": "一騎当戦 ～東方無双の剣鬼、異国に渡りて戦を喰らう～", "platform": "Kakuyomu", "url": "https://kakuyomu.jp/works/16817330656026243259", "similarity_score": 67}
     ],
     "queue": ["英雄なのか？"],
     "deprioritized": ["煌国のマジェスティ", "水精演義", "泥濘のレクイエム"]

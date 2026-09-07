@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "people": {
+    "ミヤ": "미야",
+    "ノア": "노아",
+    "ユーリ・トビタ": "유리 토비타",
+    "ゴート": "고트",
+    "アベル": "아벨",
+    "カイン・ベルカ": "카인 벨카"
+  },
+  "places": {
+    "ア・ハイ群島": "아·하이 군도",
+    "ソッスカー": "솟스카"
+  },
+  "terms": {
+    "人喰い絵本": "식인 그림책",
+    "黒騎士団": "흑기사단",
+    "選民派": "선민파",
+    "嬲り神": "농락신",
+    "エニャルギー": "에냐르기",
+    "ＸＸＸＸ": "XXXX",
+    "貴族連盟議会": "귀족연맹의회",
+    "宝石百足": "보석지네",
+    "イレギュラー": "이레귤러",
+    "正道派": "정도파",
+    "破壊神の足": "파괴신의 발",
+    "催眠魔法": "최면 마법"
+  },
+  "ruby_notes": {
+    "ＸＸＸＸ": "クアドラエックス",
+    "連続殺人鬼": "シリアルキラー"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 2,
+      "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "conflict",
+      "bucket": "ruby_notes",
+      "key": "ＸＸＸＸ",
+      "kept": "クアドラエックス",
+      "proposed": "쿼드라 엑스"
+    },
+    {
+      "type": "conflict",
+      "bucket": "ruby_notes",
+      "key": "連続殺人鬼",
+      "kept": "シリアルキラー",
+      "proposed": "시리얼 킬러"
+    },
+    {
+      "type": "term",
+      "source": "嬲り神",
+      "ko": "농락신",
+      "confidence": "medium"
+    },
+    {
+      "type": "wordplay",
+      "source": "すまんこ",
+      "ko": "미안꼬",
+      "confidence": "medium",
+      "note": "원문의 의도적인 비틀린 말장난을 설명 없이 보존"
+    },
+    {
+      "type": "proper_name",
+      "source": "カイン・ベルカ",
+      "ko": "카인 벨카",
+      "confidence": "high"
+    },
+    {
+      "type": "term",
+      "source": "宝石百足",
+      "ko": "보석지네",
+      "confidence": "medium"
+    },
+    {
+      "type": "term",
+      "source": "正道派",
+      "ko": "정도파",
+      "confidence": "high"
+    },
+    {
+      "type": "term",
+      "source": "破壊神の足",
+      "ko": "파괴신의 발",
+      "confidence": "high"
+    }
+  ]
+}

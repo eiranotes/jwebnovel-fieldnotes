@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 from datetime import datetime, timezone
@@ -51,6 +52,7 @@ PRIVATE_STATE_FILES = (
 
 MUTABLE_WORKSPACE_DIRS = (
     "workspace/full-translations",
+    "workspace/learning",
 )
 
 
@@ -69,19 +71,19 @@ def source_is_newer(src: Path, dst: Path) -> bool:
         return True
 
 
-def copy_file(src_root: Path, dst_root: Path, rel: str) -> bool:
+def copy_file(src_root: Path, dst_root: Path, rel: str, *, force: bool = False) -> bool:
     src = src_root / rel
     if not src.exists() or not src.is_file():
         return False
     dst = dst_root / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
-    if not source_is_newer(src, dst):
+    if not force and not source_is_newer(src, dst):
         return False
     shutil.copy2(src, dst)
     return True
 
 
-def copy_tree(src_root: Path, dst_root: Path, rel: str) -> bool:
+def copy_tree(src_root: Path, dst_root: Path, rel: str, *, force: bool = False) -> bool:
     src = src_root / rel
     if not src.exists() or not src.is_dir():
         return False
@@ -91,7 +93,7 @@ def copy_tree(src_root: Path, dst_root: Path, rel: str) -> bool:
     def copy_if_newer(src_name: str, dst_name: str) -> str:
         src_path = Path(src_name)
         dst_path = Path(dst_name)
-        if source_is_newer(src_path, dst_path):
+        if force or source_is_newer(src_path, dst_path):
             shutil.copy2(src_path, dst_path)
         return str(dst_path)
 
@@ -112,14 +114,75 @@ def copy_tree(src_root: Path, dst_root: Path, rel: str) -> bool:
     return True
 
 
-def ensure_runtime_marker() -> None:
+def _ignored_runtime_path(path: Path, root: Path) -> bool:
+    rel = path.relative_to(root)
+    if any(part in {".git", "__pycache__"} for part in rel.parts):
+        return True
+    name = path.name
+    return (
+        name == ".DS_Store"
+        or name.endswith(".pyc")
+        or name == "private-console.pid"
+        or (name.startswith("private-console") and name.endswith(".log"))
+    )
+
+
+def entry_hash(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    if path.is_file():
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    if not path.is_dir():
+        return None
+    digest = hashlib.sha256()
+    for child in sorted((p for p in path.rglob("*") if p.is_file()), key=lambda p: str(p.relative_to(path))):
+        if _ignored_runtime_path(child, path):
+            continue
+        rel = str(child.relative_to(path)).replace("\\", "/")
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(child.read_bytes()).digest())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def entry_mtime(path: Path) -> int:
+    if not path.exists():
+        return -1
+    if path.is_file():
+        return path.stat().st_mtime_ns
+    mtimes = [path.stat().st_mtime_ns]
+    mtimes.extend(p.stat().st_mtime_ns for p in path.rglob("*") if p.is_file() and not _ignored_runtime_path(p, path))
+    return max(mtimes)
+
+
+def mutable_entries() -> tuple[tuple[str, str], ...]:
+    return tuple((rel, "file") for rel in (*MUTABLE_FILES, *PRIVATE_STATE_FILES)) + tuple(
+        (rel, "tree") for rel in MUTABLE_WORKSPACE_DIRS
+    )
+
+
+def runtime_marker() -> dict:
+    path = RUNTIME / ".fieldnotes-runtime.json"
+    if not path.exists():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def ensure_runtime_marker(mutable_hashes: dict | None = None) -> None:
     RUNTIME.mkdir(parents=True, exist_ok=True)
+    previous = runtime_marker()
     marker = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "purpose": "private_non_git_runtime_mirror",
         "canonical_repo": str(ROOT),
         "runtime_root": str(RUNTIME),
         "updated_at": now(),
+        "mutable_hashes": dict(previous.get("mutable_hashes") or {}) if mutable_hashes is None else mutable_hashes,
     }
     (RUNTIME / ".fieldnotes-runtime.json").write_text(
         json.dumps(marker, ensure_ascii=False, indent=2) + "\n",
@@ -130,36 +193,83 @@ def ensure_runtime_marker() -> None:
         raise SystemExit(f"Refusing to use runtime mirror containing .git: {RUNTIME}")
 
 
+def _set_marker_hashes(updates: dict[str, str | None]) -> None:
+    marker = runtime_marker()
+    hashes = dict(marker.get("mutable_hashes") or {})
+    hashes.update(updates)
+    ensure_runtime_marker(hashes)
+
+
 def pull() -> dict:
-    """Import newer phone/runtime mutable state into the canonical local repo."""
+    """Import runtime-only mutable changes; refuse silent two-sided overwrites."""
     if not RUNTIME.exists():
         return {"status": "runtime_missing", "runtime": str(RUNTIME), "files": 0, "trees": 0}
+    marker = runtime_marker()
+    previous = dict(marker.get("mutable_hashes") or {})
+    imports: list[tuple[str, str]] = []
+    conflicts: list[dict] = []
+    baseline_updates: dict[str, str | None] = {}
+    for rel, kind in mutable_entries():
+        canonical = ROOT / rel
+        runtime = RUNTIME / rel
+        canonical_hash = entry_hash(canonical)
+        runtime_hash = entry_hash(runtime)
+        if rel not in previous:
+            # Upgrade path from the old mtime-only mirror. If both copies differ, preserve the
+            # more recently written side once, then establish a content-hash baseline.
+            if runtime_hash is not None and runtime_hash != canonical_hash and entry_mtime(runtime) > entry_mtime(canonical):
+                imports.append((rel, kind))
+                baseline_updates[rel] = runtime_hash
+            elif runtime_hash == canonical_hash:
+                baseline_updates[rel] = canonical_hash
+            continue
+        last_hash = previous.get(rel)
+        runtime_changed = runtime_hash != last_hash
+        canonical_changed = canonical_hash != last_hash
+        if runtime_changed and canonical_changed and runtime_hash != canonical_hash:
+            conflicts.append({"path": rel, "canonical_sha256": canonical_hash, "runtime_sha256": runtime_hash, "last_synced_sha256": last_hash})
+        elif runtime_changed and not canonical_changed:
+            imports.append((rel, kind))
+            baseline_updates[rel] = runtime_hash
+        elif runtime_hash == canonical_hash:
+            baseline_updates[rel] = canonical_hash
+    if conflicts:
+        return {"status": "conflict", "runtime": str(RUNTIME), "files": 0, "trees": 0, "conflicts": conflicts}
     files = 0
     trees = 0
-    for rel in (*MUTABLE_FILES, *PRIVATE_STATE_FILES):
-        files += int(copy_file(RUNTIME, ROOT, rel))
-    for rel in MUTABLE_WORKSPACE_DIRS:
-        trees += int(copy_tree(RUNTIME, ROOT, rel))
-    return {"status": "pulled", "runtime": str(RUNTIME), "files": files, "trees": trees}
+    for rel, kind in imports:
+        if kind == "file":
+            files += int(copy_file(RUNTIME, ROOT, rel, force=True))
+        else:
+            trees += int(copy_tree(RUNTIME, ROOT, rel, force=True))
+    if baseline_updates:
+        _set_marker_hashes(baseline_updates)
+    return {"status": "pulled", "runtime": str(RUNTIME), "files": files, "trees": trees, "conflicts": []}
 
 
-def push() -> dict:
-    """Refresh the internal runtime mirror with newer canonical code/state."""
+def push(*, preserve_runtime: bool = True) -> dict:
+    """Refresh the mirror after hash-based reconciliation of private mutable state."""
+    preserved = pull() if preserve_runtime and RUNTIME.exists() else None
+    if preserved and preserved.get("status") == "conflict":
+        return {"status": "conflict", "runtime": str(RUNTIME), "preserved_runtime": preserved, "files": 0, "trees": 0}
     ensure_runtime_marker()
     files = 0
     trees = 0
     for rel in RUNTIME_DIRS:
-        trees += int(copy_tree(ROOT, RUNTIME, rel))
+        trees += int(copy_tree(ROOT, RUNTIME, rel, force=True))
     for rel in RUNTIME_FILES:
-        files += int(copy_file(ROOT, RUNTIME, rel))
-    ensure_runtime_marker()
-    return {"status": "pushed", "runtime": str(RUNTIME), "files": files, "trees": trees}
+        files += int(copy_file(ROOT, RUNTIME, rel, force=True))
+    hashes = {rel: entry_hash(ROOT / rel) for rel, _ in mutable_entries()}
+    ensure_runtime_marker(hashes)
+    return {"status": "pushed", "runtime": str(RUNTIME), "preserved_runtime": preserved, "files": files, "trees": trees}
 
 
 def install() -> dict:
     # Preserve any edits made from the phone before refreshing code/state.
     imported = pull() if RUNTIME.exists() else {"status": "first_install", "files": 0, "trees": 0}
-    exported = push()
+    if imported.get("status") == "conflict":
+        return {"status": "conflict", "pull": imported, "push": None}
+    exported = push(preserve_runtime=False)
     return {"status": "installed", "pull": imported, "push": exported}
 
 

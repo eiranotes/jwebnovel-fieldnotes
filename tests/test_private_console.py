@@ -10,6 +10,23 @@ from private_console import _content_disposition
 
 
 class PrivateConsoleTests(unittest.TestCase):
+    def test_profile_validation_pairs_title_and_following_reference_url(self):
+        payload={
+            'defaults':{'min_chars':300000},
+            'selection':{'selected_profile_ids':['quiz']},
+            'profiles':[{
+                'profile_id':'quiz','name':'퀴즈왕','enabled':True,
+                'reference_works':['異世界クイズ王','https://ncode.syosetu.com/s0134g/'],
+                'hard_filters':{'min_chars':300000},'output':{'shortlist_count':5}
+            }]
+        }
+        result=private_console.validate_profiles(payload)
+        self.assertEqual(result['profiles'][0]['reference_works'],[{
+            'title':'異世界クイズ王','url':'https://ncode.syosetu.com/s0134g/'
+        }])
+        self.assertTrue(result['criteria_ready'])
+        self.assertEqual(result['selection']['selected_profile_ids'],['quiz'])
+
     def test_unicode_download_name_uses_ascii_safe_rfc5987_header(self):
         value=_content_disposition('逆さの茶笠 - 번역본.txt')
         value.encode('latin-1')

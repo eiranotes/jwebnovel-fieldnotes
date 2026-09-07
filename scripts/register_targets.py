@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse, json, re
 from pathlib import Path
 from datetime import datetime, timezone
+from learning_store import safe_observe
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / 'data' / 'work-registry.json'
@@ -53,6 +54,13 @@ def main() -> int:
     existing = {canonical_key(x): x for x in registry.get('works', [])}
     created = []
     for candidate in selected:
+        url = str(candidate.get('url') or '').strip()
+        if not re.match(r'^https://', url):
+            safe_observe(
+                'discovery', 'candidate_missing_url_in_json', 'observed',
+                scope='persistence', note=f"entry={args.entry}; title={str(candidate.get('title') or '')[:120]}", root=ROOT,
+            )
+            raise SystemExit(f"Selected candidate is missing canonical https URL in entry JSON: {candidate.get('title')}")
         key = canonical_key(candidate)
         if key in existing:
             existing[key]['latest_entry_id'] = args.entry

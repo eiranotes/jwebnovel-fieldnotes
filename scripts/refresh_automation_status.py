@@ -73,8 +73,19 @@ def refresh(root: Path=ROOT) -> dict:
      'translating':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='translation_pending'),
      'complete':sum(1 for x in fullq.get('requests',[]) if x.get('status')=='complete')}
     status.setdefault('source_acquisition',{}).update({'acquired_works':acquired})
-    status['phase']='ready_for_schedule' if cfg.get('time') and profiles.get('criteria_ready') else 'pipeline_ready_configuration_pending'
-    status['next_action']='enable daily schedule' if status['phase']=='ready_for_schedule' else 'collect search criteria and exact daily time'
+    criteria_ready=bool(profiles.get('criteria_ready') and enabled_profiles)
+    if not criteria_ready:
+        status['phase']='pipeline_ready_configuration_pending'
+        status['next_action']='save at least one enabled search profile'
+    elif not cfg.get('time'):
+        status['phase']='pipeline_ready_configuration_pending'
+        status['next_action']='set exact daily time'
+    elif not cfg.get('enabled'):
+        status['phase']='ready_for_schedule'
+        status['next_action']='enable daily schedule'
+    else:
+        status['phase']='scheduled'
+        status['next_action']='run daily pipeline on schedule'
     atomic_json(status_path,status)
     return status
 

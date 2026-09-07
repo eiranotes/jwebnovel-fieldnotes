@@ -45,6 +45,13 @@ YYYY-MM-DD-NN
 
 기준작이 없으면 사용자의 자연어 요구에서 style dimensions를 직접 만든다.
 
+## Learning audit
+
+- `learning_lessons_applied[]` — 이번 탐색에 실제로 적용한 active operational/discovery lesson id만 기록
+- `discovery_incidents_observed[]` — 이번 탐색에서 새로 발견한 반복 가능 오탐/누락/수집 실패 signature를 기록
+
+취향 모델의 raw event나 private lesson 본문을 엔트리에 복사하지 않는다. 엔트리는 어떤 검증된 lesson이 영향을 줬는지 id만 남겨 재현 가능하게 한다.
+
 ## Result fields
 
 각 후보는 다음을 분리한다.
@@ -57,6 +64,7 @@ YYYY-MM-DD-NN
 - `samples_read[]`
 - `kept_because`
 - `differs_because`
+- `url` — shortlist/length exception처럼 downstream acquisition 대상이 될 수 있는 후보는 canonical HTTPS URL 필수
 
 ## Publication tier
 

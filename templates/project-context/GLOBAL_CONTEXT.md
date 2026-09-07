@@ -2,19 +2,19 @@
 
 Fieldnotes keeps canonical metadata, source text, versioned translation guides,
 glossaries, tasks and checkpoints on the Mac. This Project holds published
-reference snapshots only; it is not the authoritative database.
+workflow/reference snapshots only; it is not the authoritative database.
 
-A work source is named WORK_<work_id>_v<version>_<hash>.md. Use the exact file
-named in the task, not a similarly named older upload. Each source records its
-content revision and a retrieval probe. A returned probe demonstrates access to
-that source content; it is not a guarantee of comprehensive reading or model
-translation quality.
+There is one ChatGPT Project named Fieldnotes. Every novel gets its own Project
+conversation and every chunk of that novel continues in that same conversation.
+Never reuse a different novel's conversation as translation context. The Project
+Sources are application-wide rules shared by those conversations; there is no
+per-novel Project and no per-novel Project Source in the production path.
 
-The current Japanese chunk, previous tail, following head, source segment ids
-and runtime glossary corrections arrive directly in each translation task.
-Do not translate adjacent context again. Runtime corrections may be newer than
-the published source snapshot and must be respected without inventing a new
-Project upload.
+Each Project Source records a content revision and retrieval probe. Returning a
+probe demonstrates access to that exact source; it is not itself a translation
+quality signal. Private work metadata, Japanese text, sentence ids, adjacent
+context, ruby evidence and the current glossary live in the exact local task JSON
+named by the current translation task.
 
 Output result:
 {"work_id":"current work","chunk_id":"current chunk",

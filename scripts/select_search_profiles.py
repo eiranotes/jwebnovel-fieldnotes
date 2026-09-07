@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from automation_log import log_event, new_run_id
+from learning_store import active_context, seed_known
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -92,12 +93,19 @@ def main() -> int:
             public_details={"mode": mode, "count": len(chosen)},
         )
     preference_profiles = load(PREFERENCE_MODEL, {"profiles": {}}).get("profiles", {})
+    # Keep operational/process learning separate from user taste, but surface both in the
+    # resolved next-run payload so a discovery worker does not have to infer where to find them.
+    try:
+        seed_known(ROOT)
+        discovery_learning = active_context("discovery", root=ROOT)
+    except Exception:
+        discovery_learning = {"domain": "discovery", "lessons": [], "count": 0}
     output_profiles = []
     for profile in chosen:
         row = json.loads(json.dumps(profile, ensure_ascii=False))
         row["preference_learning"] = preference_profiles.get(profile.get("profile_id"), {})
         output_profiles.append(row)
-    print(json.dumps({"mode": mode, "profiles": output_profiles}, ensure_ascii=False, indent=2))
+    print(json.dumps({"mode": mode, "profiles": output_profiles, "operational_learning": discovery_learning}, ensure_ascii=False, indent=2))
     return 0
 
 

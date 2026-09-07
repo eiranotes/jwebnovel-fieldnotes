@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "source": "workspace/2026-09-06/2026-09-06-01/kakuyomu-16817330656026243259/merged/ja.txt",
+  "source_sha256": "ec1047cefa2df002102d190ca72affdbefb3b39e9c97a493462d3ad63d8ad532",
+  "target_chunk_chars": 9000,
+  "hard_max_chunk_chars": 12000,
+  "chunk_count": 2,
+  "chunks": [
+    {
+      "chunk_id": "0001",
+      "order": 1,
+      "status": "done",
+      "source_start_char": 0,
+      "source_end_char": 8969,
+      "ja_chars": 8969,
+      "ko_chars": 10465,
+      "translated_at": "2026-09-07T12:42:50.865442+00:00",
+      "review_status": "auto_pending",
+      "terms_added": []
+    },
+    {
+      "chunk_id": "0002",
+      "order": 2,
+      "status": "done",
+      "source_start_char": 8969,
+      "source_end_char": 12885,
+      "ja_chars": 3916,
+      "ko_chars": 4571,
+      "translated_at": "2026-09-07T12:45:12.739691+00:00",
+      "review_status": "auto_pending",
+      "terms_added": []
+    }
+  ],
+  "created_at": "2026-09-07T10:30:45.755539+00:00"
+}

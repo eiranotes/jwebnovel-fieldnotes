@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from rebuild_work_index import OUT, canonical, rebuild
+from learning_store import safe_observe
 
 
 def load_index() -> dict:
@@ -42,6 +43,13 @@ def main() -> int:
     data = json.loads(raw)
     items = data if isinstance(data, list) else [data]
     rows = annotate(items)
+    seen_count = sum(bool(x.get("seen")) for x in rows)
+    if seen_count:
+        safe_observe(
+            "discovery", "repeat_or_crosspost_candidate", "confirmed",
+            scope="candidate_pool", note=f"seen candidates filtered={seen_count}",
+            root=Path(__file__).resolve().parent.parent,
+        )
     if args.unseen_only:
         rows = [x for x in rows if not x["seen"]]
     print(json.dumps(rows, ensure_ascii=False, indent=2))

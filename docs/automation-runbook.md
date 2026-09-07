@@ -20,6 +20,8 @@
 | automation log summary | `data/automation-logs.json` |
 | private detailed logs | `workspace/automation-logs/YYYY-MM-DD.jsonl` |
 | full-work translation root | `workspace/full-translations/WORK_ID/` |
+| operational/discovery lessons | `workspace/learning/operational-lessons.json` |
+| learning policy / seed rules | `config/learning-policy.json` |
 
 ## Register top-N targets
 
@@ -108,13 +110,21 @@ python3 scripts/translation_queue.py complete \
 ```
 
 This also rebuilds the local parallel view and refreshes global automation status.
-When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, `<원문 제목> - 번역본.txt`, and a ZIP; the private console exposes them in **파일받기**. `<원문 제목> - 번역본.txt` is ordered sentence-by-sentence as `원문 → 번역 → 원문 → 번역`.
+When the last chunk completes, the standard route also packages `translation/output/ko.txt`, `ja-ko.md`, `<원문 제목> - 번역본.txt`, and a ZIP; the private console exposes them in **파일받기**. The user-facing TXT groups consecutive sentence pairs by original paragraph, then writes `원문 문단 → 대응 번역 문단`. Sentence ids remain the internal 1:1 validator.
 
 The production model path is owned by `scripts/translate_project.py`:
 
-1. Primary: one reusable ChatGPT Project conversation per `(work_id, translator)` with fresh Project-source proof and an exact Core read of the local task JSON.
+1. Primary: one reusable ChatGPT Project conversation per `(work_id, translator)` with Project-source proof returned in the same translation result and an exact Core read of the local task JSON.
 2. Fallback: only for configured terminal/pre-submit failure codes, local Codex reads the same task and prepares a WebGPT instruction; Oracle launches WebGPT from a throwaway copy of the signed-in Chrome profile. The fallback result returns to the same hidden-probe, sentence-id, glossary and transactional completion validators.
 3. Ambiguous delivery (`WORKER_RESULT_TIMEOUT`, uncertain submission/transport) never falls back or resubmits automatically.
+
+For a browser-backed multi-work production run:
+
+```bash
+python3 scripts/translate_parallel.py --entry 2026-09-06-01 --workers 2 --launch-gap 30
+```
+
+Do not increase browser workers beyond 2 on the current setup. The Project backend polls at 3 seconds. A local bridge `rate_limited` 429 retries the same local request with bounded backoff; a provider conversation rate limit stops new launches.
 
 Per-work fallback:
 
@@ -159,12 +169,36 @@ python3 scripts/select_search_profiles.py --commit
 
 Explicitly checked groups all run. With no explicit selection the fallback can be `round_robin`, `least_recently_run`, `random_daily`, or `all_enabled`.
 
+On the private Tailnet console, profile text/checkbox changes autosave. Checking `다음 탐색` also enables the profile in the same durable write. The public GitHub Pages console is read-only and cannot persist a next-search request.
+
 Before ranking discovery candidates, rebuild and consult the seen index:
 
 ```bash
 python3 scripts/rebuild_work_index.py
 cat candidates.json | python3 scripts/work_index.py --unseen-only
 ```
+
+## Operational / discovery learning
+
+Seed and inspect the verified private lesson ledger before a production run:
+
+```bash
+python3 scripts/learning_store.py seed
+python3 scripts/learning_store.py context --domain translation
+python3 scripts/learning_store.py context --domain discovery
+```
+
+Record a newly observed repeatable failure without promoting it:
+
+```bash
+python3 scripts/learning_store.py record \
+  --domain discovery \
+  --scope ranking \
+  --signature "example false-positive signature" \
+  --outcome observed
+```
+
+After an actual code/protocol fix has passed regression/E2E, record it as `resolved` with a bounded resolution and guard. Only resolved/confirmed lessons become active context. Never put source text, translated chapter text, complete model output, credentials or private URLs in the store.
 
 ## Full-work translation
 

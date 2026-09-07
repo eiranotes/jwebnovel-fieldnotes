@@ -1,0 +1,249 @@
+{
+  "schema_version": "1.2",
+  "entry_id": "2026-09-08-01",
+  "date": "2026-09-08",
+  "sequence": 1,
+  "continuation_of": null,
+  "title": "퀴즈왕 스타일 — 집요한 소재 전개와 광기성 서술",
+  "method_version_used": "0.4 + live web sampling",
+  "current_protocol_version": "0.4",
+  "request_snapshot": "현재 선택된 quiz-king-style 프로필을 그대로 사용. 『異世界クイズ王』의 퀴즈 소재를 복제하지 않고, 독특한 전개·광기에 가까운 서술·한 소재를 극한까지 밀어붙이는 구성과 중간 정도 인기를 우선한다. Narou/Kakuyomu, 300,000자 이상, 확인된 출판작 제외, strict seen-index dedupe. 남성 주인공은 선호조건이다.",
+  "reference_works": [
+    {
+      "title": "異世界クイズ王",
+      "url": "https://ncode.syosetu.com/s0134g/",
+      "role": "style_benchmark",
+      "notes": "퀴즈를 단순 소재가 아니라 세계의 제도·기술·전투·의례까지 확장하고, 전문 퀴저의 미세한 관찰과 과열된 진지함을 사건 논리로 바꾸는 방식을 기준점으로 사용."
+    }
+  ],
+  "anti_reference_works": [],
+  "hard_filters": {
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [],
+    "min_chars": 300000,
+    "must": [],
+    "must_not": [
+      "confirmed_commercial_publication",
+      "adult_r18"
+    ],
+    "publication": "exclude_confirmed_commercial_editions"
+  },
+  "length_policy": {
+    "source": "user_profile",
+    "default_min_chars": 300000,
+    "explicit_min_chars": 300000,
+    "effective_min_chars": 300000,
+    "allow_high_fit_exception": true,
+    "exception_label": "LENGTH EXCEPTION"
+  },
+  "soft_preferences": [
+    "male_protagonist",
+    "middle_visibility",
+    "single_premise_taken_to_extreme",
+    "mad_or_abnormal_narration",
+    "specialist_density"
+  ],
+  "allowed_exceptions": [
+    "female_protagonist_when_core_fingerprint_is_exceptionally_strong",
+    "completed",
+    "hiatus",
+    "lower_or_higher_visibility_when_style_fit_is_strong"
+  ],
+  "style_dimensions": [
+    {
+      "name": "single_premise_extremity",
+      "weight": 25
+    },
+    {
+      "name": "obsessive_protagonist_logic",
+      "weight": 20
+    },
+    {
+      "name": "madness_or_abnormal_narration",
+      "weight": 20
+    },
+    {
+      "name": "specialist_detail_density",
+      "weight": 15
+    },
+    {
+      "name": "rule_system_escalation",
+      "weight": 10
+    },
+    {
+      "name": "low_generic_power_fantasy_drag",
+      "weight": 10
+    }
+  ],
+  "sampling_plan": {
+    "s0_for_all_survivors": true,
+    "deeper_samples": [
+      "opening",
+      "additional representative episode where accessible"
+    ],
+    "adaptive_s3": true
+  },
+  "learning_lessons_applied": [
+    "discovery.canonical-url",
+    "discovery.length-exception-lane",
+    "discovery.no-quota-padding",
+    "discovery.request-isolation",
+    "discovery.strict-dedupe",
+    "discovery.wide-then-deep"
+  ],
+  "preference_signals_applied": [],
+  "discovery_incidents_observed": [],
+  "dedupe": {
+    "mode": "strict_seen_index",
+    "seen_index_rebuilt_before_sampling": true,
+    "seen_count_before_run": 27,
+    "shortlist_seen_collisions": 0
+  },
+  "results": {
+    "shortlist": [
+      {
+        "rank": "A1",
+        "title": "〖六部完結済〗念動魔術の魔剣使い 〜失われた日常魔術を極め、理を捻じ曲げる〜",
+        "author": "雪白ましろ",
+        "platform": "Narou",
+        "url": "https://ncode.syosetu.com/n8058kp/",
+        "length_chars": 814336,
+        "episodes": 339,
+        "status": "completed",
+        "visibility": "mid-low / mid",
+        "visibility_evidence": "작품 정보 스냅샷 기준 334 bookmarks / 1,298pt; 작품 자체가 2026년 7월 주목도 랭킹 완결작 상위에 든 이력은 있으나 플랫폼 최상위 장기 히트작 규모는 아님.",
+        "fit": "very high",
+        "publication_tier": "P2",
+        "publication_note": "작품 페이지와 정확 제목+작가명 외부 검색에서 이 작품의 상업판을 확인하지 못함(2026-09-08). 작가 프로필의 서적화 지향/다른 계약 이력은 이 작품의 출판 증거로 보지 않음.",
+        "why": "본래 짐 운반·청소용인 염동계 일상마술 하나를 전투, 조리, 정밀 조작, 병렬 제어, 공간전술까지 계속 확장한다. 한 사소한 기술을 세계의 보편 법칙을 흔드는 수준까지 밀어붙이는 구조가 기준작과 가장 직접적으로 맞는다.",
+        "difference": "광기성 화자보다는 기술 집착과 운용 논리가 중심이라 『異世界クイズ王』의 과열된 경기 의식보다 정통 전투 판타지 쪽이 강하다.",
+        "samples_read": [
+          "작품 정보/목차",
+          "1화 본문: 마력 실·화구의 조작 공정과 유지 효율을 세부적으로 설명하는 구간"
+        ]
+      },
+      {
+        "rank": "A2",
+        "title": "マジカル・パワー・プリンセス・セイコ",
+        "author": "だいちげんき",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16818792436254836303",
+        "length_chars": 307553,
+        "episodes": 64,
+        "status": "ongoing / 2026-09-04 update",
+        "visibility": "mid",
+        "visibility_evidence": "Kakuyomu ★399 / 206 followers.",
+        "fit": "very high on abnormal narration",
+        "publication_tier": "P2",
+        "publication_note": "현재 작품 페이지는 콘테스트 응모중으로 표시되며 書籍化 배지는 없고, 정확 제목+작가명 외부 검색에서도 상업판을 확인하지 못함(2026-09-08).",
+        "why": "마지컬 파워라는 한 세계 어휘를 전투·기계·신체·사회 묘사 전반에 반복 투입하고, 과잉 의성어와 기괴한 조어를 정상적인 세계 설명처럼 밀어붙인다. 서술 자체가 소재의 집착을 체현하는 점에서 이번 프로필의 광기 축이 가장 강하다.",
+        "difference": "여성 주인공이라 남성 주인공 선호에는 어긋나며, 전문 규칙의 정합성보다는 조어·폭력·리듬의 과잉이 핵심이다.",
+        "samples_read": [
+          "작품 정보/리뷰",
+          "본문 샘플: 약속과 고문을 동일한 일상 논리로 처리하는 구간",
+          "별도 회차의 마지컬 파워 조어·기계 설명 구간"
+        ]
+      },
+      {
+        "rank": "A3",
+        "title": "さあ、とことんレベルアップをしよう！　‐薬効チートから始める転生少女の迷宮譚‐",
+        "author": "えがおをみせて",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16817139559043507774",
+        "length_chars": 832351,
+        "episodes": 245,
+        "status": "completed / 2025-10-21 update",
+        "visibility": "mid / mid-high",
+        "visibility_evidence": "Kakuyomu ★572 / 1,321 followers.",
+        "fit": "very high on obsessive single premise",
+        "publication_tier": "P2",
+        "publication_note": "현재 작품 페이지에서 書籍化 배지를 찾지 못했고, 정확 제목+작가명 외부 검색에서도 상업판을 확인하지 못함(2026-09-08).",
+        "why": "레벨업을 생활 방식으로 삼은 주인공이 비효율 사냥터를 하루 종일 반복하고 스탯·경험치·파티 운용을 계속 최적화한다. 소재가 단순 성장 장치가 아니라 성격·행동·관계 전체를 지배한다.",
+        "difference": "여성 주인공이고 게임형 수치 체계가 전면에 있어 기준작보다 웹소설 게임 문법이 직접적이다.",
+        "samples_read": [
+          "작품 정보/리뷰",
+          "1화 본문: 비효율 사냥터에서 독두꺼비만 반복 사냥하며 스탯을 노래하듯 외우는 구간"
+        ]
+      },
+      {
+        "rank": "A4",
+        "title": "どうして人を殺してはいけないのですか？",
+        "author": "風宮なつき",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16816700428661981603",
+        "length_chars": 526533,
+        "episodes": 88,
+        "status": "completed / 2024-04-09 update",
+        "visibility": "mid",
+        "visibility_evidence": "Kakuyomu ★322 / 749 followers.",
+        "fit": "high on madness / premise escalation",
+        "publication_tier": "P2",
+        "publication_note": "현재 작품 페이지에 書籍化 표시가 없고, 정확 제목+작가명 외부 검색에서도 이 작품의 상업판을 확인하지 못함(2026-09-08). 동명 일반서적은 작가가 달라 제외함.",
+        "why": "감각 차단과 장기 감금을 단순 얀데레 설정으로 끝내지 않고 인물의 인지와 정상성 자체가 붕괴하는 장기 서사로 확대한다. 전문기술 축은 약하지만 하나의 비정상 관계를 끝까지 밀어붙이는 정도와 서술 온도가 강하다.",
+        "difference": "규칙/전문 분야의 세부 운용보다 심리·호러·광애가 중심이라 기준작의 기술적 쾌감은 적다.",
+        "samples_read": [
+          "작품 정보/리뷰",
+          "1장 초반 본문: 감금·감각 통제와 천재 의학자 여동생의 관찰을 차갑게 겹치는 구간"
+        ]
+      },
+      {
+        "rank": "B1",
+        "title": "ブラック企業エンジニア、異世界で「搾取」を誓う 〜効率化を極めたら、なぜか冒険者に愛されるホワイト聖地になりました〜",
+        "author": "ナノ",
+        "platform": "Narou",
+        "url": "https://ncode.syosetu.com/n6584ll/",
+        "length_chars": 392918,
+        "episodes": 99,
+        "status": "ongoing / 2026-08-31 update",
+        "visibility": "mid-low / mid",
+        "visibility_evidence": "최근 검색 스냅샷 기준 약 227 bookmarks / 1,028pt / 주간 unique 360.",
+        "fit": "high on specialist logic",
+        "publication_tier": "P2",
+        "publication_note": "작품 페이지와 정확 제목+작가명 외부 검색에서 상업판을 확인하지 못함(2026-09-08). Kakuyomu 교차연재는 출판으로 보지 않음.",
+        "why": "장애 대응·비용 최적화·로그·스크립트·운영 지표라는 SE 사고방식을 던전 전체 설계 원리로 옮긴다. 효율화라는 한 프레임이 전투·시설·인원·마력 운용의 의사결정을 계속 지배한다.",
+        "difference": "직접적인 전생/던전 경영 장르 문법과 AI 문장 활용 고지가 있어 문체 자체의 독창성은 상위 4편보다 낮다.",
+        "samples_read": [
+          "작품 정보/현재 99화 메타데이터",
+          "1화 본문: 장애 알람·원인 분리·본번 환경 대응을 건조하게 처리하는 구간",
+          "11화/38화: 마력과 소환비용을 운영 지표로 계산하는 구간"
+        ]
+      }
+    ],
+    "queue": [
+      {
+        "title": "狂愛クインテット",
+        "author": "Ryoooh",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/1177354054893635584",
+        "length_chars": 303141,
+        "reason": "광기와 관계 통제 논리는 강하지만 단일 전문 소재의 규칙 확장성이 상위 5편보다 약해 보류."
+      }
+    ],
+    "deprioritized": [
+      {
+        "title": "死憶の異世界傾国姫",
+        "author": "ぎむねま",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16817139557393018673",
+        "length_chars": 2207943,
+        "reason": "광기성·기억 붕괴는 강하지만 이번 프로필의 한 소재/전문 운용 극단화보다 대서사·TS 정체성 축이 더 강함."
+      }
+    ],
+    "excluded": [
+      {
+        "group": "seen_index",
+        "count": 0,
+        "reason": "오늘 최종 수집 7편은 모두 strict seen-index 기준 unseen이었음."
+      },
+      {
+        "group": "confirmed_commercial_titles",
+        "reason": "탐색 중 작품 페이지에 書籍化/상업판 표시가 확인된 작품은 shortlist 전 단계에서 제거."
+      }
+    ],
+    "length_exceptions": []
+  },
+  "checked_at": "2026-09-08"
+}

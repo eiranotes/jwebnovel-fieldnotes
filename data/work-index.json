@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T13:50:19.480057+00:00",
+  "updated_at": "2026-09-07T22:07:49.401247+00:00",
   "works": [
     {
       "canonical_key": "kakuyomu:16818622172225120257",
@@ -179,6 +179,72 @@
       "platform_instances": []
     },
     {
+      "canonical_key": "title-author:さあとことんレベルアップをしよう薬効チートから始める転生少女の迷宮譚:えがおをみせて",
+      "title": "さあ、とことんレベルアップをしよう！　‐薬効チートから始める転生少女の迷宮譚‐",
+      "author": "えがおをみせて",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16817139559043507774",
+      "length_chars": 832351,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "shortlist",
+          "rank": "A3"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16817139559043507774"
+        }
+      ],
+      "work_id": "kakuyomu-16817139559043507774",
+      "workspace": "workspace/2026-09-08/2026-09-08-01/kakuyomu-16817139559043507774",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title-author:どうして人を殺してはいけないのですか:風宮なつき",
+      "title": "どうして人を殺してはいけないのですか？",
+      "author": "風宮なつき",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16816700428661981603",
+      "length_chars": 526533,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "shortlist",
+          "rank": "A4"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16816700428661981603"
+        }
+      ],
+      "work_id": "kakuyomu-16816700428661981603",
+      "workspace": "workspace/2026-09-08/2026-09-08-01/kakuyomu-16816700428661981603",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 4,
+      "chunks_total": 4,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title-author:アイテムストレージをモンスター化したら世界中の全てを喰らい尽くす神話級の相棒バケモノが生まれました:びーぜろ",
       "title": "アイテムストレージをモンスター化したら、世界中の全てを喰らい尽くす神話級の相棒（バケモノ）が生まれました！",
       "author": "びーぜろ",
@@ -207,7 +273,7 @@
       "work_id": "kakuyomu-2912051599410128857",
       "workspace": "workspace/2026-09-07/2026-09-07-01/kakuyomu-2912051599410128857",
       "pipeline_status": "translation_pending",
-      "chunks_done": 0,
+      "chunks_done": 2,
       "chunks_total": 3,
       "full_translation": null
     },
@@ -242,6 +308,72 @@
       "pipeline_status": "translation_complete",
       "chunks_done": 1,
       "chunks_total": 1,
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title-author:ブラック企業エンジニア異世界で搾取を誓う効率化を極めたらなぜか冒険者に愛されるホワイト聖地になりました:ナノ",
+      "title": "ブラック企業エンジニア、異世界で「搾取」を誓う 〜効率化を極めたら、なぜか冒険者に愛されるホワイト聖地になりました〜",
+      "author": "ナノ",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n6584ll/",
+      "length_chars": 392918,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "shortlist",
+          "rank": "B1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n6584ll/"
+        }
+      ],
+      "work_id": "narou-n6584ll",
+      "workspace": "workspace/2026-09-08/2026-09-08-01/narou-n6584ll",
+      "pipeline_status": "translation_pending",
+      "chunks_done": 0,
+      "chunks_total": 3,
+      "full_translation": null
+    },
+    {
+      "canonical_key": "title-author:マジカルパワープリンセスセイコ:だいちげんき",
+      "title": "マジカル・パワー・プリンセス・セイコ",
+      "author": "だいちげんき",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16818792436254836303",
+      "length_chars": 307553,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "shortlist",
+          "rank": "A2"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16818792436254836303"
+        }
+      ],
+      "work_id": "kakuyomu-16818792436254836303",
+      "workspace": "workspace/2026-09-08/2026-09-08-01/kakuyomu-16818792436254836303",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
+      "chunks_total": 3,
       "full_translation": null
     },
     {
@@ -366,6 +498,39 @@
       "full_translation": null
     },
     {
+      "canonical_key": "title-author:六部完結済念動魔術の魔剣使い失われた日常魔術を極め理を捻じ曲げる:雪白ましろ",
+      "title": "〖六部完結済〗念動魔術の魔剣使い 〜失われた日常魔術を極め、理を捻じ曲げる〜",
+      "author": "雪白ましろ",
+      "platform": "Narou",
+      "url": "https://ncode.syosetu.com/n8058kp/",
+      "length_chars": 814336,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "shortlist",
+          "rank": "A1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Narou",
+          "url": "https://ncode.syosetu.com/n8058kp/"
+        }
+      ],
+      "work_id": "narou-n8058kp",
+      "workspace": "workspace/2026-09-08/2026-09-08-01/narou-n8058kp",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
+      "chunks_total": 3,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title:完結彼はデスゲームで最善の結果を求めるようです",
       "title": "〖完結〗彼はデスゲームで最善の結果を求めるようです",
       "author": null,
@@ -421,6 +586,33 @@
       "full_translation": null
     },
     {
+      "canonical_key": "title-author:死憶の異世界傾国姫:ぎむねま",
+      "title": "死憶の異世界傾国姫",
+      "author": "ぎむねま",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16817139557393018673",
+      "length_chars": 2207943,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "deprioritized",
+          "rank": null
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16817139557393018673"
+        }
+      ]
+    },
+    {
       "canonical_key": "title-author:狂人が治癒スキルを獲得しました:葉月水",
       "title": "狂人が治癒スキルを獲得しました。",
       "author": "葉月水",
@@ -448,10 +640,37 @@
       ],
       "work_id": "narou-n1541kl",
       "workspace": "workspace/2026-09-07/2026-09-07-01/narou-n1541kl",
-      "pipeline_status": "translation_pending",
-      "chunks_done": 0,
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
       "chunks_total": 3,
       "full_translation": null
+    },
+    {
+      "canonical_key": "title-author:狂愛クインテット:ryoooh",
+      "title": "狂愛クインテット",
+      "author": "Ryoooh",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/1177354054893635584",
+      "length_chars": 303141,
+      "first_seen_entry": "2026-09-08-01",
+      "last_seen_entry": "2026-09-08-01",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-01"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-01",
+          "bucket": "queue",
+          "rank": null
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/1177354054893635584"
+        }
+      ]
     },
     {
       "canonical_key": "title:現代最強のデスゲーマー異世界デスゲームでも無双する",

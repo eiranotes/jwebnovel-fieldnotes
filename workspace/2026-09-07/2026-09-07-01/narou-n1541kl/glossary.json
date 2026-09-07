@@ -1,8 +1,14 @@
 {
   "schema_version": "1.0",
-  "people": {},
+  "people": {
+    "月下快": "츠키시타 카이",
+    "月下元": "츠키시타 하지메",
+    "月下愛": "츠키시타 아이"
+  },
   "places": {},
-  "terms": {},
+  "terms": {
+    "治癒（特）": "치유(특)"
+  },
   "ruby_notes": {
     "月下快": "つきしたかい",
     "月下元": "つきしたはじめ",
@@ -13,6 +19,33 @@
       "type": "ruby_scan",
       "count": 3,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "name_rendering",
+      "source": "explicit_ruby",
+      "ja": "月下快",
+      "reading": "つきしたかい",
+      "ko": "츠키시타 카이"
+    },
+    {
+      "type": "name_rendering",
+      "source": "explicit_ruby",
+      "ja": "月下元",
+      "reading": "つきしたはじめ",
+      "ko": "츠키시타 하지메"
+    },
+    {
+      "type": "name_rendering",
+      "source": "explicit_ruby",
+      "ja": "月下愛",
+      "reading": "つきしたあい",
+      "ko": "츠키시타 아이"
+    },
+    {
+      "type": "term_rendering",
+      "ja": "治癒（特）",
+      "ko": "치유(특)",
+      "context": "skill_name"
     }
   ]
 }

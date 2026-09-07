@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {
+    "小鹿と蜂蜜亭": "아기사슴과 꿀 여관"
+  },
+  "terms": {
+    "魔力糸": "마력 실",
+    "自然魔力": "자연 마력",
+    "深域": "심역",
+    "魔法陣": "마법진",
+    "魔石": "마석",
+    "命令式": "명령식",
+    "テンザライト鉱石": "텐자라이트 광석",
+    "深緑の剣": "심록의 검",
+    "ファイアボール": "파이어볼",
+    "ウォーターボール": "워터볼",
+    "毒装備": "독 장비",
+    "浮遊剣": "부유검",
+    "念動魔術": "염동 마술",
+    "螺旋剣": "나선검"
+  },
+  "ruby_notes": {},
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 0,
+      "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "term_translation",
+      "ja": "小鹿と蜂蜜亭",
+      "ko": "아기사슴과 꿀 여관"
+    },
+    {
+      "type": "term_translation",
+      "ja": "深域",
+      "ko": "심역"
+    },
+    {
+      "type": "term_translation",
+      "ja": "テンザライト鉱石",
+      "ko": "텐자라이트 광석"
+    },
+    {
+      "type": "term_translation",
+      "ja": "深緑の剣",
+      "ko": "심록의 검"
+    },
+    {
+      "type": "term_translation",
+      "ja": "ファイアボール",
+      "ko": "파이어볼"
+    },
+    {
+      "type": "term_translation",
+      "ja": "ウォーターボール",
+      "ko": "워터볼"
+    },
+    {
+      "type": "term_translation",
+      "ja": "浮遊剣",
+      "ko": "부유검"
+    },
+    {
+      "type": "term_translation",
+      "ja": "念動魔術",
+      "ko": "염동 마술"
+    },
+    {
+      "type": "term_translation",
+      "ja": "螺旋剣",
+      "ko": "나선검"
+    }
+  ]
+}

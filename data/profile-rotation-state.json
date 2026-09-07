@@ -1,5 +1,10 @@
 {
   "schema_version": "1.0",
   "round_robin_cursor": 0,
-  "profiles": {}
+  "profiles": {
+    "quiz-king-style": {
+      "last_selected_at": "2026-09-07T20:59:35.388592+00:00",
+      "selected_count": 1
+    }
+  }
 }

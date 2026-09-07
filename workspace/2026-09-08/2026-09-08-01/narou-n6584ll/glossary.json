@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "迷宮主": "ダンジョンマスター",
+    "迷宮核": "ダンジョンコア",
+    "自動詠唱回路": "オートキャスト・ルーン"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 3,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

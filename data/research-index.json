@@ -108,5 +108,37 @@
     "page": "entries/2026-09-07-01.html",
     "doc": "docs/entries/2026-09-07-01.md",
     "data": "data/entries/2026-09-07-01.json"
+  },
+  {
+    "entry_id": "2026-09-08-01",
+    "date": "2026-09-08",
+    "sequence": 1,
+    "title": "퀴즈왕 스타일 — 집요한 소재 전개와 광기성 서술",
+    "summary": "『異世界クイズ王』의 전문 집착·광기·단일 소재 극단화를 기준으로 unseen 후보 5편을 선별.",
+    "reference_works": [
+      "異世界クイズ王"
+    ],
+    "criteria_terms": [
+      "300k+",
+      "비출판",
+      "strict seen-index",
+      "중간 인지도 선호",
+      "소재 극단화",
+      "광기 서술",
+      "전문성"
+    ],
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [],
+    "min_chars": 300000,
+    "length_policy": "profile_300k_with_high_fit_exception",
+    "status": "complete",
+    "candidate_count": 7,
+    "shortlist_count": 5,
+    "page": "entries/2026-09-08-01.html",
+    "doc": "docs/entries/2026-09-08-01.md",
+    "data": "data/entries/2026-09-08-01.json"
   }
 ]

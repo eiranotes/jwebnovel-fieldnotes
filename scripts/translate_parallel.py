@@ -42,6 +42,33 @@ def pending(entry: str) -> list[dict]:
     return [row for _, row in ordered]
 
 
+def preexisting_quarantine(work_id: str, root: Path = ROOT) -> dict | None:
+    """Return durable uncertainty for a work without attempting that work again.
+
+    An after-send uncertain Project operation is deliberately sticky: only evidence external to
+    the scheduler can prove whether ChatGPT accepted it. A later daily run must therefore skip
+    that work while continuing unrelated works, instead of either resubmitting the ambiguous
+    operation or letting one old quarantine block the entire queue forever.
+    """
+    directory = root/'workspace'/'automation-runs'/'backend'/work_id/'translator'
+    if not directory.exists():
+        return None
+    for path in sorted(directory.glob('*.json')):
+        if path.name == 'worker.json' or path.name.endswith('.result.json'):
+            continue
+        try:
+            state = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError, TypeError):
+            continue
+        if state.get('state') == 'uncertain':
+            return {
+                'work_id': work_id,
+                'operation_id': state.get('operation_id') or path.stem,
+                'error': state.get('last_error') or state.get('error') or 'OPERATION_SUBMISSION_UNCERTAIN',
+            }
+    return None
+
+
 @dataclass
 class Slot:
     work_id: str
@@ -77,6 +104,7 @@ def main() -> int:
     completed_chunks = 0
     failures: list[dict] = []
     blocked_works: set[str] = set()
+    reported_quarantine: dict[str, dict] = {}
     stop_scheduling = False
     last_launch = 0.0
     started_at = time.time()
@@ -118,12 +146,23 @@ def main() -> int:
                     stop_scheduling = True
 
         queue = pending(args.entry)
-        if (not queue or stop_scheduling) and not active:
+        quarantined: dict[str, dict] = {}
+        for row in queue:
+            reason = preexisting_quarantine(row['work_id'])
+            if reason:
+                quarantined[row['work_id']] = reason
+                if row['work_id'] not in reported_quarantine:
+                    reported_quarantine[row['work_id']] = reason
+                    print(json.dumps({'event':'work_quarantined', **reason}, ensure_ascii=False), flush=True)
+        runnable = [row for row in queue if row['work_id'] not in quarantined]
+        if (not runnable or stop_scheduling) and not active:
             break
 
         # Keep one active process per work. A work returning to the queue after chunk N may run
-        # chunk N+1 once a slot and the global launch-gap are available.
-        candidates = [row for row in queue if row['work_id'] not in active and row['work_id'] not in blocked_works]
+        # chunk N+1 once a slot and the global launch-gap are available. Pre-existing uncertainty
+        # is work-scoped quarantine; a *new* uncertainty observed by this run still triggers the
+        # global stop above because it may reflect a fresh provider/session incident.
+        candidates = [row for row in runnable if row['work_id'] not in active and row['work_id'] not in blocked_works]
         now_mono = time.monotonic()
         if not stop_scheduling and len(active) < args.workers and candidates and now_mono - last_launch >= args.launch_gap:
             row = candidates[0]
@@ -136,11 +175,12 @@ def main() -> int:
         time.sleep(0.5)
 
     print(json.dumps({
-        'status':'complete' if not failures else 'completed_with_failures',
+        'status':('completed_with_failures' if failures else 'complete_with_quarantine' if reported_quarantine else 'complete'),
         'entry_id':args.entry,
         'workers':args.workers,
         'launch_gap_seconds':args.launch_gap,
         'completed_chunks':completed_chunks,
+        'quarantined':list(reported_quarantine.values()),
         'failures':failures,
         'wall_seconds':round(time.time()-started_at,2),
     }, ensure_ascii=False), flush=True)

@@ -122,36 +122,33 @@ class ProjectTranslationIntegration(unittest.TestCase):
             self.assertNotIn('원문:', text)
             self.assertNotIn('번역:', text)
 
-    def test_primary_project_failure_uses_codex_webgpt_fallback_then_normal_commit(self):
+    def test_disabled_fallback_preserves_primary_failure_and_never_calls_codex(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory).resolve();work=root/'workspace/2026-09-07/test/fallback-example';work.mkdir(parents=True)
             actual=Path(__file__).resolve().parents[1]
             for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md','TRANSLATION_RULES.md','USER_INSTRUCTIONS.md'):
                 destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
                 destination.write_text((actual/'templates/project-context'/name).read_text())
-            atomic_json(root/'config/project-translation.json',read_json(actual/'config/project-translation.json'))
+            config=read_json(actual/'config/project-translation.json')
+            self.assertIs(config['fallback']['enabled'],False)
+            atomic_json(root/'config/project-translation.json',config)
             atomic_json(work/'metadata.json',{'work_id':'fallback-example','entry_id':'test','title':'Fallback Fixture'})
             atomic_json(work/'glossary.json',{'people':{},'decisions':[]})
             atomic_json(work/'state.json',{'status':'translation_pending'})
             cdir=work/'translation/chunks/0001';cdir.mkdir(parents=True);(cdir/'ja.txt').write_text('風が吹く。\n')
             atomic_json(cdir/'meta.json',{'chunk_id':'0001','order':1,'status':'pending'})
             atomic_json(work/'translation/manifest.json',{'chunk_count':1,'chunks':[{'chunk_id':'0001','order':1,'status':'pending'}]})
-            def complete(script,args):
-                result=read_json(Path(args[args.index('--result')+1]))
-                return source.complete_chunk(work,'0001',result)
-            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common_packs',side_effect=lambda:context.build_common_packs(root)),patch.object(driver,'script_json',side_effect=complete):
+            with patch.object(driver,'ROOT',root),patch.object(source,'ROOT',root),patch.object(driver,'build_common_packs',side_effect=lambda:context.build_common_packs(root)):
                 capture=io.StringIO()
                 with contextlib.redirect_stdout(capture):
                     source.next_task(SimpleNamespace(work_dir=str(work),entry='test',work='fallback-example',context_tail=700,context_head=500))
                 task=read_json(Path(capture.getvalue().strip()))
                 primary=UnavailablePrimary();fallback=FixtureFallback()
-                result=driver.process_task(task,backend=primary,source_sync=lambda *a,**k:{'state':'complete'},fallback_backend=fallback)
-            self.assertEqual(result['backend'],'codex_webgpt')
-            self.assertEqual(result['fallback_reason'],'PROJECT_SOURCE_UNAVAILABLE')
+                with self.assertRaisesRegex(AutomationError,'PROJECT_SOURCE_UNAVAILABLE'):
+                    driver.process_task(task,backend=primary,source_sync=lambda *a,**k:{'state':'complete'},fallback_backend=fallback)
             self.assertEqual(primary.calls,['translate_chunk'])
-            self.assertEqual(len(fallback.calls),1)
-            self.assertNotIn('project_source_proof_contract',fallback.calls[0][1])
-            self.assertEqual(read_json(work/'state.json')['chunks_done'],1)
+            self.assertEqual(fallback.calls,[])
+            self.assertEqual(read_json(work/'state.json').get('chunks_done',0),0)
 
     def test_guide_revision_changes_when_glossary_changes(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -12,7 +12,7 @@ from project_backend import ProjectBackend,parse_envelope
 
 class FakeBridge:
     """Transport fixture only: no claim that the provider created or answered a real chat."""
-    def __init__(self):self.workers=[];self.calls=[];self.finish=True;self.lost_reply=False;self.fail_bootstrap_once=False;self.reject_spawn_before_worker_once=False;self.rate_limit_once=False;self.rate_limit_after_send_once=False;self.invalid_json_once=False
+    def __init__(self):self.workers=[];self.calls=[];self.finish=True;self.lost_reply=False;self.fail_bootstrap_once=False;self.reject_spawn_before_worker_once=False;self.rate_limit_once=False;self.rate_limit_after_send_once=False;self.uncertain_after_send_once=False;self.invalid_json_once=False
     def request(self,route,body=None,method='GET'):
         self.calls.append((route,copy.deepcopy(body)))
         project={'alias':'fieldnotes','name':'Fieldnotes','url':'https://chatgpt.com/g/g-p-test-fieldnotes/project'}
@@ -42,6 +42,13 @@ class FakeBridge:
                 worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'failed',
                         'revivable':False,'conversationId':None,'complete':False,'answer':None,
                         'brokerResult':'CHATGPT_CONVERSATION_RATE_LIMITED_AFTER_SEND: Too Many Requests',
+                        'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
+                self.workers.append(worker);return {'workers':[copy.deepcopy(worker)]}
+            if self.uncertain_after_send_once:
+                self.uncertain_after_send_once=False
+                worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'failed',
+                        'revivable':False,'conversationId':None,'complete':False,'answer':None,
+                        'brokerResult':'CHATGPT_BOOTSTRAP_SUBMISSION_UNCERTAIN_AFTER_SEND: send clicked; no provider evidence yet',
                         'projectTarget':{**project,'workId':target['workId'],'role':target['role']}}
                 self.workers.append(worker);return {'workers':[copy.deepcopy(worker)]}
             worker={'id':f'worker-{len(self.workers)+1}','createdAt':1000+len(self.workers),'state':'sleeping' if self.finish else 'active',
@@ -168,6 +175,13 @@ class BackendTests(unittest.TestCase):
             b.execute('example','translator',{'number':9})
         with self.assertRaisesRegex(AutomationError,'OPERATION_SUBMISSION_UNCERTAIN'):
             b.execute('example','translator',{'number':9})
+        self.assertEqual(len(self.bridge.workers),1)
+    def test_fresh_bootstrap_click_without_provider_evidence_is_never_resubmitted(self):
+        self.bridge.uncertain_after_send_once=True;b=self.backend()
+        with self.assertRaisesRegex(AutomationError,'OPERATION_SUBMISSION_UNCERTAIN'):
+            b.execute('example','translator',{'number':10})
+        with self.assertRaisesRegex(AutomationError,'OPERATION_SUBMISSION_UNCERTAIN'):
+            b.execute('example','translator',{'number':10})
         self.assertEqual(len(self.bridge.workers),1)
     def test_legacy_generic_worker_failure_is_retryable_only_when_exact_worker_never_had_chat(self):
         self.bridge.fail_bootstrap_once=True;b=self.backend()

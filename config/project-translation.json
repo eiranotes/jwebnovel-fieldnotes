@@ -9,7 +9,7 @@
   "source_probe_max_attempts": 6,
   "source_probe_retry_seconds": 10,
   "fallback": {
-    "enabled": true,
+    "enabled": false,
     "backend": "codex_webgpt",
     "timeout_seconds": 900,
     "trigger_codes": [

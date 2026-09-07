@@ -270,6 +270,19 @@ class ProjectBackend:
                     raise AutomationError("WORKER_TARGET_NOT_VERIFIED")
                 if worker.get("state") == "failed":
                     broker = str(worker.get('brokerResult') or worker.get('result') or '')
+                    if 'CHATGPT_BOOTSTRAP_SUBMISSION_UNCERTAIN_AFTER_SEND' in broker:
+                        safe_observe(
+                            "translation", "project_bootstrap_send_not_accepted", "observed",
+                            scope="browser_transport", note="fresh Project submit was clicked but provider acceptance remained unproven", root=self.root,
+                        )
+                        # A fresh-chat submit click already crossed the irreversible boundary.
+                        # Missing route/Fiber evidence is not proof that ChatGPT rejected it, so
+                        # never classify this as a retryable bootstrap failure or invoke another
+                        # backend. Preserve the exact operation for manual/provider-side recovery.
+                        state.update(state='uncertain', last_error='CHATGPT_BOOTSTRAP_SUBMISSION_UNCERTAIN_AFTER_SEND',
+                                     last_error_detail=broker[-500:], ended_at=now())
+                        atomic_json(state_path, state)
+                        raise AutomationError('OPERATION_SUBMISSION_UNCERTAIN')
                     if 'CHATGPT_CONVERSATION_RATE_LIMITED_AFTER_SEND' in broker:
                         safe_observe(
                             "translation", "CHATGPT_CONVERSATION_RATE_LIMITED", "observed",

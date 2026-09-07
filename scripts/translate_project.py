@@ -37,24 +37,34 @@ def guide_revision(work_dir: Path) -> str:
     return digest({str(path.name):digest(path.read_bytes()) for path in files if path.exists()})
 
 
-def prove_project_sources(backend, work_id: str, chunk_id: str, common: dict, work: dict, *, alias: str,
+def prove_project_sources(backend, work_id: str, chunk_id: str, packs: list[dict], *, alias: str,
                           max_attempts: int, retry_seconds: float) -> dict:
     if not 1 <= max_attempts <= 20 or not 0 <= retry_seconds <= 120:
         raise AutomationError('PROJECT_POLICY_INVALID')
-    task=source_probe_task(work_id,common,work)
+    task=source_probe_task(work_id,*packs)
     for attempt in range(1,max_attempts+1):
         # Negative source availability is safe to retry: this operation reads Project Sources and
         # has no queue/state mutation. Each bounded attempt has its own stable id, so a process
         # restart resumes an accepted attempt instead of duplicating it, while a completed
         # source_unavailable response does not poison every future probe forever.
         operation_id=digest({'kind':'probe','work':work_id,'chunk':chunk_id,
-                             'sources':[public_pack(common),public_pack(work)],'attempt':attempt})
-        answer=backend.execute(work_id,'translator',task,alias=alias,operation_id=operation_id)
+                             'sources':[public_pack(pack) for pack in packs],'attempt':attempt})
+        try:
+            answer=backend.execute(work_id,'translator',task,alias=alias,operation_id=operation_id)
+        except AutomationError as error:
+            # A fresh Project chat that failed before receiving a conversation id executed no
+            # model work. Treat that definitive browser/bootstrap failure like source indexing
+            # unavailability: bounded retry is safe and cannot duplicate a probe or translation.
+            if error.code == 'PROJECT_WORKER_BOOTSTRAP_FAILED':
+                if attempt == max_attempts: raise
+                time.sleep(min(retry_seconds,3))
+                continue
+            raise
         if isinstance(answer,dict) and answer.get('status')=='source_unavailable' and answer.get('work_id')==work_id:
             if attempt == max_attempts: raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
             time.sleep(retry_seconds)
             continue
-        return verify_source_probe(answer,work_id,[common,work])
+        return verify_source_probe(answer,work_id,packs)
     raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
 
 
@@ -99,16 +109,18 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         else:
             common, work = build_common(), build_work(work_dir)
         source_sync = source_sync or synchronize_project_sources
-        # Every context revision must be provider-listed before any worker is allowed to prove
-        # retrieval or translate. synchronize() is exact-filename idempotent and persists an
-        # accepted/uncertain operation instead of guessing after transport loss, so running this
-        # on every chunk safely becomes a no-op for an unchanged revision and uploads a new WORK
-        # snapshot after glossary/guide changes.
-        source_sync([common,work],root=ROOT,alias=config['project_alias'],instructions=True)
+        # Work-specific metadata, glossary, adjacent context and chapter text now come from the
+        # exact local task JSON. Only the stable GLOBAL_CONTEXT is a Project retrieval anchor.
+        # This removes a needless per-work Sources UI mutation from every chunk while retaining
+        # fresh provider-side retrieval proof that the worker is operating in the registered
+        # Project. A historical UI listing may skip a redundant upload; the model probe below
+        # still catches provider deletion/index loss fail-closed.
+        project_packs=[common]
+        source_sync(project_packs,root=ROOT,alias=config['project_alias'],instructions=False)
         # Repeat the probe in this worker/operation before using cached context. Do not count a
         # successful old worker probe as proof that a replacement chat inherited the sources.
-        proof_task=source_probe_task(work_id,common,work)
-        verification=prove_project_sources(backend,work_id,chunk_id,common,work,alias=config['project_alias'],
+        proof_task=source_probe_task(work_id,*project_packs)
+        verification=prove_project_sources(backend,work_id,chunk_id,project_packs,alias=config['project_alias'],
             max_attempts=int(config.get('source_probe_max_attempts',6)),
             retry_seconds=float(config.get('source_probe_retry_seconds',10)))
         atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':verification})
@@ -119,7 +131,7 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         payload={
             'kind':'translate_chunk','entry_id':task.get('entry_id'),'work_id':work_id,'chunk_id':chunk_id,
             'chunk_sha256':source_hash,'local_source_task':local_source_task,
-            'project_sources':[public_pack(common),public_pack(work)],
+            'project_sources':[public_pack(pack) for pack in project_packs],
             'source_policy':'Pinned Project Sources plus one exact read-only local translation task; do not claim a new upload.',
             'translation_instruction':'Read local_source_task.path with Chat On Steroids Core read. The JSON contains the private chapter text, sentence-id map, adjacent-source context, glossary, instructions, output contract, and a local read probe. Translate every sentence segment from that file and preserve its exact ids/order.',
             'output_contract':{'local_source_proof':'value read from the local task JSON',
@@ -132,7 +144,7 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         result=backend.execute(work_id,'translator',payload,alias=config['project_alias'])
         if not isinstance(result,dict):raise AutomationError('INVALID_TRANSLATION_RESULT')
         # A rollover between preflight and translation must not inherit an old chat's proof.
-        verify_source_probe(result.get('project_source_proof'),work_id,[common,work])
+        verify_source_probe(result.get('project_source_proof'),work_id,project_packs)
         if result.get('local_source_proof') != local_source_probe:
             raise AutomationError('LOCAL_SOURCE_PROOF_MISMATCH')
         validate_segment_translations(task['source_segments'],result.get('segment_translations'))

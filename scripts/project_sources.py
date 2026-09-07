@@ -12,6 +12,34 @@ from project_context import build_common, build_work, public_pack
 ROOT=Path(__file__).resolve().parent.parent
 
 
+def historically_listed(directory: Path, target: dict, files: list[dict]) -> list[dict] | None:
+    """Find prior verified UI receipts covering every requested immutable source file.
+
+    A fresh provider-side source probe still follows this shortcut, so a file deleted from the
+    Project after an older listing receipt is detected fail-closed by translation rather than
+    trusted indefinitely.
+    """
+    wanted={f['filename']:f['sha256'] for f in files}
+    found={}
+    receipts=[]
+    if not directory.exists(): return None
+    for path in directory.glob('*.json'):
+        state=read_json(path,{})
+        if state.get('state')!='complete' or (state.get('target') or {}).get('url')!=target.get('url'):
+            continue
+        ui=state.get('ui_receipt') or {}
+        if ui.get('state')!='listed': continue
+        listed=set(ui.get('filenames') or [])
+        hashes={row.get('filename'):row.get('file_sha256') for row in (state.get('sources') or []) if isinstance(row,dict)}
+        used=False
+        for name,sha in wanted.items():
+            if name in listed and hashes.get(name)==sha:
+                found[name]=sha;used=True
+        if used:
+            receipts.append({'fingerprint':state.get('fingerprint'),'command_id':state.get('command_id')})
+    return receipts if found==wanted else None
+
+
 def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='fieldnotes', instructions=False, timeout=150, poll_interval=1.0) -> dict:
     bridge=bridge or BridgeClient()
     registry=bridge.request('/automation-projects/registry')
@@ -33,6 +61,16 @@ def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='field
     with locked(directory/'.lock'):
         state=read_json(state_path,{})
         if state.get('state')=='complete':return state
+        prior=historically_listed(directory,target,files)
+        if prior and not instructions:
+            state={'version':1,'fingerprint':fingerprint,'target':{k:target[k] for k in ('alias','name','url')},
+                   'state':'complete','started_at':now(),'ended_at':now(),'sources':[public_pack(p) for p in packs],
+                   'historical_ui_receipts':prior,
+                   'ui_receipt':{'state':'listed','filenames':[f['filename'] for f in files],
+                                 'instructionsSaved':False,'historical':True},
+                   'source_retrieval_verified':False}
+            atomic_json(state_path,state)
+            return state
         if state.get('state') in ('submitting','uncertain'):
             raise AutomationError('PROJECT_SYNC_OUTCOME_UNCERTAIN')
         previous_attempts=list(state.get('previous_attempts') or [])

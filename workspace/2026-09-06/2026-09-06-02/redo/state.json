@@ -1,8 +1,8 @@
 {
-  "status": "translation_pending",
+  "status": "translation_complete",
   "source_files": 5,
   "merged_chars": 17936,
   "chunks_total": 2,
-  "chunks_done": 0,
-  "updated_at": "2026-09-06T07:52:00.953767+00:00"
+  "chunks_done": 2,
+  "updated_at": "2026-09-07T07:27:52.633656+00:00"
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T05:19:24.272908+00:00",
+  "updated_at": "2026-09-07T07:35:27.743901+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -140,6 +140,112 @@
       "details": {
         "title": "Redo -リドゥ-",
         "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T05:22:43.596970+00:00",
+      "run_id": "translate-next-20260907T052243-47c9f584",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected Redo -リドゥ- / 0001",
+      "details": {
+        "title": "Redo -リドゥ-",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:03:21.466814+00:00",
+      "run_id": "translate-complete-20260907T070320-e75b39dd",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed deathgame-jikketsu / 0001",
+      "details": {
+        "work_id": "deathgame-jikketsu",
+        "chunk": "0001",
+        "done": 1,
+        "total": 1
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:03:59.112843+00:00",
+      "run_id": "translate-next-20260907T070358-e878cb8c",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected Redo -リドゥ- / 0001",
+      "details": {
+        "title": "Redo -リドゥ-",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:18:49.331794+00:00",
+      "run_id": "translate-complete-20260907T071848-3bb07763",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed redo / 0001",
+      "details": {
+        "work_id": "redo",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:18:56.734317+00:00",
+      "run_id": "translate-next-20260907T071856-b4c7a751",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 逆さの茶笠 / 0001",
+      "details": {
+        "title": "逆さの茶笠",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:27:53.046698+00:00",
+      "run_id": "translate-complete-20260907T072752-2bd3fa5b",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed redo / 0002",
+      "details": {
+        "work_id": "redo",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:31:38.099086+00:00",
+      "run_id": "translate-complete-20260907T073137-eb13fc40",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed haikei-ashita-no-watashi / 0002",
+      "details": {
+        "work_id": "haikei-ashita-no-watashi",
+        "chunk": "0002",
+        "done": 2,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:35:27.743901+00:00",
+      "run_id": "translate-complete-20260907T073526-16d2d7da",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed haikei-ashita-no-watashi / 0003",
+      "details": {
+        "work_id": "haikei-ashita-no-watashi",
+        "chunk": "0003",
+        "done": 3,
+        "total": 3
       }
     }
   ]

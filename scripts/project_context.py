@@ -88,10 +88,12 @@ def public_pack(pack: dict) -> dict:
     return {k: pack[k] for k in ("source_name", "filename", "context_version", "content_hash", "file_sha256")}
 
 
-def source_probe_task(work_id: str, common: dict, work: dict) -> dict:
+def source_probe_task(work_id: str, *packs: dict) -> dict:
+    if not packs:
+        raise AutomationError("PROJECT_SOURCE_PROOF_MISMATCH")
     return {"kind": "project_source_probe", "work_id": work_id,
-            "sources": [public_pack(common), public_pack(work)],
-            "instructions": "Retrieve both exact named Project Sources. Return their source_probe values from the file contents, without guessing. Do not read local files or call Steroids. If unavailable return {status:source_unavailable}.",
+            "sources": [public_pack(pack) for pack in packs],
+            "instructions": "Retrieve every exact named Project Source in sources. Return its source_probe value from the file contents, without guessing. Do not read local files or call Steroids. If unavailable return {status:source_unavailable}.",
             "output_contract": {"status": "ready or source_unavailable", "work_id": work_id,
                                 "sources": [{"filename": "exact filename", "source_probe": "value read from that file"}]}}
 

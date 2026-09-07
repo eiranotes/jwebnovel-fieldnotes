@@ -18,10 +18,11 @@ Move the already verified ChatGPT Project translation path from a one-work live 
 ## Changes
 - Project translation activation is now `verified_live`.
 - `translate_project.py` requires that activation in addition to `backend=webgpt_project` and `allow_fallback=false`.
-- Before every source probe, the driver synchronizes the exact immutable common/work context pair through `project_sources.synchronize(..., instructions=True)`.
-  - An unchanged pair is a persisted no-op.
-  - A new work or changed glossary/guide produces a new immutable source revision and is uploaded before worker execution.
-  - Uncertain synchronization remains fail-closed; no worker task is submitted around it.
+- Before every source probe, the driver requires the immutable `GLOBAL_CONTEXT` Project Source as a stable retrieval anchor.
+  - Persistent Project Instructions are setup state, not per-chunk synchronization state. The browser intentionally refuses to overwrite an existing non-empty instruction field automatically.
+  - Work-specific metadata, glossary, adjacent context and chapter text are read from the exact local task JSON, so a mutable `WORK_<work_id>` upload is no longer part of the production critical path.
+  - A prior verified UI listing receipt can avoid a redundant upload of an unchanged immutable anchor. A fresh model source-probe still follows, so provider-side deletion/index loss remains fail-closed.
+  - Current policy reaches each translation through `GLOBAL_CONTEXT` plus the per-turn Project-worker bootstrap/task contract.
 - `glossary.json` now participates in the guide/context revision fence.
 - The daily automation contract now calls `translate_project.py` as the owner of Project sync, source proof, worker reuse, validation and transactional completion; it explicitly forbids manual/general-chat/local-worker/API fallback.
 - Automation status now reports Project backend, activation, alias, source-proof policy and fallback policy.
@@ -85,3 +86,22 @@ The production driver now validates that local task against canonical `ja.txt`, 
 Live transport smoke on the installed runtime used Project worker `worker-32`, conversation `6a9e5a0f-8928-83ee-8d3f-0020b2d1394a`. The recorder captured exactly one local tool call: Core `read` of `/Volumes/DevDrive/Projects/fieldnotes/workspace/automation-runs/local-read-e2e/translation/tasks/0001.json`. The worker then returned the hidden probe and the local harness printed `LOCAL_READ_E2E_OK`. No exec, patch, write, agents or second local-path call was recorded. Fieldnotes regression tests are **23/23 PASS**.
 
 A follow-up attempt to commit a real `sakasano-chagasa` chunk was stopped by the Core write/exec safety gate before the production script ran, so this follow-up changes no real translation progress. The transport itself is live-verified; the existing production translation state remains unchanged.
+
+## Candidate-set production E2E
+The full pending candidate queue was then exercised against the installed runtime rather than a fixture. This exposed and repaired four production-only failure modes without enabling any fallback:
+
+1. Routine Project Source synchronization attempted to rewrite an already non-empty Project Instructions field and correctly hit `PROJECT_INSTRUCTIONS_CONFLICT`. Instructions are now setup state, not per-chunk mutation state.
+2. Reused sleeping workers exposed their previous answer briefly after a new message was queued. `ProjectBackend` now persists the pre-submit answer hash and waits for a genuinely new answer instead of raising `RESULT_OPERATION_MISMATCH`.
+3. Fresh Project worker creation can fail definitively before ChatGPT assigns a conversation. That is now classified as `PROJECT_WORKER_BOOTSTRAP_FAILED`; only this proven pre-send case is retryable. Historical generic failed states are reclassified only when the broker proves the exact worker generation has no conversation id.
+4. One complete long translation returned valid JSON followed by one extra closing brace. `parse_envelope` now repairs only that unambiguous trailing-brace case; prose, multiple objects and incomplete JSON remain rejected.
+
+Dynamic per-work Project Source upload was also removed from the translation critical path. `GLOBAL_CONTEXT_v0002_51b585403825.md` had already been UI-listed and was freshly retrieved by each real worker using its hidden source probe. The private local task now includes work metadata and glossary, so current work context is available without a second provider upload.
+
+Live results:
+- `deathgame-jikketsu`: **1/1 complete**, Project worker local-read proof passed, output ZIP generated.
+- `redo`: **2/2 complete**, both chunks passed fresh Project proof + exact local read; the second chunk reused a complete model answer after narrow JSON-tail repair rather than retranslating it.
+- `haikei-ashita-no-watashi`: **3/3 complete**, remaining chunks reused the original work-specific Project conversation and generated the final ZIP.
+- `beni-death-gamer`: remains **2/2 complete** from the earlier production smoke.
+- `sakasano-chagasa`: **0/2 pending**. The OS reports `CGSSessionScreenIsLocked=Yes`; six bounded fresh-worker attempts all ended before conversation creation with `PROJECT_WORKER_BOOTSTRAP_FAILED`. No model task ran and nothing was committed for this work.
+
+After these fixes the Fieldnotes regression suite is **28/28 PASS** and `git diff --check` passes. Public projection reports **8 completed chunks / 2 pending chunks**. `runtime_sync.py push` copied the completed private artifacts into `~/HermesWorkspace/project/fieldnotes-runtime`; the live private console inventory exposes `ko.txt`, alternating JA/KO, parallel view and ZIP artifacts for Beni, Deathgame, Redo and Haikei. A real `/fieldnotes/api/download` of `redo-translation.zip` returned 94,746 bytes and matched the runtime-mirror SHA-256 exactly.

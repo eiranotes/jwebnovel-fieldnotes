@@ -2,7 +2,9 @@
   "schema_version": "1.0",
   "people": {},
   "places": {},
-  "terms": {},
+  "terms": {
+    "黒獣": "흑수"
+  },
   "ruby_notes": {
     "唐沢": "からさわ",
     "歩": "あゆむ",
@@ -14,6 +16,12 @@
       "type": "ruby_scan",
       "count": 4,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "term_translation",
+      "source": "黒獣",
+      "reading": "こくじゅう",
+      "ko": "흑수"
     }
   ]
 }

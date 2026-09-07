@@ -66,7 +66,17 @@ def parse_envelope(answer: str, operation_id: str, work_id: str):
     try:
         value = json.loads(raw)
     except (TypeError, ValueError) as error:
-        raise AutomationError("INVALID_MODEL_JSON") from error
+        # Models occasionally emit an otherwise complete JSON object followed by one or more
+        # unmatched closing braces. Recover only that syntactically unambiguous tail: the first
+        # raw-decoded value must consume the whole meaningful answer and the remainder may contain
+        # only `}` plus whitespace. Prose, a second object, or an incomplete JSON value still fails.
+        try:
+            value, end = json.JSONDecoder().raw_decode(raw)
+            remainder = raw[end:].strip()
+            if not remainder or any(ch != '}' for ch in remainder) or len(remainder) > 3:
+                raise ValueError('unsafe trailing data')
+        except (TypeError, ValueError, json.JSONDecodeError) as repair_error:
+            raise AutomationError("INVALID_MODEL_JSON") from repair_error
     if not isinstance(value, dict) or value.get("operation_id") != operation_id or value.get("work_id") != work_id or "payload" not in value:
         raise AutomationError("RESULT_OPERATION_MISMATCH")
     return value["payload"]
@@ -143,7 +153,26 @@ class ProjectBackend:
             if previous.get("state") in ("submitting", "uncertain"):
                 raise AutomationError("OPERATION_SUBMISSION_UNCERTAIN", "inspect the accepted worker before retrying")
             if previous.get("state") == "failed":
-                raise AutomationError(previous.get("error", "WORKER_FAILED"))
+                # A worker that failed before ChatGPT ever assigned a conversation did not
+                # execute the operation. That terminal browser/bootstrap failure is therefore
+                # safe to retry without risking duplicate model work. Any failure after a chat
+                # exists remains terminal and must be inspected explicitly.
+                retryable_bootstrap = previous.get("error") == "PROJECT_WORKER_BOOTSTRAP_FAILED"
+                if previous.get("error") == "PROJECT_WORKER_FAILED" and previous.get("worker_id") and previous.get("created_at"):
+                    # Backward compatibility for states written before the dedicated bootstrap
+                    # error code existed. Ask the broker for the exact failed generation; only a
+                    # failed worker with no conversation id is reclassified as pre-send.
+                    try:
+                        old_status = self.bridge.request("/automation-agents/status")
+                        old_worker = next((w for w in old_status.get("workers", [])
+                            if w.get("id") == previous.get("worker_id") and w.get("createdAt") == previous.get("created_at")), None)
+                        retryable_bootstrap = bool(old_worker and old_worker.get("state") == "failed" and not old_worker.get("conversationId"))
+                    except AutomationError:
+                        retryable_bootstrap = False
+                if retryable_bootstrap:
+                    previous = {}
+                else:
+                    raise AutomationError(previous.get("error", "WORKER_FAILED"))
             project = self._project(alias)
             target = {**project, "workId":work_id,"role":role}
             if previous.get("state") == "accepted":
@@ -168,7 +197,8 @@ class ProjectBackend:
                 if len(prompt) > 250_000:
                     raise AutomationError("TASK_TOO_LARGE")
                 state = {"version":1,"operation_id":operation_id,"fingerprint":fingerprint,"target":target,
-                         "state":"submitting","submitted_at":now(),"reused":bool(reusable)}
+                         "state":"submitting","submitted_at":now(),"reused":bool(reusable),
+                         "answer_before_submit_sha256":digest(worker.get("answer")) if reusable and isinstance(worker.get("answer"),str) else None}
                 atomic_json(state_path,state)
                 try:
                     if reusable:
@@ -198,11 +228,30 @@ class ProjectBackend:
                 if not worker or worker.get("projectTarget") != target:
                     raise AutomationError("WORKER_TARGET_NOT_VERIFIED")
                 if worker.get("state") == "failed":
-                    state.update(state="failed",error="PROJECT_WORKER_FAILED",ended_at=now())
+                    error_code = "PROJECT_WORKER_BOOTSTRAP_FAILED" if not worker.get("conversationId") else "PROJECT_WORKER_FAILED"
+                    state.update(state="failed",error=error_code,ended_at=now())
                     atomic_json(state_path,state)
-                    raise AutomationError("PROJECT_WORKER_FAILED")
+                    raise AutomationError(error_code)
                 if worker.get("state") in ("sleeping","finished") and worker.get("complete") is True and isinstance(worker.get("answer"),str):
-                    result = parse_envelope(worker["answer"],operation_id,work_id)
+                    answer = worker["answer"]
+                    # A reused sleeping Project worker still exposes its previous completed answer
+                    # until the browser has actually delivered and completed the newly queued turn.
+                    # Treat that exact pre-submit answer as "not new yet", not as a malformed reply.
+                    # Persisting the hash makes the same fence survive a driver restart.
+                    previous_hash = state.get("answer_before_submit_sha256")
+                    if state.get("reused") and previous_hash and digest(answer) == previous_hash:
+                        time.sleep(self.poll_interval)
+                        continue
+                    try:
+                        result = parse_envelope(answer,operation_id,work_id)
+                    except AutomationError as error:
+                        # Backward-compatible recovery for an already-accepted reused operation
+                        # created before answer_before_submit_sha256 existed: an answer explicitly
+                        # naming another operation is necessarily historical, so keep waiting.
+                        if state.get("reused") and error.code == "RESULT_OPERATION_MISMATCH":
+                            time.sleep(self.poll_interval)
+                            continue
+                        raise
                     result_file = f"{operation_id}.result.json"
                     atomic_json(directory / result_file,result)
                     state.update(state="complete",result_file=result_file,result_sha256=digest(result),

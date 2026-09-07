@@ -401,7 +401,7 @@ def next_task(args):
         'status':'pending','entry_id':args.entry or metadata.get('entry_id'),'work_id':safe_id(args.work or metadata.get('work_id') or wdir.name),'work_dir':str(wdir.relative_to(ROOT)) if wdir.is_relative_to(ROOT) else str(wdir),'chunk_id':cid,
         'source_sha256':manifest.get('source_sha256'),'chunk_sha256':chunk_hash,'local_source_probe':local_source_probe,
         'source_ja':ja,'source_segments':segments,'previous_source_tail':prev_tail,'next_source_head':next_head,
-        'glossary':glossary,
+        'metadata':metadata,'glossary':glossary,
         'instructions':[
             'Translate every source_segments item whose kind is sentence from Japanese to natural Korean without omissions.',
             'Return exactly one segment_translations item for every sentence id, preserving the same ids and order. Do not merge, split, skip, or invent ids.',

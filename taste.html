@@ -35,7 +35,7 @@
       <div class="taste-transfer-copy">
         <span>ONE-TAP READING</span>
         <h2>오늘 모음을 한 번에</h2>
-        <p>통합 TXT 하나로 받거나, 작품별 TXT가 든 ZIP으로 받는다. 번역 완료본이 있으면 JA/KO 교차본을 우선하고 없으면 원문을 담는다. iPhone에서는 공유 시트에서 Text Viewer를 선택하면 바로 넘길 수 있다.</p>
+        <p>교차 번역이 완료된 추천작만 통합 TXT 또는 작품별 ZIP으로 받는다. 원문-only/한국어-only 파일은 만들지 않는다. iPhone에서는 공유 시트에서 Text Viewer를 선택하면 바로 넘길 수 있다.</p>
       </div>
       <div class="taste-transfer-actions">
         <button class="control-button" id="taste-share">공유 → Text Viewer</button>
@@ -45,7 +45,7 @@
       <details class="taste-webdav">
         <summary>Text Viewer에 Field Notes를 원격 서재로 연결</summary>
         <div>
-          <p>Text Viewer의 WebDAV에 아래 주소를 한 번 등록하면 이후에는 <b>오늘</b> 폴더에서 최신 추천을 바로 열 수 있다.</p>
+          <p>Text Viewer의 WebDAV에 아래 루트 주소를 한 번 등록하면 <b>날짜별 폴더</b>가 계속 쌓인다. 날짜 폴더 안에는 원문/번역 교차 TXT만 표시한다.</p>
           <label><span>WEBDAV URL</span><input id="taste-webdav-url" readonly value=""></label>
           <button class="text-button" id="taste-copy-webdav">주소 복사</button>
           <small>Tailscale이 켜진 기기에서만 접근 가능. 별도 공개 저장소에는 원문이 올라가지 않는다.</small>

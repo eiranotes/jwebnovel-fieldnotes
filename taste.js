@@ -54,7 +54,7 @@ function renderTransferLinks() {
   $('#taste-txt').href = `${base}&format=txt`;
   $('#taste-zip').href = `${base}&format=zip`;
   const root = `${location.origin}${location.pathname.includes('/fieldnotes/') ? '/fieldnotes' : ''}`;
-  $('#taste-webdav-url').value = `${root}/dav/today/`;
+  $('#taste-webdav-url').value = `${root}/dav/`;
 }
 
 function renderProgress() {

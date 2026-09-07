@@ -262,31 +262,26 @@ def _safe_text_filename(value: str) -> str:
     return (cleaned or "untitled")[:100]
 
 
-def _taste_work_text(item: dict, registry_by_key: dict[str, dict]) -> tuple[str, str]:
+def _taste_work_text(item: dict, registry_by_key: dict[str, dict]) -> tuple[str, str] | None:
     reg = registry_by_key.get(str(item.get("canonical_key") or ""))
     if not reg or not reg.get("workspace"):
-        raise ValueError(f"local sample is not available: {item.get('title')}")
+        return None
     workspace = (ROOT / reg["workspace"]).resolve()
     alternating = (workspace / "translation" / "output" / "ja-ko-alternating.txt").resolve()
-    translated = (workspace / "translation" / "output" / "ko.txt").resolve()
-    source = (workspace / "merged" / "ja.txt").resolve()
     if alternating.is_file() and alternating.is_relative_to(workspace) and alternating.stat().st_size > 0:
         return alternating.read_text(encoding="utf-8"), "JA/KO"
-    if translated.is_file() and translated.is_relative_to(workspace) and translated.stat().st_size > 0:
-        return translated.read_text(encoding="utf-8"), "KO"
-    if source.is_file() and source.is_relative_to(workspace):
-        return source.read_text(encoding="utf-8"), "JA"
-    raise ValueError(f"local sample is not available: {item.get('title')}")
+    return None
 
 
 def taste_reading_files(date: str) -> list[dict]:
     deck = taste_deck(date)
-    if not deck.get("items"):
-        raise ValueError("no readable works in the selected daily taste deck")
     registry_by_key = _taste_registry_by_key()
     rows = []
-    for index, item in enumerate(deck["items"], 1):
-        text, language = _taste_work_text(item, registry_by_key)
+    for index, item in enumerate(deck.get("items") or [], 1):
+        resolved = _taste_work_text(item, registry_by_key)
+        if not resolved:
+            continue
+        text, language = resolved
         header = (
             f"FIELD NOTES DAILY TASTE · {date}\n"
             f"{index:02d}. {item.get('title') or ''}\n"
@@ -296,29 +291,31 @@ def taste_reading_files(date: str) -> list[dict]:
             + "=" * 72 + "\n\n"
         )
         body = header + text.strip() + "\n"
-        filename = f"{index:02d}_{_safe_text_filename(item.get('title') or '')}.txt"
+        filename = f"{index:02d}_{_safe_text_filename(item.get('title') or '')}_교차번역.txt"
         rows.append({"filename": filename, "body": body, "language": language, "item": item})
     return rows
 
 
 def taste_bundle(date: str, fmt: str = "txt") -> tuple[bytes, str, str]:
     rows = taste_reading_files(date)
+    if not rows:
+        raise ValueError("no completed alternating translations for this date")
     combined_parts = [
         f"FIELD NOTES · 오늘의 추천 소설 · {date}\n",
-        f"총 {len(rows)}편 · 각 작품은 daily taste용 로컬 샘플입니다.\n",
-        "Text Viewer에서는 작품별 ZIP 또는 이 통합 TXT를 바로 읽을 수 있습니다.\n",
+        f"교차 번역 완료 {len(rows)}편\n",
+        "원문/한국어 번역을 문장 단위로 교차 표시합니다.\n",
         "#" * 72 + "\n",
     ]
     for row in rows:
         combined_parts.append("\n\n" + row["body"] + "\n")
     combined = "".join(combined_parts).encode("utf-8")
-    stem = f"fieldnotes-{date}-daily-taste"
+    stem = f"fieldnotes-{date}-daily-taste-ja-ko"
     if fmt == "txt":
         return combined, f"{stem}.txt", "text/plain; charset=utf-8"
     if fmt == "zip":
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("00_오늘추천_통합.txt", combined)
+            archive.writestr("00_오늘추천_교차번역_통합.txt", combined)
             for row in rows:
                 archive.writestr(row["filename"], row["body"].encode("utf-8"))
         return buffer.getvalue(), f"{stem}.zip", "application/zip"
@@ -331,30 +328,21 @@ def _content_disposition(filename: str) -> str:
 
 def _dav_date_and_name(path: str) -> tuple[str | None, str | None]:
     decoded = unquote(path).rstrip("/")
-    if decoded in {"/dav", "/dav/today"}:
-        if decoded == "/dav/today":
-            dates = available_taste_dates()
-            return (dates[0] if dates else None), None
+    if decoded == "/dav":
         return None, None
     if not decoded.startswith("/dav/"):
         return None, None
     rest = decoded[len("/dav/"):]
     parts = rest.split("/", 1)
-    date = parts[0]
-    if date == "today":
-        dates = available_taste_dates()
-        date = dates[0] if dates else ""
-    return (date or None), (parts[1] if len(parts) > 1 else None)
+    return (parts[0] or None), (parts[1] if len(parts) > 1 else None)
 
 
 def _dav_file_map(date: str) -> dict[str, tuple[bytes, str]]:
     rows = taste_reading_files(date)
-    combined, _, _ = taste_bundle(date, "txt")
-    zipped, _, _ = taste_bundle(date, "zip")
-    files: dict[str, tuple[bytes, str]] = {
-        "00_오늘추천_통합.txt": (combined, "text/plain; charset=utf-8"),
-        "99_오늘추천_작품별.zip": (zipped, "application/zip"),
-    }
+    files: dict[str, tuple[bytes, str]] = {}
+    if rows:
+        combined, _, _ = taste_bundle(date, "txt")
+        files["00_오늘추천_교차번역_통합.txt"] = (combined, "text/plain; charset=utf-8")
     for row in rows:
         files[row["filename"]] = (row["body"].encode("utf-8"), "text/plain; charset=utf-8")
     return files
@@ -365,8 +353,8 @@ def dav_resource(path: str):
     decoded = unquote(path).rstrip("/")
     if decoded == "/dav":
         return {"collection": True, "display": "Field Notes", "date": None, "name": None}
-    if decoded == "/dav/today" or (date and name is None and date in available_taste_dates()):
-        return {"collection": True, "display": "오늘" if decoded == "/dav/today" else date, "date": date, "name": None}
+    if date and name is None and date in available_taste_dates():
+        return {"collection": True, "display": date, "date": date, "name": None}
     if date and name:
         files = _dav_file_map(date)
         if name in files:
@@ -378,9 +366,7 @@ def dav_resource(path: str):
 def dav_children(path: str) -> list[dict]:
     decoded = unquote(path).rstrip("/")
     if decoded == "/dav":
-        children = [{"path": "/dav/today/", "collection": True, "display": "오늘"}]
-        children += [{"path": f"/dav/{date}/", "collection": True, "display": date} for date in available_taste_dates()]
-        return children
+        return [{"path": f"/dav/{date}/", "collection": True, "display": date} for date in available_taste_dates()]
     resource = dav_resource(path)
     if resource and resource.get("collection") and resource.get("date"):
         date = resource["date"]
@@ -421,6 +407,7 @@ def dav_multistatus(path: str, depth: str = "1") -> bytes:
         )
     xml = '<?xml version="1.0" encoding="utf-8"?><D:multistatus xmlns:D="DAV:">' + "".join(responses) + "</D:multistatus>"
     return xml.encode("utf-8")
+
 
 
 def save_taste_response(body: dict) -> dict:

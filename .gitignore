@@ -22,3 +22,10 @@ __pycache__/
 workspace/preference-feedback.json
 workspace/preference-model.json
 workspace/daily-taste-state.json
+
+# Model outputs and runtime logs must never enter public history.
+workspace/**/translation/results/
+workspace/**/*.log
+workspace/**/translation/parallel/
+workspace/project-context/
+workspace/automation-runs/

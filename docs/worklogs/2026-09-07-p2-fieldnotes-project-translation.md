@@ -57,3 +57,20 @@ This implementation is committed as the Priority 2 deterministic checkpoint befo
 
 ## Verdict
 PARTIAL. Deterministic Project translation architecture and safety properties pass; live Project Source-backed translation is not yet proven.
+
+## Live completion
+Project Source synchronization completed against the real `Fieldnotes` Project. The provider UI receipt lists both immutable context snapshots and confirms Project Instructions were saved. The synchronization state retains earlier terminal UI failures as history and safely retried them because missing-file upload is exact-filename idempotent; `submitting`/`uncertain` operations remain non-retriable without diagnosis.
+
+The source-probe gate then succeeded through real Project worker `worker-29`. Both hidden probe values were returned from the exact uploaded files, proving retrieval rather than prompt echo. The same worker conversation `6a9e36f0-5530-83e8-8802-4498470f9b69` was reused across subsequent operations.
+
+Actual Beni translation E2E completed:
+- chunk `0001`: source proof PASS, translation validation PASS, transactional completion PASS;
+- worker slept and was reused rather than replaced;
+- chunk `0002`: fresh source proof PASS in the same conversation, translation validation PASS, transactional completion PASS;
+- work state is `translation_complete`, manifest reports 2/2 chunks done;
+- private outputs were generated: `ko.txt`, `ja-ko.md`, `ja-ko-alternating.txt`, and `beni-death-gamer-translation.zip`.
+
+The first large translation exceeded the driver's synchronous wait window while the provider was still generating. The operation remained `accepted` rather than being resubmitted; a later invocation resumed result polling, consumed the existing worker result, and committed the chunk exactly once. This validates the lost/slow-result resume boundary in the real path.
+
+## Updated verdict
+PASS for Priority 2. Real Project Instructions/Sources, hidden retrieval proof, same-conversation reusable worker, two sequential Beni chunks, strict validation, durable completion, and final private artifacts are all verified. No fallback backend was used.

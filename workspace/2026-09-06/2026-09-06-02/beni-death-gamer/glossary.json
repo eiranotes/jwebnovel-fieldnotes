@@ -1,8 +1,28 @@
 {
   "schema_version": "1.0",
-  "people": {},
+  "people": {
+    "音重": "오토시게",
+    "渡辺": "와타나베",
+    "紅": "쿠레나이",
+    "堂本": "도모토",
+    "木崎": "키자키",
+    "木崎明美": "키자키 아케미"
+  },
   "places": {},
-  "terms": {},
+  "terms": {
+    "鬼": "도깨비",
+    "用務員": "관리인",
+    "体育教師": "체육 교사",
+    "撮れ高": "방송 분량",
+    "サポチャ": "후원챗",
+    "カモブタ": "호구돼지",
+    "チンピラ": "양아치",
+    "濃口醤油": "진간장",
+    "キャバ嬢": "캬바걸",
+    "七三眼鏡": "칠삼 안경",
+    "メスパンダ": "암컷 판다",
+    "JK": "JK"
+  },
   "ruby_notes": {
     "音重": "おとしげ",
     "渡辺": "わたなべ",
@@ -18,6 +38,54 @@
       "type": "ruby_scan",
       "count": 8,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "name_reading",
+      "source": "音重《おとしげ》",
+      "ko": "오토시게"
+    },
+    {
+      "type": "name_reading",
+      "source": "渡辺《わたなべ》",
+      "ko": "와타나베"
+    },
+    {
+      "type": "name_reading",
+      "source": "紅《くれない》",
+      "ko": "쿠레나이"
+    },
+    {
+      "type": "name_inference",
+      "source": "堂本",
+      "ko": "도모토",
+      "uncertain": true
+    },
+    {
+      "type": "name_inference",
+      "source": "木崎",
+      "ko": "키자키",
+      "uncertain": true
+    },
+    {
+      "type": "name_inference",
+      "source": "木崎明美",
+      "ko": "키자키 아케미",
+      "uncertain": true
+    },
+    {
+      "type": "term_choice",
+      "source": "鬼",
+      "ko": "도깨비"
+    },
+    {
+      "type": "term_choice",
+      "source": "撮れ高",
+      "ko": "방송 분량"
+    },
+    {
+      "type": "term_choice",
+      "source": "サポチャ",
+      "ko": "후원챗"
     }
   ]
 }

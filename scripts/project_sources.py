@@ -35,9 +35,15 @@ def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='field
         if state.get('state')=='complete':return state
         if state.get('state') in ('submitting','uncertain'):
             raise AutomationError('PROJECT_SYNC_OUTCOME_UNCERTAIN')
-        if state.get('state')=='failed':raise AutomationError('PROJECT_SYNC_FAILED')
+        previous_attempts=list(state.get('previous_attempts') or [])
+        if state.get('state')=='failed':
+            # A bridge `failed` receipt is terminal, unlike a lost/uncertain response. The UI
+            # synchronizer is filename-idempotent and uploads only missing immutable files, so a
+            # terminal attempt can be retried without duplicating an already-listed source.
+            previous_attempts.append({'command_id':state.get('command_id'),'error':state.get('error'),'ended_at':state.get('ended_at')})
+            state={}
         if state.get('state')!='accepted':
-            state={'version':1,'fingerprint':fingerprint,'target':{k:target[k] for k in ('alias','name','url')},'state':'submitting','started_at':now(),'sources':[public_pack(p) for p in packs]}
+            state={'version':1,'fingerprint':fingerprint,'target':{k:target[k] for k in ('alias','name','url')},'state':'submitting','started_at':now(),'sources':[public_pack(p) for p in packs], 'previous_attempts':previous_attempts}
             atomic_json(state_path,state)
             try:
                 receipt=bridge.request('/automation-projects/inspect',body,method='POST')

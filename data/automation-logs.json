@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T08:31:45.993633+00:00",
+  "updated_at": "2026-09-07T04:15:27.866768+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -62,6 +62,46 @@
         "tailnet_download": "sha256_match",
         "full_download_smoke": "3/3",
         "full_priority_router": true
+      }
+    },
+    {
+      "timestamp": "2026-09-07T03:25:44.501603+00:00",
+      "run_id": "translate-next-20260907T032544-5949eb1e",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 紅さんはデスゲーマー / 0001",
+      "details": {
+        "title": "紅さんはデスゲーマー",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T04:13:31.814165+00:00",
+      "run_id": "translate-complete-20260907T041331-a165e5db",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed beni-death-gamer / 0001",
+      "details": {
+        "work_id": "beni-death-gamer",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T04:15:27.866768+00:00",
+      "run_id": "translate-complete-20260907T041527-28c32ed4",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed beni-death-gamer / 0002",
+      "details": {
+        "work_id": "beni-death-gamer",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
       }
     }
   ]

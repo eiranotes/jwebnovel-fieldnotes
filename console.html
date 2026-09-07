@@ -44,11 +44,11 @@
     </div>
 
     <section class="wrap control-section active" data-panel="profiles" id="profiles">
-      <header class="section-head"><span>SEARCH PROFILES</span><div><h2>조건 그룹</h2><p>체크된 그룹은 다음 탐색에서 모두 각각 실행한다. 아무 그룹도 선택하지 않으면 아래 fallback 방식으로 자동 선택한다.</p></div></header>
+      <header class="section-head"><span>탐색 조건</span><div><h2>조건 그룹</h2><p>체크한 그룹은 다음 탐색에서 각각 실행한다. 아무것도 체크하지 않으면 아래 방식으로 자동 선택한다.</p></div></header>
       <div class="selection-bar">
-        <label><span>NO SELECTION</span><select id="fallback-mode"><option value="round_robin">순환</option><option value="least_recently_run">가장 오래 안 쓴 그룹</option><option value="random_daily">날짜 기반 랜덤</option><option value="all_enabled">활성 그룹 전부</option></select></label>
-        <label><span>CHECKED GROUPS</span><select id="explicit-mode"><option value="once">다음 탐색 1회만</option><option value="sticky">계속 고정</option></select></label>
-        <label><span>BATCH</span><input id="rotation-batch" type="number" min="1" value="1"></label>
+        <label><span>미선택 시</span><select id="fallback-mode"><option value="round_robin">순환</option><option value="least_recently_run">가장 오래 안 쓴 그룹</option><option value="random_daily">날짜 기반 랜덤</option><option value="all_enabled">활성 그룹 전부</option></select></label>
+        <label><span>체크한 그룹</span><select id="explicit-mode"><option value="once">다음 탐색 1회만</option><option value="sticky">계속 고정</option></select></label>
+        <label><span>한 번에 실행</span><input id="rotation-batch" type="number" min="1" value="1"></label>
         <button id="save-selection" class="control-button">다음 탐색 선택 저장</button>
       </div>
       <div id="profile-list" class="profile-list"></div>
@@ -56,20 +56,14 @@
     </section>
 
     <section class="wrap control-section" data-panel="feedback" id="feedback">
-      <header class="section-head"><span>PREFERENCE LEARNING</span><div><h2>취향 피드백</h2><p>작품 반응을 누적해 다음 탐색의 소프트 랭킹을 보정한다. 하드 필터는 자동 변경하지 않으며, 학습된 변경안은 승인 후에만 조건 그룹에 들어간다.</p></div></header>
-      <div class="feedback-editor">
-        <label class="wide"><span>WORK</span><select id="feedback-work"></select></label>
-        <label><span>PROFILE SCOPE</span><select id="feedback-profile"></select></label>
-        <label><span>VERDICT</span><select id="feedback-verdict"><option value="love">최애 · +3</option><option value="like">좋음 · +1</option><option value="neutral">보통 · 0</option><option value="dislike">별로 · -1</option><option value="exclude">다시 추천하지 않음 · -3</option></select></label>
-        <fieldset class="feedback-reasons wide"><legend>WHY</legend>
-          <label><input type="checkbox" value="premise">소재</label><label><input type="checkbox" value="tone">톤</label><label><input type="checkbox" value="prose">문체</label><label><input type="checkbox" value="pacing">전개</label><label><input type="checkbox" value="protagonist">주인공</label><label><input type="checkbox" value="characters">캐릭터</label><label><input type="checkbox" value="relationships">관계성</label><label><input type="checkbox" value="romance">로맨스</label><label><input type="checkbox" value="worldbuilding">세계관</label><label><input type="checkbox" value="system_rules">룰/시스템</label><label><input type="checkbox" value="strategy">전략/추론</label><label><input type="checkbox" value="comedy">개그</label><label><input type="checkbox" value="darkness">어두움</label><label><input type="checkbox" value="slice_of_life">일상</label><label><input type="checkbox" value="length">분량</label><label><input type="checkbox" value="freshness">신선도</label><label><input type="checkbox" value="ending">결말</label><label><input type="checkbox" value="genre_mix">장르혼합</label>
-        </fieldset>
-        <label class="wide"><span>FEATURE TAGS · 쉼표로 구분</span><input id="feedback-tags" placeholder="여성 주인공, 건조한 문체, 규칙 추론, 반복 데스게임"></label>
-        <label class="wide"><span>NOTE</span><textarea id="feedback-note" placeholder="왜 좋았는지/싫었는지 자유 메모"></textarea></label>
-        <div class="feedback-submit wide"><button id="save-feedback" class="control-button">피드백 저장</button><span>전체 번역 선택은 강한 긍정 신호로 자동 기록됨</span></div>
+      <header class="section-head"><span>취향 학습</span><div><h2>취향 피드백</h2><p>날짜별 추천작을 펼쳐 별점과 이유를 빠르게 남긴다. 평가는 다음 탐색의 소프트 랭킹에 반영한다.</p></div></header>
+      <div class="feedback-toolbar">
+        <label><span>평가 적용 범위</span><select id="feedback-profile"></select></label>
+        <p>별점 1~5점 · 체크 이유와 자유 메모는 선택사항</p>
       </div>
+      <div id="feedback-list" class="feedback-date-list"></div>
       <div class="learning-summary">
-        <header><span>LEARNED SIGNALS</span><h3 id="learning-scope-title">GLOBAL</h3></header>
+        <header><span>학습된 취향 신호</span><h3 id="learning-scope-title">GLOBAL</h3></header>
         <div id="learning-signals" class="signal-list"></div>
         <div id="learning-suggestions" class="suggestion-list"></div>
       </div>
@@ -94,7 +88,7 @@
     </section>
 
     <section class="wrap control-section" data-panel="files" id="files">
-      <header class="section-head"><span>DOWNLOADS</span><div><h2>핸드폰으로 파일 받기</h2><p>완료된 번역은 한국어 TXT, 원문/번역 Markdown, 문장 단위 원문→번역 교차 TXT, ZIP으로 제공한다. private console을 Tailscale Serve로 노출하면 아이폰에서 바로 받을 수 있다.</p></div></header>
+      <header class="section-head"><span>파일 받기</span><div><h2>핸드폰으로 파일 받기</h2><p>완료된 작품은 문장 단위 원문→번역 교차 TXT만 표시하고 내려받는다.</p></div></header>
       <div id="artifact-list" class="artifact-list"></div>
     </section>
 

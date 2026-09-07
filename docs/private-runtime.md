@@ -58,4 +58,4 @@ The private runtime exposes daily recommendation reading files without publishin
 - Per-work ZIP: `/fieldnotes/api/taste/bundle?date=YYYY-MM-DD&format=zip`
 - Read-only WebDAV shelf: `/fieldnotes/dav/today/`
 
-The bundle prefers the completed sentence-alternating `<원문 제목> - 번역본.txt`, then `ko.txt`, and falls back to the locally acquired Japanese sample when translation output is not ready. The WebDAV surface is read-only at the Field Notes server layer and is intended to be used only through the user's Tailscale network.
+The bundle and WebDAV shelf expose only completed sentence-alternating `<원문 제목> - 번역본.txt` files. Original-only and translation-only artifacts are not offered from the reading/download surfaces. The WebDAV surface is read-only at the Field Notes server layer and is intended to be used only through the user's Tailscale network.

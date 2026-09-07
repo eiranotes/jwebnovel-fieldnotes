@@ -6,6 +6,15 @@ let writable = false;
 let feedbackTargetKey = null;
 let feedbackScope = '__global__';
 
+const feedbackReasons = [
+  ['premise','소재'],['tone','톤'],['prose','문체'],['pacing','전개'],['protagonist','주인공'],
+  ['characters','캐릭터'],['relationships','관계성'],['romance','로맨스'],['worldbuilding','세계관'],
+  ['system_rules','룰/시스템'],['strategy','전략/추론'],['comedy','개그'],['darkness','어두움'],
+  ['slice_of_life','일상'],['length','분량'],['freshness','신선도'],['ending','결말'],['genre_mix','장르혼합']
+];
+const ratingToVerdict = {1:'exclude', 2:'dislike', 3:'neutral', 4:'like', 5:'love'};
+const verdictToRating = {exclude:1, dislike:2, neutral:3, like:4, love:5};
+
 function toast(message, error=false) {
   const el = $('#toast');
   el.textContent = message;
@@ -53,31 +62,33 @@ function profileCard(profile, selected) {
   const out = profile.output || {};
   return `<article class="profile-card" data-id="${esc(profile.profile_id)}">
     <header>
-      <label class="profile-select"><input type="checkbox" data-role="selected" ${selected?'checked':''}><span>NEXT SEARCH</span></label>
+      <label class="profile-select"><input type="checkbox" data-role="selected" ${selected?'checked':''}><span>다음 탐색</span></label>
       <input data-field="name" class="profile-name" value="${esc(profile.name)}">
-      <label class="toggle"><input type="checkbox" data-field="enabled" ${profile.enabled?'checked':''}><span>ACTIVE</span></label>
+      <label class="toggle"><input type="checkbox" data-field="enabled" ${profile.enabled?'checked':''}><span>활성</span></label>
     </header>
     <div class="profile-grid">
-      <label><span>PROFILE ID</span><input data-field="profile_id" value="${esc(profile.profile_id)}"></label>
-      <label><span>PLATFORMS</span><input data-field="platforms" value="${esc(valueList(hard.platforms || ['Narou','Kakuyomu']))}"></label>
-      <label><span>MIN CHARS</span><input data-field="min_chars" type="number" value="${esc(hard.min_chars ?? 300000)}"></label>
-      <label><span>SHORTLIST</span><input data-field="shortlist_count" type="number" min="1" value="${esc(out.shortlist_count ?? 10)}"></label>
-      <label class="wide"><span>REFERENCE WORKS · title | url</span><textarea data-field="reference_works">${esc((profile.reference_works||[]).map(x=>typeof x==='string'?x:[x.title,x.url].filter(Boolean).join(' | ')).join('\n'))}</textarea></label>
-      <label><span>GENRES</span><input data-field="genres" value="${esc(valueList(hard.genres))}"></label>
-      <label><span>MUST</span><input data-field="must" value="${esc(valueList(hard.must))}"></label>
-      <label><span>MUST NOT</span><input data-field="must_not" value="${esc(valueList(hard.must_not))}"></label>
-      <label><span>STATUS PRIORITY</span><input data-field="serialization_priority" value="${esc(valueList(soft.serialization_priority))}" placeholder="ongoing, completed"></label>
-      <label><span>VISIBILITY</span><input data-field="visibility" value="${esc(soft.visibility||'')}"></label>
-      <label><span>FRESHNESS</span><input data-field="freshness" value="${esc(soft.freshness||'')}"></label>
-      <label><span>PROTAGONIST</span><input data-field="protagonist" value="${esc(soft.protagonist||'')}"></label>
-      <label><span>POV</span><input data-field="pov" value="${esc(soft.pov||'')}"></label>
-      <label><span>ROMANCE</span><input data-field="romance_tolerance" value="${esc(soft.romance_tolerance||'')}"></label>
-      <label><span>PUBLICATION</span><select data-field="commercial_publication"><option value="profile_specific" ${hard.commercial_publication==='profile_specific'?'selected':''}>조건별 판단</option><option value="exclude" ${hard.commercial_publication==='exclude'?'selected':''}>출판작 제외</option><option value="allow" ${hard.commercial_publication==='allow'?'selected':''}>허용</option><option value="deprioritize" ${hard.commercial_publication==='deprioritize'?'selected':''}>우선순위 하향</option></select></label>
-      <label><span>R18</span><select data-field="adult_r18"><option value="exclude" ${hard.adult_r18!=='allow'?'selected':''}>제외</option><option value="allow" ${hard.adult_r18==='allow'?'selected':''}>허용</option></select></label>
-      <label><span>STYLE</span><input data-field="style" value="${esc(valueList(soft.style))}"></label>
-      <label><span>PACING</span><input data-field="pacing" value="${esc(valueList(soft.pacing))}"></label>
-      <label class="wide"><span>ELEMENT PREFERENCES</span><input data-field="element_preferences" value="${esc(valueList(soft.element_preferences))}"></label>
-      <label class="wide"><span>FREEFORM INTENT</span><textarea data-field="intent">${esc(profile.intent||'')}</textarea></label>
+      <label><span>플랫폼</span><input data-field="platforms" value="${esc(valueList(hard.platforms || ['Narou','Kakuyomu']))}"></label>
+      <label><span>최소 분량 · 글자 수</span><input data-field="min_chars" type="number" value="${esc(hard.min_chars ?? 300000)}"></label>
+      <label><span>추천 수</span><input data-field="shortlist_count" type="number" min="1" value="${esc(out.shortlist_count ?? 10)}"></label>
+      <label><span>주인공</span><input data-field="protagonist" value="${esc(soft.protagonist||'')}" placeholder="예: 여성 주인공"></label>
+      <label class="wide"><span>기준 작품 · 제목 | URL</span><textarea data-field="reference_works">${esc((profile.reference_works||[]).map(x=>typeof x==='string'?x:[x.title,x.url].filter(Boolean).join(' | ')).join('\n'))}</textarea></label>
+      <label><span>장르</span><input data-field="genres" value="${esc(valueList(hard.genres))}"></label>
+      <label><span>반드시 포함</span><input data-field="must" value="${esc(valueList(hard.must))}"></label>
+      <label><span>제외 조건</span><input data-field="must_not" value="${esc(valueList(hard.must_not))}"></label>
+      <label class="wide"><span>자유 조건</span><textarea data-field="intent" placeholder="작품 탐색 의도를 자연어로 적기">${esc(profile.intent||'')}</textarea></label>
+      <div class="profile-preserved-fields" hidden>
+        <input data-field="profile_id" value="${esc(profile.profile_id)}">
+        <input data-field="serialization_priority" value="${esc(valueList(soft.serialization_priority))}">
+        <input data-field="visibility" value="${esc(soft.visibility||'')}">
+        <input data-field="freshness" value="${esc(soft.freshness||'')}">
+        <input data-field="pov" value="${esc(soft.pov||'')}">
+        <input data-field="romance_tolerance" value="${esc(soft.romance_tolerance||'')}">
+        <input data-field="commercial_publication" value="${esc(hard.commercial_publication||'profile_specific')}">
+        <input data-field="adult_r18" value="${esc(hard.adult_r18||'exclude')}">
+        <input data-field="style" value="${esc(valueList(soft.style))}">
+        <input data-field="pacing" value="${esc(valueList(soft.pacing))}">
+        <input data-field="element_preferences" value="${esc(valueList(soft.element_preferences))}">
+      </div>
     </div>
     <button class="text-button danger" data-action="remove-profile">삭제</button>
   </article>`;
@@ -133,24 +144,70 @@ function renderWorks() {
 }
 
 function renderFeedback() {
-  const works = state.work_index?.works || [];
-  if (!feedbackTargetKey && works.length) feedbackTargetKey = works[0].canonical_key;
-  const workSelect = $('#feedback-work');
-  workSelect.innerHTML = works.map(w=>`<option value="${esc(w.canonical_key)}" ${w.canonical_key===feedbackTargetKey?'selected':''}>${esc(w.title)}${w.author?` · ${esc(w.author)}`:''}</option>`).join('');
+  const events = state.preference_feedback?.events || [];
+  const feedbackKeys = new Set(events.map(event=>event.canonical_key));
+  const works = (state.work_index?.works || []).filter(work =>
+    feedbackKeys.has(work.canonical_key) || (work.classifications || []).some(item=>['shortlist','length_exceptions'].includes(item.bucket))
+  );
   const profiles = state.profiles?.profiles || [];
   const profileSelect = $('#feedback-profile');
   profileSelect.innerHTML = `<option value="__global__">전체 취향</option>` + profiles.map(p=>`<option value="${esc(p.profile_id)}" ${p.profile_id===feedbackScope?'selected':''}>${esc(p.name)}</option>`).join('');
   if (![...profileSelect.options].some(o=>o.value===feedbackScope)) feedbackScope='__global__';
   profileSelect.value = feedbackScope;
+
+  const latestFeedback = key => events
+    .filter(event => event.canonical_key === key && (feedbackScope === '__global__' ? !event.profile_id : event.profile_id === feedbackScope))
+    .sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')))[0] || null;
+  const dateFor = work => {
+    const value = String(work.last_seen_entry || work.first_seen_entry || '');
+    return value.match(/^\d{4}-\d{2}-\d{2}/)?.[0] || '날짜 미상';
+  };
+  const groups = new Map();
+  for (const work of works) {
+    const date = dateFor(work);
+    if (!groups.has(date)) groups.set(date, []);
+    groups.get(date).push(work);
+  }
+  const dates = [...groups.keys()].sort((a,b)=>{
+    if (a === '날짜 미상') return 1;
+    if (b === '날짜 미상') return -1;
+    return b.localeCompare(a);
+  });
+  const targetDate = feedbackTargetKey ? dateFor(works.find(w=>w.canonical_key===feedbackTargetKey) || {}) : null;
+  $('#feedback-list').innerHTML = dates.map((date, dateIndex) => {
+    const rows = groups.get(date).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''), 'ja'));
+    const open = targetDate ? date === targetDate : dateIndex === 0;
+    return `<details class="feedback-day" ${open?'open':''}>
+      <summary><span>${esc(date)}</span><b>${rows.length}편</b></summary>
+      <div class="feedback-day-works">${rows.map(work=>{
+        const response = latestFeedback(work.canonical_key);
+        const rating = verdictToRating[response?.verdict] || 0;
+        const selectedReasons = new Set(response?.reasons || []);
+        const focused = work.canonical_key === feedbackTargetKey;
+        return `<article class="feedback-work-card ${focused?'focused':''}" data-feedback-key="${esc(work.canonical_key)}" data-rating="${rating}">
+          <header>
+            <div class="feedback-work-title"><small>${esc(work.platform||'플랫폼 미상')}${work.author?` · ${esc(work.author)}`:''}</small><h3>${esc(work.title)}</h3></div>
+            <div class="feedback-stars" role="radiogroup" aria-label="${esc(work.title)} 별점">${[1,2,3,4,5].map(value=>`<button type="button" data-feedback-rating="${value}" class="${value<=rating?'selected':''}" aria-label="${value}점" aria-pressed="${value===rating?'true':'false'}" ${!writable?'disabled':''}>★</button>`).join('')}</div>
+          </header>
+          <fieldset class="feedback-card-reasons"><legend>좋았거나 싫었던 이유</legend>${feedbackReasons.map(([value,label])=>`<label><input type="checkbox" data-feedback-reason value="${value}" ${selectedReasons.has(value)?'checked':''} ${!writable?'disabled':''}><span>${label}</span></label>`).join('')}</fieldset>
+          <div class="feedback-card-foot">
+            <label><span>자유 메모</span><textarea data-feedback-note placeholder="왜 좋았는지/싫었는지 자유롭게 메모" ${!writable?'disabled':''}>${esc(response?.note||'')}</textarea></label>
+            <button type="button" class="control-button compact" data-save-feedback ${!writable?'disabled':''}>${response?'평가 수정':'평가 저장'}</button>
+          </div>
+        </article>`;
+      }).join('')}</div>
+    </details>`;
+  }).join('') || '<div class="archive-state">평가할 작품이 없다.</div>';
+
   const model = state.preference_model?.profiles?.[feedbackScope] || {event_count:0,signals:[],suggestions:[],positive_examples:[],negative_examples:[]};
-  $('#learning-scope-title').textContent = `${feedbackScope==='__global__'?'GLOBAL':profileSelect.selectedOptions[0]?.textContent || feedbackScope} · ${model.event_count||0} signals`;
-  $('#learning-signals').innerHTML = (model.signals||[]).map(x=>`<article class="signal-row"><b>${esc(x.reason)}</b><span>${Number(x.score||0)>0?'+':''}${esc(x.score||0)}</span><small>${esc(x.count||0)}회 · confidence ${Math.round(Number(x.confidence||0)*100)}%</small></article>`).join('') || '<div class="archive-state">아직 학습 신호가 없다.</div>';
+  $('#learning-scope-title').textContent = `${feedbackScope==='__global__'?'전체 취향':profileSelect.selectedOptions[0]?.textContent || feedbackScope} · ${model.event_count||0}개 평가`;
+  $('#learning-signals').innerHTML = (model.signals||[]).map(x=>`<article class="signal-row"><b>${esc(x.reason)}</b><span>${Number(x.score||0)>0?'+':''}${esc(x.score||0)}</span><small>${esc(x.count||0)}회 · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</small></article>`).join('') || '<div class="archive-state">아직 학습 신호가 없다.</div>';
   if (feedbackScope === '__global__') {
     $('#learning-suggestions').innerHTML = '<div class="archive-state">조건 반영은 특정 프로필을 선택하면 표시된다. 전체 취향 신호는 모든 프로필 랭킹에 기본 반영된다.</div>';
   } else {
-    $('#learning-suggestions').innerHTML = (model.suggestions||[]).map(x=>`<article class="suggestion-row"><div><small>PROPOSED · ${esc(x.direction)}</small><b>${esc(x.reason)}</b><p>${esc(x.evidence_count)}개 근거 · 평균 ${esc(x.average_score)} · confidence ${Math.round(Number(x.confidence||0)*100)}%</p></div><button class="control-button secondary compact" data-apply-signal="${esc(x.reason)}" data-direction="${esc(x.direction)}" ${!writable?'disabled':''}>조건에 반영</button></article>`).join('') || '<div class="archive-state">승인 대기 변경안이 없다.</div>';
+    $('#learning-suggestions').innerHTML = (model.suggestions||[]).map(x=>`<article class="suggestion-row"><div><small>조건 반영 제안 · ${esc(x.direction)}</small><b>${esc(x.reason)}</b><p>${esc(x.evidence_count)}개 근거 · 평균 ${esc(x.average_score)} · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</p></div><button class="control-button secondary compact" data-apply-signal="${esc(x.reason)}" data-direction="${esc(x.direction)}" ${!writable?'disabled':''}>조건에 반영</button></article>`).join('') || '<div class="archive-state">승인 대기 변경안이 없다.</div>';
   }
-  $$('#feedback input, #feedback select, #feedback textarea, #feedback button').forEach(el=>{ el.disabled=!writable; });
+  profileSelect.disabled = !writable;
 }
 
 function renderFullQueue() {
@@ -166,8 +223,8 @@ function renderLogs() {
 }
 
 function renderArtifacts() {
-  const rows = state.artifacts || [];
-  $('#artifact-list').innerHTML = rows.map(row=>`<article class="artifact-row"><div><small>${esc(row.kind)}</small><h3>${esc(row.title||row.work_id||'artifact')}</h3><p>${Number(row.size||0).toLocaleString()} bytes</p></div><div class="artifact-links">${writable?`<a href="api/download?path=${encodeURIComponent(row.path)}">${esc(row.filename)}</a>`:`<span>${esc(row.filename)}</span>`}</div></article>`).join('') || '<div class="archive-state">받을 수 있는 로컬 작업물이 아직 없다.</div>';
+  const rows = (state.artifacts || []).filter(row=>String(row.filename||'').endsWith(' - 번역본.txt'));
+  $('#artifact-list').innerHTML = rows.map(row=>`<article class="artifact-row"><div><small>교차 번역</small><h3>${esc(row.title||row.work_id||'artifact')}</h3><p>${Number(row.size||0).toLocaleString()} bytes</p></div><div class="artifact-links">${writable?`<a href="api/download?path=${encodeURIComponent(row.path)}">${esc(row.filename)}</a>`:`<span>${esc(row.filename)}</span>`}</div></article>`).join('') || '<div class="archive-state">완료된 교차 번역본이 아직 없다.</div>';
 }
 
 function renderAll(){ renderProfiles(); renderFeedback(); renderWorks(); renderFullQueue(); renderLogs(); renderArtifacts(); }
@@ -232,20 +289,43 @@ $('#work-index-list').addEventListener('click',async event=>{
   }catch(error){toast(error.message,true);}
 });
 
-$('#feedback-work').addEventListener('change',event=>{ feedbackTargetKey=event.target.value; });
 $('#feedback-profile').addEventListener('change',event=>{ feedbackScope=event.target.value; renderFeedback(); });
 
-$('#save-feedback').addEventListener('click',async()=>{
-  try{
-    const reasons=$$('.feedback-reasons input:checked').map(x=>x.value);
-    const tags=splitList($('#feedback-tags').value);
-    await api('api/feedback',{method:'POST',body:JSON.stringify({canonical_key:$('#feedback-work').value,profile_id:$('#feedback-profile').value==='__global__'?null:$('#feedback-profile').value,verdict:$('#feedback-verdict').value,reasons,tags,note:$('#feedback-note').value})});
-    $$('.feedback-reasons input').forEach(x=>x.checked=false);
-    $('#feedback-tags').value=''; $('#feedback-note').value='';
-    toast('취향 피드백 저장됨');
+$('#feedback-list').addEventListener('click',async event=>{
+  const card = event.target.closest('.feedback-work-card');
+  if (!card) return;
+  const ratingButton = event.target.closest('[data-feedback-rating]');
+  if (ratingButton) {
+    const rating = Number(ratingButton.dataset.feedbackRating || 0);
+    card.dataset.rating = String(rating);
+    card.querySelectorAll('[data-feedback-rating]').forEach(button=>{
+      const value = Number(button.dataset.feedbackRating || 0);
+      button.classList.toggle('selected', value <= rating);
+      button.setAttribute('aria-pressed', value === rating ? 'true' : 'false');
+    });
+    return;
+  }
+  const saveButton = event.target.closest('[data-save-feedback]');
+  if (!saveButton) return;
+  const rating = Number(card.dataset.rating || 0);
+  if (!ratingToVerdict[rating]) return toast('별점을 먼저 선택해 주세요.', true);
+  try {
+    saveButton.disabled = true;
+    const reasons = [...card.querySelectorAll('[data-feedback-reason]:checked')].map(x=>x.value);
+    const note = card.querySelector('[data-feedback-note]')?.value || '';
+    feedbackTargetKey = card.dataset.feedbackKey;
+    await api('api/feedback',{method:'POST',body:JSON.stringify({
+      canonical_key:feedbackTargetKey,
+      profile_id:feedbackScope==='__global__'?null:feedbackScope,
+      verdict:ratingToVerdict[rating], reasons, tags:[], note
+    })});
+    toast(`${rating}점 평가 저장됨`);
     await loadState();
     activateTab('feedback');
-  }catch(error){toast(error.message,true);}
+  } catch(error) {
+    saveButton.disabled = false;
+    toast(error.message,true);
+  }
 });
 
 $('#learning-suggestions').addEventListener('click',async event=>{

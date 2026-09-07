@@ -83,31 +83,19 @@ def artifact_inventory() -> list[dict]:
     rows: list[dict] = []
     registry = load(REGISTRY, {"works": []})
     for work in registry.get("works", []):
-        for kind, rel in (
-            ("merged_original", work.get("paths", {}).get("merged")),
-            ("parallel_view", work.get("paths", {}).get("parallel_view")),
-        ):
-            if not rel:
-                continue
-            target = (ROOT / rel).resolve()
-            if target.is_file():
-                rows.append({
-                    "kind": kind,
-                    "title": work.get("title"),
-                    "work_id": work.get("work_id"),
-                    "path": str(target.relative_to(ROOT)),
-                    "filename": target.name,
-                    "size": target.stat().st_size,
-                })
         workspace = work.get("workspace")
         if workspace:
             output_dir = (ROOT / workspace / "translation" / "output").resolve()
             if output_dir.is_dir():
-                for target in sorted(output_dir.iterdir()):
-                    if not target.is_file() or target.suffix.lower() not in {".txt", ".md", ".zip"}:
+                title = str(work.get("title") or work.get("work_id") or "untitled")
+                expected = (output_dir / alternating_translation_filename(title)).resolve()
+                candidates = [expected] if expected.is_file() else sorted(output_dir.glob("* - 번역본.txt"))
+                for target in candidates[:1]:
+                    target = target.resolve()
+                    if not target.is_file() or not target.is_relative_to(output_dir):
                         continue
                     rows.append({
-                        "kind": "standard_translation",
+                        "kind": "alternating_translation",
                         "title": work.get("title"),
                         "work_id": work.get("work_id"),
                         "path": str(target.relative_to(ROOT)),
@@ -118,9 +106,9 @@ def artifact_inventory() -> list[dict]:
     for request in full.get("requests", []):
         for rel in request.get("artifacts") or []:
             target = (ROOT / rel).resolve()
-            if target.is_file():
+            if target.is_file() and target.name.endswith(" - 번역본.txt"):
                 rows.append({
-                    "kind": "full_translation",
+                    "kind": "alternating_translation",
                     "title": request.get("title"),
                     "work_id": request.get("work_id"),
                     "path": str(target.relative_to(ROOT)),

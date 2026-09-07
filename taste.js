@@ -86,15 +86,16 @@ function renderQueue() {
 function sampleView(item) {
   const state = sampleState.get(item.canonical_key);
   if (!item.sample_available) {
-    return `<div class="taste-sample-unavailable"><b>LOCAL SAMPLE NOT READY</b><p>아직 로컬 샘플이 준비되지 않았다. 원문 페이지에서 먼저 읽고 평가할 수 있다.</p>${item.url?`<a href="${esc(item.url)}" target="_blank" rel="noreferrer">원문에서 읽기 ↗</a>`:''}</div>`;
+    return `<div class="taste-sample-unavailable"><b>교차 번역 준비 중</b><p>번역 완료 뒤 이 목록에 표시된다.</p></div>`;
   }
   if (!state) return '<div class="taste-sample-loading">샘플을 불러오는 중.</div>';
-  const ko = state.ko_text ? `<div class="taste-text-ko" data-reading="ko"><pre>${esc(state.ko_text)}</pre></div>` : '';
-  const ja = `<div class="taste-text-ja ${state.ko_text?'secondary':''}" data-reading="ja"><pre>${esc(state.ja_text || '')}</pre></div>`;
+  const body = state.reading_mode === 'alternating'
+    ? `<div class="taste-text-alternating" data-reading="alternating"><pre>${esc(state.text || '')}</pre></div>`
+    : `<div class="taste-text-ja" data-reading="ja"><pre>${esc(state.ja_text || '')}</pre></div>`;
   return `<div class="taste-reading-toolbar">
-      <span>${state.ko_text ? '번역 샘플' : '일본어 원문 샘플'}</span>
+      <span>${state.reading_mode === 'alternating' ? '원문 · 번역 교차본' : '일본어 원문 샘플'}</span>
       <b>${Number(state.end || 0).toLocaleString()} / ${Number(state.total || 0).toLocaleString()} chars</b>
-    </div>${ko}${ja}${state.has_more?'<button class="taste-more" data-action="more">다음 부분 더 읽기</button>':''}`;
+    </div>${body}${state.has_more?'<button class="taste-more" data-action="more">다음 부분 더 읽기</button>':''}`;
 }
 
 function renderReader() {
@@ -137,8 +138,8 @@ async function loadSample(key, append=false) {
   const start = append && current ? current.end : 0;
   const data = await api(`api/taste/read?date=${encodeURIComponent(deck.date)}&key=${encodeURIComponent(key)}&start=${start}`);
   if (append && current) {
-    data.ja_text = [current.ja_text, data.ja_text].filter(Boolean).join('\n\n');
-    data.ko_text = [current.ko_text, data.ko_text].filter(Boolean).join('\n\n');
+    if (data.reading_mode === 'alternating') data.text = [current.text, data.text].filter(Boolean).join('\n\n');
+    else data.ja_text = [current.ja_text, data.ja_text].filter(Boolean).join('\n\n');
     data.start = 0;
   }
   sampleState.set(key, data);

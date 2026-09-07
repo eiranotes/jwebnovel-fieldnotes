@@ -45,5 +45,42 @@ class PrivateConsoleTests(unittest.TestCase):
             self.assertEqual([row['filename'] for row in rows],['테스트 - 번역본.txt'])
             self.assertEqual(rows[0]['kind'],'alternating_translation')
 
+    def test_taste_sample_reads_alternating_translation_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve()
+            entries=root/'data'/'entries'
+            registry=root/'data'/'work-registry.json'
+            taste_state=root/'workspace'/'daily-taste-state.json'
+            output=root/'workspace'/'demo'/'translation'/'output'
+            entries.mkdir(parents=True)
+            registry.parent.mkdir(parents=True,exist_ok=True)
+            output.mkdir(parents=True)
+            taste_state.parent.mkdir(parents=True,exist_ok=True)
+            (entries/'2026-09-06-01.json').write_text(json.dumps({
+                'entry_id':'2026-09-06-01','date':'2026-09-06','results':{'shortlist':[{
+                    'title':'테스트','platform':'Narou','url':'https://example.test/work','rank':'A1'
+                }]}
+            },ensure_ascii=False),encoding='utf-8')
+            registry.write_text(json.dumps({'works':[{
+                'title':'테스트','work_id':'demo','workspace':'workspace/demo','platform':'Narou','url':'https://example.test/work'
+            }]},ensure_ascii=False),encoding='utf-8')
+            taste_state.write_text(json.dumps({'responses':[]}),encoding='utf-8')
+            (output/'테스트 - 번역본.txt').write_text('原文\n번역\n',encoding='utf-8')
+
+            previous=(private_console.ROOT,private_console.ENTRIES,private_console.REGISTRY,private_console.DAILY_TASTE)
+            try:
+                private_console.ROOT=root
+                private_console.ENTRIES=entries
+                private_console.REGISTRY=registry
+                private_console.DAILY_TASTE=taste_state
+                deck=private_console.taste_deck('2026-09-06')
+                sample=private_console.taste_sample('2026-09-06',deck['items'][0]['canonical_key'])
+            finally:
+                private_console.ROOT,private_console.ENTRIES,private_console.REGISTRY,private_console.DAILY_TASTE=previous
+
+            self.assertEqual(len(deck['items']),1)
+            self.assertEqual(sample['reading_mode'],'alternating')
+            self.assertEqual(sample['text'],'原文\n번역\n')
+
 
 if __name__=='__main__':unittest.main()

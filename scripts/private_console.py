@@ -197,11 +197,14 @@ def taste_deck(date: str | None = None) -> dict:
         reg = registry_by_key.get(row["canonical_key"])
         sample_available = False
         if reg and reg.get("workspace"):
-            sample_available = (ROOT / reg["workspace"] / "merged" / "ja.txt").is_file()
+            workspace = (ROOT / reg["workspace"]).resolve()
+            title = str(reg.get("title") or row.get("title") or reg.get("work_id") or "untitled")
+            alternating = (workspace / "translation" / "output" / alternating_translation_filename(title)).resolve()
+            sample_available = alternating.is_file() and alternating.is_relative_to(workspace) and alternating.stat().st_size > 0
             row["work_id"] = reg.get("work_id")
         row["sample_available"] = sample_available
         row["response"] = responses.get((date, row["canonical_key"]))
-        if sample_available or row["response"]:
+        if sample_available:
             items.append(row)
     def rank_key(row: dict):
         rank = str(row.get("rank") or "Z")
@@ -227,16 +230,17 @@ def taste_sample(date: str, canonical_key: str, start: int = 0, limit: int = 650
     reg = next((w for w in registry.get("works", []) if w.get("title") and canonical(w) == canonical_key), None)
     if not reg or not reg.get("workspace"):
         raise ValueError("local sample is not available")
-    source = (ROOT / reg["workspace"] / "merged" / "ja.txt").resolve()
     workspace = (ROOT / reg["workspace"]).resolve()
+    title = str(reg.get("title") or item.get("title") or reg.get("work_id") or "untitled")
+    source = (workspace / "translation" / "output" / alternating_translation_filename(title)).resolve()
     if not source.is_file() or not source.is_relative_to(workspace):
-        raise ValueError("local sample is not available")
+        raise ValueError("completed alternating translation is not available")
     text = source.read_text(encoding="utf-8")
     start = max(0, min(int(start), len(text)))
     end = min(len(text), start + max(500, min(int(limit), 8000)))
     return {
         "canonical_key": canonical_key, "date": date, "start": start, "end": end, "total": len(text),
-        "has_more": end < len(text), "ja_text": text[start:end], "ko_text": None,
+        "has_more": end < len(text), "reading_mode": "alternating", "text": text[start:end],
     }
 
 

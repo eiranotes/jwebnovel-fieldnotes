@@ -89,8 +89,18 @@ function sampleView(item) {
     return `<div class="taste-sample-unavailable"><b>교차 번역 준비 중</b><p>번역 완료 뒤 이 목록에 표시된다.</p></div>`;
   }
   if (!state) return '<div class="taste-sample-loading">샘플을 불러오는 중.</div>';
+  const alternatingHtml = text => String(text || '').trim().split(/\n\s*\n+/).filter(Boolean).map((block, index) => {
+    const lines = block.split('\n').map(x=>x.trimEnd()).filter(x=>x.trim());
+    if (!lines.length) return '';
+    const ja = lines[0];
+    const ko = lines.slice(1).join('\n');
+    return `<section class="taste-pair" data-pair="${index+1}">
+      <p class="taste-pair-ja" lang="ja">${esc(ja)}</p>
+      ${ko?`<p class="taste-pair-ko" lang="ko">${esc(ko)}</p>`:''}
+    </section>`;
+  }).join('');
   const body = state.reading_mode === 'alternating'
-    ? `<div class="taste-text-alternating" data-reading="alternating"><pre>${esc(state.text || '')}</pre></div>`
+    ? `<div class="taste-text-alternating" data-reading="alternating">${alternatingHtml(state.text)}</div>`
     : `<div class="taste-text-ja" data-reading="ja"><pre>${esc(state.ja_text || '')}</pre></div>`;
   return `<div class="taste-reading-toolbar">
       <span>${state.reading_mode === 'alternating' ? '원문 · 번역 교차본' : '일본어 원문 샘플'}</span>

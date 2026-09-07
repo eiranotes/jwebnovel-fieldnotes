@@ -17,11 +17,14 @@ from automation_store import atomic_json,read_json
 
 
 class FixtureModel:
-    def __init__(self,root,sequence=None):self.root=root;self.calls=[];self.sequence=sequence
+    def __init__(self,root,sequence=None,probe_unavailable=0):self.root=root;self.calls=[];self.sequence=sequence;self.probe_unavailable=probe_unavailable
     def execute(self,work_id,role,payload,**kwargs):
         self.calls.append(payload['kind'])
         if self.sequence is not None:self.sequence.append(payload['kind'])
         if payload['kind']=='project_source_probe':
+            if self.probe_unavailable:
+                self.probe_unavailable-=1
+                return {'status':'source_unavailable','work_id':work_id,'sources':[]}
             packs=[]
             for descriptor in payload['sources']:
                 manifest=read_json(self.root/'workspace/project-context'/descriptor['source_name']/'current.json')
@@ -99,3 +102,27 @@ class ProjectTranslationIntegration(unittest.TestCase):
                 atomic_json(work/'glossary.json',{'people':{'紅':'쿠레나이'}})
                 after=driver.guide_revision(work)
             self.assertNotEqual(before,after)
+
+    def test_source_probe_retries_only_explicit_unavailable_with_new_attempt_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();work=root/'workspace/books/example';work.mkdir(parents=True)
+            actual=Path(__file__).resolve().parents[1]
+            for name in ('PROJECT_INSTRUCTIONS.md','GLOBAL_CONTEXT.md'):
+                destination=root/'templates/project-context'/name;destination.parent.mkdir(parents=True,exist_ok=True)
+                destination.write_text((actual/'templates/project-context'/name).read_text())
+            atomic_json(work/'metadata.json',{'work_id':'example','title':'Fixture'})
+            atomic_json(work/'glossary.json',{'people':{}})
+            common=context.build_common(root);pack=context.build_work(work,root)
+            backend=FixtureModel(root,probe_unavailable=2)
+            ids=[]
+            original=backend.execute
+            def execute(*args,**kwargs):
+                ids.append(kwargs.get('operation_id'))
+                return original(*args,**kwargs)
+            backend.execute=execute
+            with patch.object(driver.time,'sleep') as sleep:
+                proof=driver.prove_project_sources(backend,'example','0001',common,pack,alias='fieldnotes',max_attempts=3,retry_seconds=7)
+            self.assertEqual(proof['work_id'],'example')
+            self.assertEqual(len(set(ids)),3)
+            self.assertEqual(sleep.call_count,2)
+            sleep.assert_called_with(7)

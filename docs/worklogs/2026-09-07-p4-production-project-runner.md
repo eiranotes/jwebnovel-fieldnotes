@@ -40,5 +40,20 @@ This does **not** enable the daily schedule. Search criteria and an exact Asia/S
 ## Next live gate
 Run the normal Project driver for `haikei-ashita-no-watashi` chunk `0001`. Success requires automatic source synchronization, a work-specific Project worker, fresh source retrieval proof, strict translation validation and exactly-once queue completion. No manual pre-upload is allowed for this smoke.
 
+## First live new-work attempt
+The normal production command automatically synchronized `GLOBAL_CONTEXT_v0001_876141ee0b6c.md` plus the newly generated `WORK_haikei-ashita-no-watashi_v0001_f372e5a141e2.md`. The browser-owned Project UI receipt was complete at 05:12:43 UTC and listed both exact filenames with Instructions saved. A new exact-target worker (`worker-30`, conversation `6a9e47d0-da48-83ee-b38c-372bc3ddb8d7`) then ran the source probe before any translation was submitted.
+
+That immediate probe returned `source_unavailable`. The driver correctly stopped before translation or queue completion. A later read-only probe sent to the **same worker conversation** returned both exact hidden probe values successfully, proving that ChatGPT Project Source listing can become durable before the provider's model-retrieval index is ready.
+
+This exposed a retry-cache flaw: the source-probe operation id had been deterministic only by work/chunk/source revision, so a completed transient `source_unavailable` answer would be replayed forever. Translation operations must never be retried this way, but source probes are read-only and safe to retry.
+
+### Index-readiness fix
+- Source probes now have a bounded series of stable per-attempt operation ids.
+- Only an explicit `{status: source_unavailable, work_id: <same work>}` is retryable.
+- Each attempt remains resumable after process/transport interruption; a restart reuses the same attempt id rather than duplicating it.
+- Malformed answers, wrong work ids, mismatched filenames/probes, worker-target failures and uncertain submissions remain fail-closed and are not laundered into a retry.
+- Default policy: up to 6 attempts, 10 seconds between completed unavailable probes.
+- Tests now total 19/19 PASS and assert that two transient unavailable responses use three distinct stable attempt ids with bounded sleeps.
+
 ## Verdict
-PASS for deterministic production-runner integration; live new-work smoke pending.
+PASS for deterministic production-runner integration. Automatic new-work source synchronization is verified live; translation smoke remains pending after the indexing-readiness fix.

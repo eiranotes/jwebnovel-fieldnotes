@@ -7,6 +7,8 @@
   "allow_fallback": false,
   "worker_reuse": "project_work_role",
   "worker_timeout_seconds": 600,
+  "source_probe_max_attempts": 6,
+  "source_probe_retry_seconds": 10,
   "context_rollover_policy": "broker_context_ceiling",
   "activation": "verified_live"
 }

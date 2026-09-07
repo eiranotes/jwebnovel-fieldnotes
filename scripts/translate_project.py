@@ -8,6 +8,7 @@ import io
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -34,6 +35,27 @@ def guide_revision(work_dir: Path) -> str:
     files=[work_dir/'metadata.json',work_dir/'glossary.json',*(work_dir/name for name in ('translation-guide.md','character-guide.md','style-guide.md')),
            ROOT/'templates/project-context/PROJECT_INSTRUCTIONS.md',ROOT/'templates/project-context/GLOBAL_CONTEXT.md']
     return digest({str(path.name):digest(path.read_bytes()) for path in files if path.exists()})
+
+
+def prove_project_sources(backend, work_id: str, chunk_id: str, common: dict, work: dict, *, alias: str,
+                          max_attempts: int, retry_seconds: float) -> dict:
+    if not 1 <= max_attempts <= 20 or not 0 <= retry_seconds <= 120:
+        raise AutomationError('PROJECT_POLICY_INVALID')
+    task=source_probe_task(work_id,common,work)
+    for attempt in range(1,max_attempts+1):
+        # Negative source availability is safe to retry: this operation reads Project Sources and
+        # has no queue/state mutation. Each bounded attempt has its own stable id, so a process
+        # restart resumes an accepted attempt instead of duplicating it, while a completed
+        # source_unavailable response does not poison every future probe forever.
+        operation_id=digest({'kind':'probe','work':work_id,'chunk':chunk_id,
+                             'sources':[public_pack(common),public_pack(work)],'attempt':attempt})
+        answer=backend.execute(work_id,'translator',task,alias=alias,operation_id=operation_id)
+        if isinstance(answer,dict) and answer.get('status')=='source_unavailable' and answer.get('work_id')==work_id:
+            if attempt == max_attempts: raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
+            time.sleep(retry_seconds)
+            continue
+        return verify_source_probe(answer,work_id,[common,work])
+    raise AutomationError('PROJECT_SOURCE_UNAVAILABLE')
 
 
 def process_task(task: dict, backend=None, source_sync=None) -> dict:
@@ -70,9 +92,9 @@ def process_task(task: dict, backend=None, source_sync=None) -> dict:
         # Repeat the probe in this worker/operation before using cached context. Do not count a
         # successful old worker probe as proof that a replacement chat inherited the sources.
         proof_task=source_probe_task(work_id,common,work)
-        proof_id=digest({'kind':'probe','work':work_id,'chunk':chunk_id,'sources':[public_pack(common),public_pack(work)]})
-        proof=backend.execute(work_id,'translator',proof_task,alias=config['project_alias'],operation_id=proof_id)
-        verification=verify_source_probe(proof,work_id,[common,work])
+        verification=prove_project_sources(backend,work_id,chunk_id,common,work,alias=config['project_alias'],
+            max_attempts=int(config.get('source_probe_max_attempts',6)),
+            retry_seconds=float(config.get('source_probe_retry_seconds',10)))
         atomic_json(context_path,{'guide_revision':revision,'packs':[common,work],'proof':verification})
         payload={k:v for k,v in task.items() if k not in ('queue','work_dir')}
         payload.update(kind='translate_chunk',project_sources=[public_pack(common),public_pack(work)],

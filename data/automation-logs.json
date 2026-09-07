@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T07:35:27.743901+00:00",
+  "updated_at": "2026-09-07T08:01:41.391152+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -246,6 +246,34 @@
         "chunk": "0003",
         "done": 3,
         "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T07:57:31.565689+00:00",
+      "run_id": "translate-complete-20260907T075730-0212a448",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed sakasano-chagasa / 0001",
+      "details": {
+        "work_id": "sakasano-chagasa",
+        "chunk": "0001",
+        "done": 1,
+        "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T08:01:41.391152+00:00",
+      "run_id": "translate-complete-20260907T080140-6f8f9cb9",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed sakasano-chagasa / 0002",
+      "details": {
+        "work_id": "sakasano-chagasa",
+        "chunk": "0002",
+        "done": 2,
+        "total": 2
       }
     }
   ]

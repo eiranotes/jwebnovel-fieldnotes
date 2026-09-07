@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "people": {},
+  "people": {
+    "逆さ": "사카사"
+  },
   "places": {},
-  "terms": {},
+  "terms": {
+    "寝台列車": "침대열차",
+    "利物": "리부츠",
+    "『』": "인용부호",
+    "【】": "묵괄호",
+    "塵肺症": "진폐증",
+    "茶笠": "차가사",
+    "利益利物": "이익 리부츠",
+    "不利益利物": "불이익 리부츠",
+    "利物ガチャ": "리부츠 가챠"
+  },
   "ruby_notes": {
     "三度": "みたび",
     "利物": "りぶつ",
@@ -15,6 +27,24 @@
       "type": "ruby_scan",
       "count": 5,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "name_or_handle_inference",
+      "source": "逆さ",
+      "ko": "사카사",
+      "basis": "direct address plus work_id/title; semantic wordplay rendered as ‘거꾸로’ when used as a common word"
+    },
+    {
+      "type": "term_translation",
+      "source": "利物",
+      "reading": "りぶつ",
+      "ko": "리부츠"
+    },
+    {
+      "type": "term_translation",
+      "source": "茶笠",
+      "ko": "차가사",
+      "basis": "work_id/title metadata"
     }
   ]
 }

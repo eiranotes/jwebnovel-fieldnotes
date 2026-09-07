@@ -5,7 +5,7 @@
   "project_name": "Fieldnotes",
   "require_source_probe": true,
   "allow_fallback": false,
-  "worker_reuse": "project_work_role",
+  "worker_reuse": "project_role_pool",
   "worker_timeout_seconds": 600,
   "source_probe_max_attempts": 6,
   "source_probe_retry_seconds": 10,

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T07:36:09.165580+00:00",
+  "updated_at": "2026-09-07T08:01:50.561585+00:00",
   "phase": "pipeline_ready_configuration_pending",
   "schedule": {
     "cadence": "daily",
@@ -28,8 +28,8 @@
   "translation": {
     "mode": "resumable_chunk_queue",
     "target_chunk_chars": 9000,
-    "pending_chunks": 2,
-    "completed_chunks": 8,
+    "pending_chunks": 0,
+    "completed_chunks": 10,
     "works_waiting_for_source": 0,
     "works_ready": 5,
     "full_requests": {

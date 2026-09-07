@@ -105,3 +105,12 @@ Live results:
 - `sakasano-chagasa`: **0/2 pending**. The OS reports `CGSSessionScreenIsLocked=Yes`; six bounded fresh-worker attempts all ended before conversation creation with `PROJECT_WORKER_BOOTSTRAP_FAILED`. No model task ran and nothing was committed for this work.
 
 After these fixes the Fieldnotes regression suite is **28/28 PASS** and `git diff --check` passes. Public projection reports **8 completed chunks / 2 pending chunks**. `runtime_sync.py push` copied the completed private artifacts into `~/HermesWorkspace/project/fieldnotes-runtime`; the live private console inventory exposes `ko.txt`, alternating JA/KO, parallel view and ZIP artifacts for Beni, Deathgame, Redo and Haikei. A real `/fieldnotes/api/download` of `redo-translation.zip` returned 94,746 bytes and matched the runtime-mirror SHA-256 exactly.
+
+## Cross-work Project translator pool
+The remaining `sakasano-chagasa` blocker demonstrated that binding one Project chat permanently to one work would make every unseen work depend on a fresh browser bootstrap. That is unnecessary after work-specific metadata, glossary, adjacent context and chapter text moved into the exact local task JSON.
+
+`ProjectBackend` now serializes translator use at the Project/role level and reuses the newest sleeping, revivable worker whose Project alias/name/url and role match, even when that worker's original `projectTarget.workId` belongs to another work. The current turn's `response_contract.work_id` and `task.work_id` are explicitly authoritative. Operation state remains per-work, local task path/hash/probe validation remains per-work/chunk, and the global Project-source proof is still fresh on every chunk. Concurrent works cannot race for the same pooled chat because the role pool has its own single-writer lock.
+
+Live verification was performed without unlocking the Mac. `sakasano-chagasa` selected existing `worker-34` / conversation `6a9e62f6-caf0-83e8-bc0c-006f3254bbf8`, whose original Project target was `redo`. No fresh worker was created. The fresh source probe completed through that reused chat, followed by chunk `0001` and chunk `0002`; both passed exact local-read proof, Project-source proof, validation and transactional completion. The final ZIP was generated and mirrored into the private runtime.
+
+Final candidate projection: **10 completed chunks / 0 pending chunks** across all five works. Regression suite: **29/29 PASS**, `git diff --check` PASS, repository validator PASS, and the `sakasano-chagasa` output ZIP passes `unzip -t`.

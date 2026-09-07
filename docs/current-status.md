@@ -29,14 +29,14 @@ Updated: 2026-09-07
 | Rank | Work | Status | Workspace |
 |---|---|---|---|
 | A1 | 紅さんはデスゲーマー | **translation_complete · 2/2 chunks** | `workspace/2026-09-06/2026-09-06-02/beni-death-gamer/` |
-| A2 | 拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜 | translation_pending · 3 chunks | `workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/` |
+| A2 | 拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜 | translation_pending · **1/3 chunks** | `workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/` |
 | B1 | Redo -リドゥ- | translation_pending · 2 chunks | `workspace/2026-09-06/2026-09-06-02/redo/` |
 | A-LE1 | 逆さの茶笠 | translation_pending · 2 chunks (3 public episodes total) | `workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/` |
 | B-LE1 | デスゲーム界の十傑 | translation_pending · 1 chunk | `workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/` |
 
 Each work has tracked `metadata.json` and `state.json`. The integrated runner writes the selected first five public episodes to `source_inbox/` and immediately prepares the local translation queue. Manual TXT/ZIP remains a fallback. Source/translation fulltext stays gitignored.
 
-Current Project translation state: **2 completed chunks, 8 pending chunks across 4 works**. `beni-death-gamer` completed through one reusable real Project worker with fresh source proof on both chunks. Both Kakuyomu and Narou acquisition paths were exercised.
+Current Project translation state: **3 completed chunks, 7 pending chunks across 4 works**. `beni-death-gamer` completed through one reusable real Project worker with fresh source proof on both chunks; `haikei-ashita-no-watashi` then completed its first chunk through the normal production runner with automatic Project Source synchronization. Both Kakuyomu and Narou acquisition paths were exercised.
 
 ## Required before enabling the daily automation
 

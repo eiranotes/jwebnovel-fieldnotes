@@ -100,6 +100,8 @@ def rebuild() -> dict:
             row["work_id"] = reg.get("work_id")
             row["workspace"] = reg.get("workspace")
             row["pipeline_status"] = reg.get("status")
+            row["chunks_done"] = reg.get("chunks_done")
+            row["chunks_total"] = reg.get("chunks_total")
             row["full_translation"] = reg.get("full_translation")
         if row["canonical_key"] in full_by_key:
             req = full_by_key[row["canonical_key"]]

@@ -57,3 +57,20 @@ This exposed a retry-cache flaw: the source-probe operation id had been determin
 
 ## Verdict
 PASS for deterministic production-runner integration. Automatic new-work source synchronization is verified live; translation smoke remains pending after the indexing-readiness fix.
+
+## Live production smoke completion
+After the bounded source-index retry fix, the exact normal production command was rerun for `haikei-ashita-no-watashi` chunk `0001`. The existing work-specific `worker-30` conversation was reused. Source proof passed, the translation operation completed, strict sentence/glossary validation passed, and the queue committed the chunk exactly once. The work is now 1/3 complete.
+
+No manual Project upload, general chat, local-worker fallback, API fallback or manual queue completion was used. The first failed probe had not submitted translation, so the successful run did not duplicate model translation work.
+
+The smoke also exposed stale public projections: workspace state was correct while `work-registry.json` and `work-index.json` still reflected pre-translation status. `refresh_automation_status.py` now projects canonical workspace translation state (`status`, `chunks_done`, `chunks_total`) back into the registry with workspace path fencing, and standard queue completion rebuilds the work index immediately afterward. Existing Beni state is thereby repaired without a special migration. Work-index rows now carry the same chunk progress.
+
+Final verified projection after refresh:
+- `beni-death-gamer`: `translation_complete`, 2/2;
+- `haikei-ashita-no-watashi`: `translation_pending`, 1/3;
+- aggregate: 3 completed chunks, 7 pending chunks.
+
+Regression suite after the projection change: **21/21 PASS**, `git diff --check` PASS.
+
+## Final verdict
+PASS for Priority 4. A previously unseen work now flows through automatic immutable Project Source sync, provider indexing readiness, exact Project worker reuse, fresh source proof, real translation, validation, transactional completion and public status/index projection. Daily scheduling remains intentionally disabled until search criteria and an exact Asia/Seoul time are supplied.

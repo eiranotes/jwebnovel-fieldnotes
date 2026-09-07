@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T04:15:27.866768+00:00",
+  "updated_at": "2026-09-07T05:19:24.272908+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -102,6 +102,44 @@
         "chunk": "0002",
         "done": 2,
         "total": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-07T05:09:52.550761+00:00",
+      "run_id": "translate-next-20260907T050952-5755ac91",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected 拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜 / 0001",
+      "details": {
+        "title": "拝啓、明日ノ私〜才能で選別される狂気のデスゲーム〜",
+        "chunk": "0001"
+      }
+    },
+    {
+      "timestamp": "2026-09-07T05:18:54.486557+00:00",
+      "run_id": "translate-complete-20260907T051853-3f7fcb31",
+      "task": "translation_queue",
+      "action": "complete",
+      "status": "done",
+      "message": "Completed haikei-ashita-no-watashi / 0001",
+      "details": {
+        "work_id": "haikei-ashita-no-watashi",
+        "chunk": "0001",
+        "done": 1,
+        "total": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-07T05:19:24.272908+00:00",
+      "run_id": "translate-next-20260907T051923-bd4edfea",
+      "task": "translation_queue",
+      "action": "next",
+      "status": "pending",
+      "message": "Selected Redo -リドゥ- / 0001",
+      "details": {
+        "title": "Redo -リドゥ-",
+        "chunk": "0001"
       }
     }
   ]

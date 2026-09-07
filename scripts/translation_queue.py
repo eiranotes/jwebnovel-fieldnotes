@@ -210,6 +210,9 @@ def command_complete(args) -> int:
         )
         payload["output"] = json.loads(package.stdout)
     subprocess.run([sys.executable, str(ROOT / "scripts" / "refresh_automation_status.py")], cwd=ROOT, check=True, text=True, capture_output=True)
+    # refresh_automation_status projects canonical workspace progress into work-registry;
+    # rebuild immediately so consumers of work-index never lag one completed chunk behind.
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "rebuild_work_index.py")], cwd=ROOT, check=True, text=True, capture_output=True)
     payload["completed_at"] = datetime.now(timezone.utc).isoformat()
     log_event(task="translation_queue", action="complete", status="done", run_id=run_id, message=f"Completed {args.work} / {args.chunk}", details=payload, public_details={"work_id": args.work, "chunk": args.chunk, "done": payload.get("done"), "total": payload.get("total")})
     print(json.dumps(payload, ensure_ascii=False, indent=2))

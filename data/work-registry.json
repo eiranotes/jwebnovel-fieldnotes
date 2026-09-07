@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-06T07:52:01.288652+00:00",
+  "updated_at": "2026-09-07T05:21:01.868439+00:00",
   "works": [
     {
       "schema_version": "1.0",
@@ -29,7 +29,10 @@
       "acquired_episodes": 3,
       "acquisition_manifest": "workspace/2026-09-06/2026-09-06-02/sakasano-chagasa/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-06T07:48:12.420674+00:00",
-      "prepared_at": "2026-09-06T07:52:01.123385+00:00"
+      "prepared_at": "2026-09-06T07:52:01.123385+00:00",
+      "chunks_done": 0,
+      "chunks_total": 2,
+      "translation_updated_at": "2026-09-06T07:52:01.119904+00:00"
     },
     {
       "schema_version": "1.0",
@@ -43,7 +46,7 @@
       "length_chars": 351428,
       "source_policy": "public_reader_first_n_private_local",
       "workspace": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer",
-      "status": "translation_pending",
+      "status": "translation_complete",
       "paths": {
         "metadata": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/metadata.json",
         "state": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/state.json",
@@ -58,7 +61,10 @@
       "acquired_episodes": 5,
       "acquisition_manifest": "workspace/2026-09-06/2026-09-06-02/beni-death-gamer/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-06T07:48:38.894201+00:00",
-      "prepared_at": "2026-09-06T07:52:00.626832+00:00"
+      "prepared_at": "2026-09-06T07:52:00.626832+00:00",
+      "chunks_done": 2,
+      "chunks_total": 2,
+      "translation_updated_at": "2026-09-07T04:15:27.566673+00:00"
     },
     {
       "schema_version": "1.0",
@@ -87,7 +93,10 @@
       "acquired_episodes": 5,
       "acquisition_manifest": "workspace/2026-09-06/2026-09-06-02/haikei-ashita-no-watashi/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-06T07:49:01.416630+00:00",
-      "prepared_at": "2026-09-06T07:52:00.791976+00:00"
+      "prepared_at": "2026-09-06T07:52:00.791976+00:00",
+      "chunks_done": 1,
+      "chunks_total": 3,
+      "translation_updated_at": "2026-09-07T05:18:54.209333+00:00"
     },
     {
       "schema_version": "1.0",
@@ -116,7 +125,10 @@
       "acquired_episodes": 5,
       "acquisition_manifest": "workspace/2026-09-06/2026-09-06-02/deathgame-jikketsu/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-06T07:49:22.028529+00:00",
-      "prepared_at": "2026-09-06T07:52:01.288466+00:00"
+      "prepared_at": "2026-09-06T07:52:01.288466+00:00",
+      "chunks_done": 0,
+      "chunks_total": 1,
+      "translation_updated_at": "2026-09-06T07:52:01.285174+00:00"
     },
     {
       "schema_version": "1.0",
@@ -145,7 +157,10 @@
       "acquired_episodes": 5,
       "acquisition_manifest": "workspace/2026-09-06/2026-09-06-02/redo/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-06T07:49:11.724333+00:00",
-      "prepared_at": "2026-09-06T07:52:00.957070+00:00"
+      "prepared_at": "2026-09-06T07:52:00.957070+00:00",
+      "chunks_done": 0,
+      "chunks_total": 2,
+      "translation_updated_at": "2026-09-06T07:52:00.953767+00:00"
     }
   ]
 }

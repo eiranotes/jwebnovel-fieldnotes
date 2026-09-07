@@ -1,8 +1,23 @@
 {
   "schema_version": "1.0",
-  "people": {},
-  "places": {},
-  "terms": {},
+  "people": {
+    "三浦みう": "미우라 미우",
+    "阿修羅": "아슈라",
+    "鏡花": "쿄카",
+    "形": "케이"
+  },
+  "places": {
+    "関東地方": "간토 지방",
+    "近畿地方": "긴키 지방",
+    "クラウン島": "크라운섬"
+  },
+  "terms": {
+    "クラウン": "크라운",
+    "裏クラウン": "이면 크라운",
+    "適合者": "적합자",
+    "不適合者": "비적합자",
+    "あべこべ": "거꾸로"
+  },
   "ruby_notes": {
     "阿修羅": "あしゅら",
     "鏡花": "きょうか",
@@ -17,6 +32,45 @@
       "type": "ruby_scan",
       "count": 7,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "name_spelling",
+      "source": "ruby",
+      "ja": "阿修羅",
+      "ko": "아슈라",
+      "reading": "あしゅら"
+    },
+    {
+      "type": "name_spelling",
+      "source": "ruby",
+      "ja": "鏡花",
+      "ko": "쿄카",
+      "reading": "きょうか"
+    },
+    {
+      "type": "name_spelling",
+      "source": "ruby",
+      "ja": "形",
+      "ko": "케이",
+      "reading": "けい"
+    },
+    {
+      "type": "name_spelling",
+      "source": "ruby",
+      "ja": "三浦",
+      "ko": "미우라",
+      "reading": "みうら"
+    },
+    {
+      "type": "term_translation",
+      "ja": "あべこべ",
+      "ko": "거꾸로",
+      "note": "오프닝 게임명과 히든 역할명에 동일하게 적용"
+    },
+    {
+      "type": "voice_translation",
+      "character": "阿修羅",
+      "note": "원문의 간사이 사투리 표지를 보존하기 위해 한국어에서 가벼운 경상계 사투리 어미를 제한적으로 사용"
     }
   ]
 }

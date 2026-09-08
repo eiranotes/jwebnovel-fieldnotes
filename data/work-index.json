@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-08T01:01:42.507699+00:00",
+  "updated_at": "2026-09-08T23:00:34.460984+00:00",
   "works": [
     {
       "canonical_key": "kakuyomu:16818622172225120257",
@@ -531,6 +531,39 @@
       "full_translation": null
     },
     {
+      "canonical_key": "title-author:勇者のクズ:ロケット商会",
+      "title": "勇者のクズ",
+      "author": "ロケット商会",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/4852201425154963487",
+      "length_chars": 577387,
+      "first_seen_entry": "2026-09-08-02",
+      "last_seen_entry": "2026-09-08-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-02",
+          "bucket": "shortlist",
+          "rank": "A1"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/4852201425154963487"
+        }
+      ],
+      "work_id": "kakuyomu-4852201425154963487",
+      "workspace": "workspace/2026-09-08/2026-09-08-02/kakuyomu-4852201425154963487",
+      "pipeline_status": "translation_skipped",
+      "chunks_done": 0,
+      "chunks_total": 5,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title:完結彼はデスゲームで最善の結果を求めるようです",
       "title": "〖完結〗彼はデスゲームで最善の結果を求めるようです",
       "author": null,
@@ -849,6 +882,39 @@
       "full_translation": null
     },
     {
+      "canonical_key": "title-author:葉隠桜は嘆かない:玖洞",
+      "title": "葉隠桜は嘆かない",
+      "author": "玖洞",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/16816700426907735289",
+      "length_chars": 975940,
+      "first_seen_entry": "2026-09-08-02",
+      "last_seen_entry": "2026-09-08-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-02",
+          "bucket": "shortlist",
+          "rank": "A2"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/16816700426907735289"
+        }
+      ],
+      "work_id": "kakuyomu-16816700426907735289",
+      "workspace": "workspace/2026-09-08/2026-09-08-02/kakuyomu-16816700426907735289",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 4,
+      "chunks_total": 4,
+      "full_translation": null
+    },
+    {
       "canonical_key": "title:見てるこっちが怖いデスゲーム",
       "title": "見てるこっちが怖いデスゲーム",
       "author": null,
@@ -979,6 +1045,39 @@
         }
       ],
       "platform_instances": []
+    },
+    {
+      "canonical_key": "title-author:魔法少女かえでagent35歳サラリーマンが魔法少女やることになりました:そらり月宮悠人",
+      "title": "魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜",
+      "author": "そらり@月宮悠人",
+      "platform": "Kakuyomu",
+      "url": "https://kakuyomu.jp/works/1177354054917508820",
+      "length_chars": 760879,
+      "first_seen_entry": "2026-09-08-02",
+      "last_seen_entry": "2026-09-08-02",
+      "seen_count": 1,
+      "entry_ids": [
+        "2026-09-08-02"
+      ],
+      "classifications": [
+        {
+          "entry_id": "2026-09-08-02",
+          "bucket": "shortlist",
+          "rank": "A3"
+        }
+      ],
+      "platform_instances": [
+        {
+          "platform": "Kakuyomu",
+          "url": "https://kakuyomu.jp/works/1177354054917508820"
+        }
+      ],
+      "work_id": "kakuyomu-1177354054917508820",
+      "workspace": "workspace/2026-09-08/2026-09-08-02/kakuyomu-1177354054917508820",
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
+      "chunks_total": 3,
+      "full_translation": null
     },
     {
       "canonical_key": "narou:n5096lc",

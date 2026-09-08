@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "people": {},
+  "places": {},
+  "terms": {},
+  "ruby_notes": {
+    "黒腐病": "こくふびょう",
+    "来栖川瑠美": "くるすがわるみ"
+  },
+  "decisions": [
+    {
+      "type": "ruby_scan",
+      "count": 2,
+      "source": "source_inbox/acquisition_manifest.json"
+    }
+  ]
+}

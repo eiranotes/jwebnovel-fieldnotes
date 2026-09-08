@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-08T09:37:41.714671+00:00",
+  "updated_at": "2026-09-08T14:01:07.791422+00:00",
   "entries": [
     {
       "timestamp": "2026-09-06T08:24:55.714952+00:00",
@@ -1424,6 +1424,567 @@
       "details": {
         "date": "2026-09-08",
         "verdict": "dislike"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:18.054022+00:00",
+      "run_id": "private-console-20260908T134418-6f187f37",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:19.442949+00:00",
+      "run_id": "private-console-20260908T134419-d37bd0bf",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:19.459684+00:00",
+      "run_id": "private-console-20260908T134419-1eeb70be",
+      "task": "private_console",
+      "action": "save_selection",
+      "status": "done",
+      "message": "Search profile selection updated",
+      "details": {
+        "selected": 0,
+        "fallback": "round_robin"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:20.329032+00:00",
+      "run_id": "private-console-20260908T134420-3e1b4eee",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:20.353843+00:00",
+      "run_id": "private-console-20260908T134420-2073cb03",
+      "task": "private_console",
+      "action": "save_selection",
+      "status": "done",
+      "message": "Search profile selection updated",
+      "details": {
+        "selected": 1,
+        "fallback": "round_robin"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:44:22.957287+00:00",
+      "run_id": "private-console-20260908T134422-994a85e6",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:44:25.499151+00:00",
+      "run_id": "private-console-20260908T134425-9732b283",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:46:35.426331+00:00",
+      "run_id": "private-console-20260908T134635-38d57798",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:46:36.325282+00:00",
+      "run_id": "private-console-20260908T134636-7d3e9ba3",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:46:38.986203+00:00",
+      "run_id": "private-console-20260908T134638-7b146944",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:46:41.953187+00:00",
+      "run_id": "private-console-20260908T134641-2bed48d7",
+      "task": "private_console",
+      "action": "api",
+      "status": "error",
+      "message": "Each profile requires profile_id and name",
+      "details": {}
+    },
+    {
+      "timestamp": "2026-09-08T13:46:43.933571+00:00",
+      "run_id": "private-console-20260908T134643-c4bb3df5",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:46:47.518742+00:00",
+      "run_id": "private-console-20260908T134647-f89bd96c",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:46:48.111807+00:00",
+      "run_id": "private-console-20260908T134648-39d19e27",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:46:58.664529+00:00",
+      "run_id": "private-console-20260908T134658-ec5bd251",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:10.562248+00:00",
+      "run_id": "private-console-20260908T134710-c19b5061",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:11.939758+00:00",
+      "run_id": "private-console-20260908T134711-99e29d33",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:24.089216+00:00",
+      "run_id": "private-console-20260908T134724-974d9b40",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:27.586724+00:00",
+      "run_id": "private-console-20260908T134727-838d7763",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:34.548028+00:00",
+      "run_id": "private-console-20260908T134734-5e46a3a1",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:35.588214+00:00",
+      "run_id": "private-console-20260908T134735-9620a396",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:36.208720+00:00",
+      "run_id": "private-console-20260908T134736-b0cc849e",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 2 profiles",
+      "details": {
+        "profiles": 2
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:47:48.856696+00:00",
+      "run_id": "private-console-20260908T134748-da804f69",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:28.276058+00:00",
+      "run_id": "private-console-20260908T134828-4bad84a2",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:29.295455+00:00",
+      "run_id": "private-console-20260908T134829-270b85a9",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:30.257536+00:00",
+      "run_id": "private-console-20260908T134830-7d2485f0",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:32.275000+00:00",
+      "run_id": "private-console-20260908T134832-1b024f83",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:33.965980+00:00",
+      "run_id": "private-console-20260908T134833-de48b9e8",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:42.013108+00:00",
+      "run_id": "private-console-20260908T134842-735cb9ab",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:43.237703+00:00",
+      "run_id": "private-console-20260908T134843-127a2a01",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:45.459906+00:00",
+      "run_id": "private-console-20260908T134845-0e6c783e",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:47.852996+00:00",
+      "run_id": "private-console-20260908T134847-72243632",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:49.670664+00:00",
+      "run_id": "private-console-20260908T134849-cf82b449",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:51.047184+00:00",
+      "run_id": "private-console-20260908T134851-54f9a713",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:56.176211+00:00",
+      "run_id": "private-console-20260908T134856-bdb92106",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:48:57.450777+00:00",
+      "run_id": "private-console-20260908T134857-5c23260b",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:02.618950+00:00",
+      "run_id": "private-console-20260908T134902-282a76ea",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:03.352337+00:00",
+      "run_id": "private-console-20260908T134903-c946ac3a",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:03.976913+00:00",
+      "run_id": "private-console-20260908T134903-d9c940fa",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:05.268380+00:00",
+      "run_id": "private-console-20260908T134905-6662f67b",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:05.310335+00:00",
+      "run_id": "private-console-20260908T134905-3fd49ab4",
+      "task": "private_console",
+      "action": "save_selection",
+      "status": "done",
+      "message": "Search profile selection updated",
+      "details": {
+        "selected": 2,
+        "fallback": "round_robin"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:08.318238+00:00",
+      "run_id": "private-console-20260908T134908-a98f0022",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T13:49:08.911207+00:00",
+      "run_id": "private-console-20260908T134908-7c8911ef",
+      "task": "private_console",
+      "action": "save_profiles",
+      "status": "done",
+      "message": "Saved 3 profiles",
+      "details": {
+        "profiles": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:36.833264+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "started",
+      "message": "Pipeline started for 2026-09-08-02",
+      "details": {
+        "entry_id": "2026-09-08-02",
+        "top_n": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:37.138290+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 勇者のクズ",
+      "details": {
+        "title": "勇者のクズ"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:47.020742+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 勇者のクズ",
+      "details": {
+        "title": "勇者のクズ",
+        "episodes": 5,
+        "chunks": 5
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:47.050653+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 葉隠桜は嘆かない",
+      "details": {
+        "title": "葉隠桜は嘆かない"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:56.484979+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 葉隠桜は嘆かない",
+      "details": {
+        "title": "葉隠桜は嘆かない",
+        "episodes": 5,
+        "chunks": 4
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:00:56.505999+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "started",
+      "message": "Processing 魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜",
+      "details": {
+        "title": "魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜"
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:01:05.780716+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "work",
+      "status": "done",
+      "message": "Prepared 魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜",
+      "details": {
+        "title": "魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜",
+        "episodes": 5,
+        "chunks": 3
+      }
+    },
+    {
+      "timestamp": "2026-09-08T14:01:07.791422+00:00",
+      "run_id": "pipeline-20260908T140036-f0f64c79",
+      "task": "full_pipeline",
+      "action": "run",
+      "status": "done",
+      "message": "Pipeline finished: 3 processed, 0 errors",
+      "details": {
+        "entry_id": "2026-09-08-02",
+        "processed": 3,
+        "errors": 0
       }
     }
   ]

@@ -38,6 +38,8 @@ def pending_works() -> list[dict]:
             continue
         state_path = wdir / "state.json"
         state = load_json(state_path) if state_path.exists() else {}
+        if state.get("status") == "translation_skipped":
+            continue
         rows.append(
             {
                 "row": row,

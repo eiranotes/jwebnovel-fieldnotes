@@ -140,5 +140,35 @@
     "page": "entries/2026-09-08-01.html",
     "doc": "docs/entries/2026-09-08-01.md",
     "data": "data/entries/2026-09-08-01.json"
+  },
+  {
+    "entry_id": "2026-09-08-02",
+    "date": "2026-09-08",
+    "sequence": 2,
+    "title": "사축게이머 기준 탐색 — 성인 주인공과 강한 캐릭터군",
+    "summary": "저장된 자연어 조건을 freeze한 뒤 실제 본문 샘플로 7편을 비교해 3편을 선정. 1위는 이미 아는 작품이라 번역에서 제외했고, 2·3위와 사용자 후속 선택 4위는 번역 완료.",
+    "reference_works": [
+      "사축게이머"
+    ],
+    "criteria_terms": [
+      "500k+",
+      "성인/중년 주인공 캐릭터성",
+      "매력적인 여성 캐릭터군",
+      "strict seen-index",
+      "본문 분산 샘플"
+    ],
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "genres": [],
+    "min_chars": 500000,
+    "length_policy": "explicit_500k_no_exception",
+    "status": "complete",
+    "candidate_count": 7,
+    "shortlist_count": 3,
+    "page": "entries/2026-09-08-02.html",
+    "doc": "docs/entries/2026-09-08-02.md",
+    "data": "data/entries/2026-09-08-02.json"
   }
 ]

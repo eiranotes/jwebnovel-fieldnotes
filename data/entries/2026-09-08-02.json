@@ -1,0 +1,179 @@
+{
+  "schema_version": "2.0",
+  "entry_id": "2026-09-08-02",
+  "profile_id": "profile-mtsq0rs9",
+  "date": "2026-09-08",
+  "sequence": 2,
+  "continuation_of": null,
+  "title": "사축게이머 기준 탐색 E2E",
+  "method_version_used": "0.4",
+  "current_protocol_version": "0.4",
+  "request_snapshot": "",
+  "reference_works": [
+    "https://kakuyomu.jp/works/1177354054885956365"
+  ],
+  "anti_reference_works": [],
+  "hard_filters": {
+    "platforms": [
+      "Narou",
+      "Kakuyomu"
+    ],
+    "min_chars": 500000,
+    "genres": [],
+    "must": [],
+    "must_not": [],
+    "commercial_publication": "profile_specific",
+    "adult_r18": "exclude"
+  },
+  "length_policy": {
+    "source": "global_default",
+    "default_min_chars": 300000,
+    "explicit_min_chars": null,
+    "effective_min_chars": 300000,
+    "allow_high_fit_exception": true,
+    "exception_label": "LENGTH EXCEPTION"
+  },
+  "soft_preferences": {
+    "serialization_priority": [],
+    "freshness": null,
+    "visibility": null,
+    "protagonist": null,
+    "pov": null,
+    "style": [],
+    "pacing": [],
+    "romance_tolerance": null,
+    "element_preferences": []
+  },
+  "allowed_exceptions": [],
+  "style_dimensions": [],
+  "sampling_plan": {
+    "s0_for_all_survivors": true,
+    "deeper_samples": [
+      "S1",
+      "S2"
+    ],
+    "adaptive_s3": true
+  },
+  "status": "complete",
+  "preference_policy": {
+    "required_trace": true,
+    "secondary_ranker": "scripts/preference_rank.py",
+    "max_score_shift": 4,
+    "single_review_max_change": 0.5,
+    "explore_ratio_target": 0.2,
+    "candidate_feature_format": "preference_features[{atom,value,confidence,sample_id,start,end,evidence}]"
+  },
+  "preference_signals_applied": [],
+  "learning_lessons_applied": [],
+  "discovery_incidents_observed": [],
+  "results": {
+    "shortlist": [
+      {
+        "title": "勇者のクズ",
+        "author": "ロケット商会",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/4852201425154963487",
+        "length_chars": 577387,
+        "episodes": 144,
+        "why": "야시로의 냉소적 직업관·생활감·행동원칙이 첫 장면부터 강하게 고정되고, 세 여성 용자 지망생은 공포·광기·전투 방식이 서로 다르게 장면에서 작동한다.",
+        "difference": "마법소녀 소재는 아니지만 저장된 자연어 조건의 핵심인 확립된 성인 주인공과 매력적인 여성 전투 캐릭터군을 가장 강하게 충족.",
+        "publication_tier": "P3",
+        "publication_note": "카쿠요무 작품 페이지에 서적화 정보가 명시됨.",
+        "selection_mode": "exploit",
+        "preference_rank": 1,
+        "sample_priority": true,
+        "rank": "A1"
+      },
+      {
+        "title": "葉隠桜は嘆かない",
+        "author": "玖洞",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/16816700426907735289",
+        "length_chars": 975940,
+        "episodes": 222,
+        "why": "주인공의 실전 판단이 샘플에서 일관되고, 마법소녀 개별 인물의 성격적 결함과 전투 방식이 서사 단위로 강하게 분리된다.",
+        "difference": "주인공이 중년/성인은 아니어서 그 축은 약하지만 여성 캐릭터군의 개성은 이번 후보군 최상위.",
+        "publication_tier": "P3",
+        "publication_note": "작품 페이지에 어스스타 노벨 대상 입선 및 1권 발매가 명시됨.",
+        "selection_mode": "exploit",
+        "preference_rank": 2,
+        "sample_priority": true,
+        "rank": "A2"
+      },
+      {
+        "title": "魔法少女かえで@agent　〜35歳サラリーマンが魔法少女やることになりました〜",
+        "author": "そらり@月宮悠人",
+        "platform": "Kakuyomu",
+        "url": "https://kakuyomu.jp/works/1177354054917508820",
+        "length_chars": 760879,
+        "episodes": 300,
+        "why": "35세 블랙기업 SE라는 성인 주인공 축과 대규모 마법소녀 캐릭터군이 정확히 맞고, 샘플에서도 각 인물의 직업·말투·관계 역할이 분리된다.",
+        "difference": "기준 조건을 가장 문자 그대로 충족한다. 다만 일부 샘플은 캐릭터 일람이라 실제 장면 밀도는 별도 본문 샘플로 보수적으로 평가.",
+        "publication_tier": "P1",
+        "publication_note": "현재 작품 페이지에서 서적화 표시는 확인하지 못함.",
+        "selection_mode": "exploit",
+        "preference_rank": 3,
+        "sample_priority": true,
+        "rank": "A3"
+      }
+    ],
+    "queue": [],
+    "deprioritized": [],
+    "excluded": [],
+    "length_exceptions": []
+  },
+  "checked_at": "2026-09-08",
+  "ranking_request": {
+    "context_id": "2026-09-08-02",
+    "profile_id": "profile-mtsq0rs9",
+    "intent": "중년이 주인공이라지만 주인공으로서 캐릭터성은 확립되어있고, 마법소녀 캐릭터들이 상당히 매력적.",
+    "hard_filters": {
+      "platforms": [
+        "Narou",
+        "Kakuyomu"
+      ],
+      "min_chars": 500000,
+      "genres": [],
+      "must": [],
+      "must_not": [],
+      "commercial_publication": "profile_specific",
+      "adult_r18": "exclude"
+    },
+    "soft_preferences": {
+      "serialization_priority": [],
+      "freshness": null,
+      "visibility": null,
+      "protagonist": null,
+      "pov": null,
+      "style": [],
+      "pacing": [],
+      "romance_tolerance": null,
+      "element_preferences": []
+    },
+    "reference_works": [
+      "https://kakuyomu.jp/works/1177354054885956365"
+    ],
+    "anti_reference_works": [],
+    "explicit_dimensions": [
+      "protagonist",
+      "characters"
+    ],
+    "analysis_confirmed": true,
+    "review_budget": 3,
+    "minimum_base_score": 60,
+    "length_exception": {
+      "enabled": false,
+      "explicit_minimum": true
+    },
+    "sampling_plan": {
+      "s0_for_all_survivors": true,
+      "deeper_samples": [
+        "S1",
+        "S2"
+      ],
+      "adaptive_s3": true
+    }
+  },
+  "request_frozen_at": "2026-09-08T13:53:56.462861+00:00",
+  "ranking_trace_hash": "35c603d1d25c8e2ffe71c820f45b5a60f773a2f712ca4b5d320eee0833008764"
+}

@@ -27,7 +27,7 @@ def sync_registry_progress(root: Path=ROOT) -> bool:
         if not wdir: continue
         state=read_json(wdir/'state.json',{})
         status=state.get('status')
-        if status not in {'translation_pending','translation_complete'}: continue
+        if status not in {'translation_pending','translation_complete','translation_skipped'}: continue
         projection={
             'status':status,
             'chunks_done':int(state.get('chunks_done',0)),
@@ -54,8 +54,9 @@ def refresh(root: Path=ROOT) -> dict:
     for state_path in (root/'workspace').glob('*/*/*/state.json'):
         try: s=read_json(state_path)
         except Exception: continue
-        pending += max(0, int(s.get('chunks_total',0))-int(s.get('chunks_done',0)))
-        done += int(s.get('chunks_done',0))
+        if s.get('status') in {'translation_pending','translation_complete'}:
+            pending += max(0, int(s.get('chunks_total',0))-int(s.get('chunks_done',0)))
+            done += int(s.get('chunks_done',0))
         if state_path.parent.joinpath('translation/manifest.json').exists(): ready += 1
     for meta in (root/'workspace').glob('*/*/*/metadata.json'):
         if meta.parent.joinpath('source_inbox/acquisition_manifest.json').exists(): acquired += 1

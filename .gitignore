@@ -47,3 +47,10 @@ workspace/preference-evidence/
 workspace/preference-revisions/
 workspace/.preference.lock
 workspace/preference-*.json.*.tmp
+
+# Private discovery sampling / ranking evidence (may contain copyrighted excerpts or taste context)
+workspace/**/review-samples/
+workspace/**/candidates.json
+workspace/**/rank-result.json
+workspace/**/request.json
+workspace/**/discovered-metadata.json

@@ -6,6 +6,8 @@ import argparse
 import datetime as dt
 import html
 import json
+from preference_contract import finalize_entry, request_hash
+from preference_state import load, save, state_lock
 from pathlib import Path
 
 
@@ -19,11 +21,35 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--title", default="Untitled research entry")
     parser.add_argument("--continuation-of", default=None)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--finalize", help="Finalize an existing entry from its immutable ranking trace")
+    parser.add_argument("--freeze-request", help="Freeze the analyzed request for an existing draft")
+    parser.add_argument("--request", help="Analyzed request JSON to freeze")
+    parser.add_argument("--profile", help="Profile identity for the frozen discovery request")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    if args.freeze_request:
+        if not args.request: raise SystemExit('--request is required')
+        request=load(Path(args.request), {})
+        request_hash(request)
+        if request['context_id'] != args.freeze_request: raise SystemExit('request context mismatch')
+        path=ROOT/'data/entries'/f'{args.freeze_request}.json'
+        with state_lock(ROOT/'workspace'):
+            entry=load(path,{})
+            if not entry or entry.get('status') != 'draft': raise SystemExit('only a draft can freeze a request')
+            if entry.get('profile_id') not in (None,request['profile_id']): raise SystemExit('draft/request profile mismatch')
+            if entry.get('ranking_request') and entry['ranking_request'] != request: raise SystemExit('request already frozen; create another entry')
+            if not entry.get('ranking_request'):
+                entry.update(profile_id=request['profile_id'],ranking_request=request,request_frozen_at=dt.datetime.now(dt.timezone.utc).isoformat())
+                save(path,entry)
+        print(args.freeze_request)
+        return 0
+    if args.finalize:
+        finalize_entry(ROOT, args.finalize)
+        print(args.finalize)
+        return 0
     try:
         dt.date.fromisoformat(args.date)
     except ValueError as exc:
@@ -47,8 +73,9 @@ def main() -> int:
         return 0
 
     data = {
-        "schema_version": "1.2",
+        "schema_version": "2.0",
         "entry_id": entry_id,
+        "profile_id": args.profile,
         "date": args.date,
         "sequence": sequence,
         "continuation_of": args.continuation_of,
@@ -61,7 +88,7 @@ def main() -> int:
         "hard_filters": {
             "platforms": [],
             "genres": [],
-            "min_chars": None,
+            "min_chars": 300000,
             "must": [],
             "must_not": [],
             "publication": None,
@@ -82,6 +109,16 @@ def main() -> int:
             "deeper_samples": ["S1", "S2"],
             "adaptive_s3": True,
         },
+        "status": "draft",
+        "preference_policy": {
+            "required_trace": True,
+            "secondary_ranker": "scripts/preference_rank.py",
+            "max_score_shift": 4,
+            "single_review_max_change": 0.5,
+            "explore_ratio_target": 0.2,
+            "candidate_feature_format": "preference_features[{atom,value,confidence,sample_id,start,end,evidence}]",
+        },
+        "preference_signals_applied": [],
         "learning_lessons_applied": [],
         "discovery_incidents_observed": [],
         "results": {

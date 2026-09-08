@@ -9,12 +9,13 @@ from pathlib import Path
 
 from automation_log import log_event, new_run_id
 from learning_store import active_context, seed_known
+from preference_feedback import rebuild as rebuild_preferences
+from preference_state import save, state_lock, digest
 
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "config" / "search-profiles.json"
 STATE = ROOT / "data" / "profile-rotation-state.json"
-PREFERENCE_MODEL = ROOT / "workspace" / "preference-model.json"
 
 
 def load(path: Path, fallback: dict) -> dict:
@@ -60,28 +61,34 @@ def commit_state(state: dict, chosen: list[dict], mode: str) -> None:
         row["selected_count"] = int(row.get("selected_count", 0)) + 1
     if mode == "round_robin" and chosen:
         state["round_robin_cursor"] = int(state.get("round_robin_cursor", 0)) + len(chosen)
-    STATE.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    save(STATE,state)
 
 
 def consume_explicit_selection(config: dict, mode: str) -> None:
     selection = config.setdefault("selection", {})
     if mode != "explicit_selected" or selection.get("explicit_selection_mode", "once") != "once":
         return
-    selection["selected_profile_ids"] = []
-    CONFIG.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with state_lock(ROOT/'workspace'):
+        current=load(CONFIG,{})
+        if digest(current)!=digest(config):raise ValueError('selection changed before consumption; retry selection')
+        current.setdefault('selection',{})['selected_profile_ids']=[]
+        save(CONFIG,current)
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
     p.add_argument("--commit", action="store_true")
+    p.add_argument("--include-preferences", action="store_true", help="Diagnostic only; omit for request-only discovery/base scoring")
     args = p.parse_args()
-    config = load(CONFIG, {})
-    state = load(STATE, {"schema_version": "1.0", "round_robin_cursor": 0, "profiles": {}})
-    chosen, mode = choose(config, state, args.date)
+    with state_lock(ROOT/'workspace'):
+        config = load(CONFIG, {})
+        state = load(STATE, {"schema_version": "1.0", "round_robin_cursor": 0, "profiles": {}})
+        chosen, mode = choose(config, state, args.date)
+        if args.commit:
+            consume_explicit_selection(config, mode)
+            commit_state(state, chosen, mode)
     if args.commit:
-        commit_state(state, chosen, mode)
-        consume_explicit_selection(config, mode)
         run_id = new_run_id("profile-select")
         log_event(
             task="profile_selection",
@@ -92,18 +99,17 @@ def main() -> int:
             details={"mode": mode, "profile_ids": [x.get("profile_id") for x in chosen]},
             public_details={"mode": mode, "count": len(chosen)},
         )
-    preference_profiles = load(PREFERENCE_MODEL, {"profiles": {}}).get("profiles", {})
-    # Keep operational/process learning separate from user taste, but surface both in the
-    # resolved next-run payload so a discovery worker does not have to infer where to find them.
-    try:
-        seed_known(ROOT)
-        discovery_learning = active_context("discovery", root=ROOT)
-    except Exception:
-        discovery_learning = {"domain": "discovery", "lessons": [], "count": 0}
+    preference_profiles = rebuild_preferences().get("profiles", {}) if args.include_preferences else {}
+    # Operational failures are visible; an empty lesson set must not hide corrupt state.
+    seed_known(ROOT)
+    discovery_learning = active_context("discovery", root=ROOT)
     output_profiles = []
     for profile in chosen:
         row = json.loads(json.dumps(profile, ensure_ascii=False))
-        row["preference_learning"] = preference_profiles.get(profile.get("profile_id"), {})
+        if args.include_preferences:
+            row["preference_learning"] = preference_profiles.get(profile.get("profile_id"), {})
+        else:
+            row.pop("learned_preferences", None)
         output_profiles.append(row)
     print(json.dumps({"mode": mode, "profiles": output_profiles, "operational_learning": discovery_learning}, ensure_ascii=False, indent=2))
     return 0

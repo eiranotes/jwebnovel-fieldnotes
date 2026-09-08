@@ -199,3 +199,16 @@ also activates the group before writing it.
 
 The public GitHub Pages console is intentionally read-only. Typing/selecting search criteria must
 be done on the Tailnet private console if the change is expected to reach the canonical pipeline.
+
+## 2026-09-08 review verification amendments
+
+The ranker enforces the default 300k minimum even if omitted and consumes a truthful failed
+minimum receipt in the explicitly authorized default-length exception lane. Both result buckets
+retain a single frozen preference_rank order through registration and Daily Taste. Seen-index
+checks run before rank-time sample verification; the discovery worker must still invoke the index
+before initial expensive acquisition, which cannot be proved by a later ranking receipt.
+
+Profile writers share transaction locks and Console revisions prevent stale page overwrites.
+Immutable runtime evidence merges as a union; coupled mutable-state conflicts still stop the
+refresh until an exact, backed-up, compare-and-swap resolution. Detailed verification is in
+`pipeline-harness-review-verification.md`.

@@ -7,8 +7,11 @@ python3 scripts/automation_log.py --task daily_local_stage --action heartbeat --
 python3 scripts/refresh_automation_status.py >/dev/null
 STAMP="$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S%z)"
 mkdir -p workspace/run-logs
-printf '%s local-stage-ok\n' "$STAMP" >> workspace/run-logs/daily.log
 # Discovery and translation are executed by the scheduled ChatGPT/Steroids job.
 # This local stage only refreshes durable state and validates the workspace.
-python3 scripts/validate_repo.py >/dev/null 2>&1 || true
+if ! python3 scripts/validate_repo.py; then
+  python3 scripts/automation_log.py --task daily_local_stage --action validate --status failed --run-id "$RUN_ID" --message "Repository validation failed" >/dev/null
+  exit 1
+fi
+printf '%s local-stage-ok\n' "$STAMP" >> workspace/run-logs/daily.log
 python3 scripts/automation_log.py --task daily_local_stage --action heartbeat --status done --run-id "$RUN_ID" --message "Daily local stage finished" >/dev/null

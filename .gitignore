@@ -39,3 +39,11 @@ workspace/**/translation/chunks/*/pairs.json
 workspace/**/translation/chunks/*/pairs.txt
 workspace/**/translation/.complete.lock
 workspace/**/translation/*.lock
+
+# Private preference evidence, revisions and locks (never public artifacts)
+workspace/preference-ranking-traces.json
+workspace/preference-learning-history.json
+workspace/preference-evidence/
+workspace/preference-revisions/
+workspace/.preference.lock
+workspace/preference-*.json.*.tmp

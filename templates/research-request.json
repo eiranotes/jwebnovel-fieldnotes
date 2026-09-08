@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "2.0",
   "entry_id": "YYYY-MM-DD-NN",
   "date": "YYYY-MM-DD",
   "sequence": 1,
@@ -20,7 +20,7 @@
   "hard_filters": {
     "platforms": [],
     "genres": [],
-    "min_chars": null,
+    "min_chars": 300000,
     "must": [],
     "must_not": [],
     "publication": null
@@ -44,14 +44,27 @@
   ],
   "sampling_plan": {
     "s0_for_all_survivors": true,
-    "deeper_samples": ["S1", "S2"],
+    "deeper_samples": [
+      "S1",
+      "S2"
+    ],
     "adaptive_s3": true
   },
+  "preference_policy": {
+    "required_trace": true,
+    "secondary_ranker": "scripts/preference_rank.py",
+    "max_score_shift": 4,
+    "single_review_max_change": 0.5,
+    "explore_ratio_target": 0.2
+  },
+  "preference_signals_applied": [],
   "results": {
     "shortlist": [],
     "queue": [],
     "deprioritized": [],
     "excluded": []
   },
-  "checked_at": "YYYY-MM-DD"
+  "checked_at": "YYYY-MM-DD",
+  "status": "draft",
+  "profile_id": null
 }

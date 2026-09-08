@@ -2,6 +2,10 @@
 
 Updated: 2026-09-08
 
+## Preference harness audit remediation
+
+2026-09-08: v2 review follow-up runtime rollout complete; 95 tests passed, ten reviews preserved, 11 atoms tentative, prospective contexts 0. Follow-up: [Claude review verification](pipeline-harness-review-verification.md). Full evidence and remaining quality criteria: [preference-harness-audit.md](preference-harness-audit.md). This does not establish actual discovery-quality improvement.
+
 ## Overall
 
 | Item | State |

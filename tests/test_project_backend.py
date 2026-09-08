@@ -263,7 +263,7 @@ class BackendTests(unittest.TestCase):
         self.assertIn('Chat On Steroids Core `read`',prompt['instructions'])
         self.assertIn('Do not read any other local path',prompt['instructions'])
         self.assertIn('do not use any local write capability',prompt['instructions'])
-        self.assertIn('trusted local driver will create a new operation-specific result file',prompt['instructions'])
+        self.assertIn('trusted local driver will create a new operation-specific transport receipt',prompt['instructions'])
         self.assertIn('create_file, apply_patch, exec_command, write_stdin, or agents',prompt['instructions'])
         self.assertEqual(prompt['task']['local_source_task']['path'],str(path.resolve()))
         self.assertNotIn('local_result',prompt['task'])

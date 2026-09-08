@@ -5,6 +5,8 @@ import argparse, json, re
 from pathlib import Path
 from datetime import datetime, timezone
 from learning_store import safe_observe
+from preference_contract import validate_entry, selected_candidates
+from preference_state import load
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / 'data' / 'work-registry.json'
@@ -49,9 +51,13 @@ def main() -> int:
 
     entry_path = ROOT / 'data' / 'entries' / f'{args.entry}.json'
     entry = json.loads(entry_path.read_text(encoding='utf-8'))
+    legacy=load(ROOT/'config/preference-policy.json',{}).get('legacy_entry_ids',[])
+    if entry.get('entry_id') not in legacy and not str(entry.get('schema_version','')).startswith('2'):
+        raise SystemExit('New entries must use the frozen ranking evidence contract')
+    validate_entry(entry, load(ROOT/'workspace/preference-ranking-traces.json', {}))
     date = entry.get('date') or args.entry[:10]
     results = entry.get('results') or {}
-    pool = list(results.get('shortlist') or []) + list(results.get('length_exceptions') or [])
+    pool = selected_candidates(entry)
     selected = pool[:args.top_n]
 
     registry = load_registry()

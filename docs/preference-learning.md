@@ -1,69 +1,194 @@
-# Preference Learning v0.1
+# Preference Learning v2 — audited evidence contracts
 
-## Daily Taste review
+Updated: 2026-09-08. Supersedes the v0.3 description. The independent audit found a FAIL;
+these changes repair the harness. They do not establish an improvement in real discovery quality.
 
-`taste.html`은 매일 피드백의 기본 화면이다. 선택 날짜의 `shortlist`와 `length_exceptions`를 후보 pool로 사용하되, 실제 리뷰 큐에는 private local sample이 준비된 작품만 올린다. 원 후보 수는 별도의 pool count로 유지한다.
+## Review source of truth
 
-추천 근거는 기본적으로 접어 둔다. 먼저 실제 샘플을 읽고 반응을 고르게 해서 discovery 모델의 설명에 의한 anchoring을 줄인다.
+`workspace/preference-feedback.json` schema 2 has an ordered `operations` journal. A review ID
+is the hash of `(research context, canonical work, preference scope)`, independent of UI.
+Corrections append a revision; `events` is the latest-revision projection, never an extra vote.
+Daily Taste and Console edit the same identity. Same-content retries append no operation and
+advance no model/history revision. Different research contexts remain separate reviews.
+Direct preference learning uses only the latest review of each canonical work in a model, so
+rediscovery cannot manufacture independent evidence. Global reviews are inherited by scoped
+models, but automatic pairs require matching scopes and context. Implicit full-translation
+actions are retained separately and excluded from rating metrics and taste learning.
 
-각 답변은 날짜, canonical work key, verdict, reasons, 선택 태그/메모, 실제로 연 source 문자 수를 저장한다. `daily_taste:<date>:<canonical_key>`를 stable external id로 사용하므로 같은 날 같은 작품의 답변을 수정하면 기존 preference event를 교체하고 중복 가산하지 않는다.
+Raw commit, model rebuild and Daily projection use a shared process lock and unique, fsynced
+atomic JSON writes. The raw journal commits first; a retry/rebuild recovers interrupted derived
+writes. Daily state is a projection, not a second authority. Existing raw revisions and original
+memo text survive migration. Deleted derived model files can be reconstructed from the journal,
+immutable ranking traces and the versioned configuration/code recipe. Raw reviews alone cannot
+recreate sampled candidate features or prospective results.
 
-상태 파일 `workspace/daily-taste-state.json`은 private이며 `scripts/runtime_sync.py`를 통해 iPhone runtime과 DevDrive canonical repository 사이에서 동기화한다.
+## Atom semantics and uncertainty
 
-## 목적
+The v2 atomizer works within clauses, separates coordinated subjects, handles the audited
+negative scopes, and prevents narrow honorific complaints from voting against all prose.
+Conflicting clauses and double negation abstain. Unmapped expressions are preserved as
+`unresolved_clauses` and shown in the console. They are not silently treated as learned features.
+This remains a conservative rule-based parser, not a general Korean semantic model. New wording
+may need a rule and regression example. Every rebuild derives atoms from raw memo text; cached
+atoms never override the current extractor. No 16-atom truncation is used.
 
-탐색 결과에 대한 실제 사용자 반응을 누적해 추천 정확도를 높이되, 현재 검색 요청이나 명시적 조건을 자동으로 훼손하지 않는다.
+Quality deficits use separate presence features: dislike of `protagonist:implausible` never
+creates a negative weight for `protagonist:plausibility`. Atomizer 2.2 re-extracts old raw notes.
+A candidate value describes the named trait, never the user's reward.
 
-이 문서의 **취향 학습**과 `workspace/learning/operational-lessons.json`의 **운영/탐색 교훈 학습**은 분리한다. 전자는 “사용자가 무엇을 좋아하는가”를 배우고, 후자는 “어떤 오류가 반복됐고 어떤 해결책이 실제로 검증됐는가 / 어떤 탐색 절차가 오탐을 줄였는가”를 배운다. 운영 교훈은 `config/learning-policy.json`의 guard를 통과한 active lesson만 사용한다.
+## Continuous learning and score bounds
 
-## 신호 계층
+A direct review has at most 1.0 total support, divided over its extracted atoms. Support decays
+with a 90-day half-life relative to the most recent review operation; it does not silently change
+when an unchanged state is read. `as_of` is recorded for replay. The latest review per work is
+used; distinct contexts are required for maturity and stage promotion.
 
-1. **Explicit verdict** — `love / like / neutral / dislike / exclude`
-2. **Aspect reason** — 소재, 톤, 문체, 전개, 주인공, 캐릭터, 관계성, 로맨스, 세계관, 룰/시스템, 전략/추론, 개그, 어두움, 일상, 분량, 신선도, 결말, 장르혼합
-3. **Feature tags** — 사용자가 자유롭게 적는 구체 취향. 예: `여성 주인공`, `건조한 문체`, `반복 데스게임`
-4. **Strong implicit action** — 전체 번역 선택. 해당 작품을 positive example로 강하게 기록한다.
+For atom j, signed support is D_j, its support is S_j, and total effective review support is E:
 
-## 프로필 범위
+- diagnostic posterior: `D_j / (4 + S_j)`;
+- confidence: `S_j / (4 + S_j) * abs(D_j)/S_j`;
+- direct ranking weight: `D_j / (4 + E)` (shared denominator preserves memo-splitting budget);
+- tentative: fewer than 2 independent works/contexts;
+- reinforced: at least 2 works and 2 contexts;
+- stable: at least 5 works and 5 contexts, support >= 3, consistency >= .8;
+- mixed: both signs with consistency < .8.
 
-- `GLOBAL`: 모든 탐색 그룹에 적용되는 기본 취향
-- 특정 `profile_id`: 해당 조건 그룹에만 추가되는 취향
-- 특정 프로필의 학습 모델은 `GLOBAL + profile-specific` 이벤트를 함께 본다.
+Pair learning compares only jointly measured dimensions in valid pre-feedback traces. Unknown
+measurements are not zero. Duplicate pairs are collapsed; pair gradients are normalized within
+context and averaged across contexts. L2 is applied once per batch epoch, not once per pair.
+Pair influence is bounded to a 0.3 normalized contribution. Confidence uses contexts / 6.
 
-## 자동 반영 범위
+Let n be effective independent evidence contexts, m = `1-exp(-n/12)`, and g the quality gate.
+The target score vector has L1 norm <= `4*m*g`. Initially g=.5, so targets are bounded by +/-2
+points; validated targets may reach +/-4. A verified checkpoint processes only appended raw revisions; deleting or invalidating it
+replays the journal deterministically. The applied
+score vector moves at most **0.5 in L1 per review revision**, including changes in gate, pair
+learning, maturity, correction and decay. Actual rank score is base + dot(applied weights,
+feature value * confidence), clipped to 0–100. Thus a fixed candidate/request cannot move more
+than 0.5 points from one review operation. A code/config rollout is a separate model revision;
+this per-review bound is not a claim about arbitrary implementation changes.
 
-자동으로 가능한 것:
+A gate reduction changes the target immediately; an already higher applied vector approaches
+it under the same 0.5-step protection. No absolute rank-position limit is claimed: arbitrarily
+close base scores can change many positions from a small score change.
 
-- hard filter 통과 후보 내부의 정렬 가중치 조정
-- positive / negative example을 비교 기준으로 활용
-- 본문 샘플링 우선순위 조정
-- 반복되는 aspect/tag에 대한 soft preference 변경안 생성
+Independent consistent single-atom simulation (no prospective evidence):
 
-자동으로 금지하는 것:
+| Reviews / contexts | Applied score shift |
+|---:|---:|
+| 1 | 0.032 |
+| 3 | 0.190 |
+| 5 | 0.379 |
+| 10 | 0.808 |
+| 20 | 1.352 |
+| 50 | 1.823 |
+| 100 | 1.923 |
 
-- `MUST`, `MUST NOT`, 최소 글자수 등 hard filter 변경
-- 사용자가 명시한 현재 요청보다 과거 취향 우선
-- 적은 표본으로 영구 취향 확정
+Reason/tag suggestions share their own bounded explicit-evidence budget and require at least
+5 independent contexts. They require user approval to update profile soft preferences. They
+never mutate MUST/MUST NOT. Approved records are suppressed from repeated suggestions and are
+not automatically injected into request-only discovery. Console shows actual applied score budget, not a fictitious 72/28
+absolute blend.
 
-## 제안 승격 규칙
+## Prospective online policy evaluation
 
-초기값:
+Ranking traces contain an immutable model revision/recipe reference, request, candidate pool, exact
+sample hashes, features, base/rerank scores, selected order and every candidate's inclusion
+probability. A context trace is create-only; identical retries return the existing hash. A
+changed trace or trace created after feedback is rejected. Content-addressed sample copies are
+retained privately. Only selected works, matching scope, valid content hash, and review creation
+timestamps after the trace can enter prospective learning/evaluation. The explicit `SCORING_COHORT_ID` must match for gate and pair training. Full code hashes remain
+provenance, not cohort boundaries: a comment or unrelated evaluator change does not erase evidence.
+Incompatible score/feature meaning changes require a deliberate cohort bump. Other cohorts remain
+visible in `cohort_pair_counts`; no trace is deleted or retroactively relabeled.
 
-- 동일 signal이 최소 2회 등장
-- 평균 절대 점수 1.0 이상
-- confidence = `min(1, count / 5)`
-- 조건을 만족하면 `proposed` soft-preference 제안 생성
-- 사용자가 콘솔에서 승인해야 `config/search-profiles.json > learned_preferences`에 반영
+Base and rerank use the same unequal-user-rating pair population; score ties receive 0.5.
+Metrics are averaged per context, then across contexts in actual trace creation-time order. Individual model revisions remain
+visible. This evaluates an online policy through frozen predictions; it is not a claim that a
+single unchanged model was A/B tested. NDCG based on original editorial ranks remains a separate
+historical diagnostic.
 
-## 다음 고도화 후보
+- <20 contexts or <60 pairs: calibrating, g=.5.
+- >=10 contexts and delta <= -.05: guarded g=.25; delta <= -.10: degraded g=.125.
+- Improvement needs >=20 contexts/60 pairs, delta >= .05, a positive lower 90% context-bootstrap
+  bound, and confirmation after at least 5 additional contexts.
+- First confirmed promotion at 25 contexts: g=.55; +.05 per additional context, maximum 1.
+- Otherwise stable/calibrating stays at .5. No promotion from a single 40-pair entry.
 
-- **exploration quota**: 상위 취향과 다른 후보 10~20%를 의도적으로 섞어 취향 고착 방지
-- **time decay**: 오래된 반응의 가중치를 완만하게 감소
-- **pairwise feedback**: “A보다 B가 낫다”를 직접 받아 점수보다 정밀한 선호 학습
-- **reason extraction assist**: 사용자의 자유 메모에서 후보 태그를 제안하되 저장 전 승인
-- **profile drift detector**: 한 프로필 안에서 상충되는 취향 군집이 생기면 새 조건 그룹 분리를 제안
-- **false-positive audit**: 상위 추천이 반복해서 `dislike/exclude`를 받으면 어떤 검색 feature가 과대평가되었는지 역추적
-- **serendipity lane**: 취향 적합도는 높지 않지만 신선도가 높은 작품을 별도 1~2개 유지
+## Discovery/entry contract
 
-## 로컬 프라이버시
+1. Create a draft with `new_entry.py --profile PROFILE --date DATE --title TITLE`.
+2. Prepare a request JSON containing `context_id`, `profile_id`, `intent`, `hard_filters`,
+   `reference_works`, `soft_preferences`, `explicit_dimensions`, `analysis_confirmed:true`, and
+   `review_budget` (normally 5). Explicit dimensions must cover the request and fingerprint;
+   `pacing` protects the whole pacing family. This analysis is a worker judgment and must be
+   evidenced, not inferred from accumulated taste.
+3. Draft/request profile identity must match. Freeze it before discovery: `new_entry.py --freeze-request ENTRY --request REQUEST.json`.
+4. Rebuild `data/work-index.json`, then harvest, deduplicate, and acquire accessible body samples for the candidate pool privately.
+   Generate request-neutral core features as well as learned dimensions; do not restrict feature
+   extraction to the current preference vocabulary. Keep unsupported dimensions unmeasured.
+   The ranker also checks the index before inspecting samples. `strict_seen_index` excludes every
+   seen work; `cooldown` allows a repeat after configured days (default 30). An explicitly frozen
+   `revisit:{enabled:true,reason:...}` with a sourced `revisit:pass` receipt allows an intentional revisit.
+5. Each candidate needs `base_score` explicitly in 0–100, `eligible:true`, platform/genre/length
+   metadata as applicable, and `eligibility_receipt` with request hash, canonical candidate key,
+   and source-backed checks. Missing min_chars uses the 300,000-character global floor. List conditions use IDs like `must:0`, `must_not:0`, `platforms:0`;
+   scalar conditions use the field name (`min_chars`). Each check contains `status:pass`,
+   `evidence`, `source_url`. The default length-exception lane requires a truthful failed
+   `min_chars` receipt, `length_exception_fit:pass` with evidence/source, and explicit authorization
+   `length_exception:{enabled:true,explicit_minimum:false}`. Other failed checks are excluded. Semantic checks remain accountable worker judgments.
+6. Samples: `samples[{sample_id,path,sha256,source_url}]`, paths under private `workspace/`.
+   Features: `preference_features[{atom,value,confidence,sample_id,start,end,evidence}]`.
+   Values are -1..1, confidence 0..1, no duplicate atoms. Evidence is an EXACT source-text span,
+   not the worker's explanation. Hash/offset/quotation mismatches reject ranking.
+7. Run `preference_rank.py --profile PROFILE --context ENTRY --request REQUEST.json --input
+   CANDIDATES.json --count N --seed DATE:PROFILE:ENTRY`. The command rebuilds/locks model state
+   and saves the immutable trace. Request-explicit dimensions contribute zero learned shift.
+8. Run `new_entry.py --finalize ENTRY`. Only safe selected metadata enters the public entry; length exceptions retain their own bucket.
+   `selected_candidates(entry)` merges both buckets in frozen preference_rank order for acquisition.
+   Validators and target registration reject a missing trace or reordered/different slate.
+   Archive HTML/Markdown/index must be generated from that finalized entry, not alternate picks.
 
-원시 피드백과 학습 모델은 `workspace/` 아래 private local state로 유지하며 GitHub Pages에 게시하지 않는다. 공개 페이지에는 필요하면 집계된 기능 상태만 노출하고 개인 취향 원문은 올리지 않는다.
+All new scaffolds require the trace contract. Existing pre-v2 entries remain legacy, explicitly
+without prospective proof; historical scores are never fabricated. A new context is required
+when a frozen request or candidate slate needs changing.
+
+Exploration reserves approximately one slot per five reviewable works, restricted to candidates
+at least 60 base points and within 5 points of the current cutoff. The minimum score is an initial
+policy value, not a calibrated universal relevance threshold. Selection is uniform without
+replacement on the qualified frontier, giving exact marginal inclusion probability k/N.
+Slots are placed inside the actual acquisition/review budget even with a longer displayed slate.
+No qualifying explore candidate means abstention, not a garbage slot. Novelty and measurement
+uncertainty are recorded separately; selection diversity and actual explore-review coverage can
+be inspected with `preference_evaluate.py`.
+
+## Privacy, history and evaluation limits
+
+Feedback, model, Daily projection, traces, history, sample evidence and revision recipes are
+private, ignored and included in runtime reconciliation. Mutable sync locks both roots and
+reports two-sided conflict rather than choosing a winner. Immutable archive trees merge disjoint
+files by union; same-path/different-content files are conflicts. Coupled mutable state remains
+all-or-nothing. `runtime_sync.py resolve --path PATH --prefer canonical|runtime --expected-canonical
+HASH --expected-runtime HASH` requires both inspected hashes and backs up both old versions before
+resolving exactly one path. Stale hashes fail. Unchanged immutable files are not recopied. Revision recipes preserve raw review
+operation references, profile config, code source and trace hashes. Sources/config/operations are
+content-addressed once under `preference-revisions/`; recipes retain the scoring weights. Trace
+files reference recipes instead of multiplying full models across contexts. Replay loads and
+validates the trace set once per transaction, and a digest-verified checkpoint resumes only when
+its operation prefix, config, source revision and relevant trace dependencies match.
+History's summary view retains 200 distinct content revisions; immutable evidence is not
+silently pruned. No-op retries create no revision.
+
+`preference_evaluate.py` reports selected/reviewed/explored coverage and zero-propensity candidates.
+`--benchmark FILE` accepts independent user relevance labels per intent and reports recall@20;
+it rejects model-generated/unspecified label sources. No real discovery benchmark is fabricated.
+Observed user ratings still do not give unbiased quality over unexposed/unread candidates.
+Future prospective contexts and independent recall judgments remain necessary for a quality PASS.
+
+## Profile writer discipline
+
+Console profile/selection updates, daily selection consumption and preference approvals share the
+workspace lock and atomic unique-temp JSON save. Console writes include the last read config
+revision; stale edits are rejected with a reload instruction. Request-only profile selection does
+not rebuild/write the preference model. Operational learning read errors and local-stage validator
+failures surface as failures rather than silently returning empty data or success.

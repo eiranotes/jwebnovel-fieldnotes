@@ -1,6 +1,8 @@
 # Search Protocol v0.4 — Parameterized Discovery
 
-**Updated: 2026-09-06**
+**Updated: 2026-09-08**
+
+Preference harness execution contract: [Preference Learning v2](preference-learning.md). New entries require a frozen request, verified body samples, immutable trace and exact slate finalization. Discovery/base scoring receives request-only profile output; learned weights enter only the bounded reranker. Legacy numeric blend/stage descriptions below are superseded by v2.
 
 목표는 하나의 취향 프로필을 영구 고정하는 것이 아니다. **검색 절차는 재사용하고, 기준작·장르·제외조건·문체 가중치는 요청마다 교체**한다.
 
@@ -293,37 +295,21 @@ normalized_title + author
 
 수량을 채우기 위해 질 낮은 작품을 끼워 넣지 않는다.
 
-## 13. 과거 취향은 soft prior로만 사용하고 현재 요청이 항상 우선한다
+## 13. 현재 요청을 고정하고 누적 취향은 제한된 2차 정렬에만 사용한다
 
-새 요청은 항상 새 request snapshot에서 시작한다. 다만 사용자가 운영 콘솔에서 남긴 명시적 피드백은 `workspace/preference-model.json`에 누적하고, **hard filter를 모두 통과한 후보의 2차 정렬**에만 사용한다.
+실행 계약의 상세와 CLI는 [preference-learning.md](preference-learning.md)를 따른다.
 
-- 이전 기준작과 같고 “더 찾아봐” → `continuation_of`
-- 기준작 변경 → 새 fingerprint
-- 글자수/장르/제외조건 변경 → 새 hard filters
-- 문체 요구가 달라짐 → 새 style dimensions
+1. `select_search_profiles.py` 기본 출력은 현재 요청 전용이다. 누적 모델을 후보 수집·base score에 전달하지 않는다.
+2. draft entry에 현재 MUST/MUST NOT, 기준작, 명시적 선호와 충돌 차원을 freeze한다. 변경하려면 새 context를 만든다.
+3. 후보별 hard-filter receipt, 본문 sample hash와 정확한 feature 인용을 검사한다. 검증 실패와 base score 60 미만은 제외한다.
+4. 명시적 요청 차원의 learned weight를 0으로 mask한다. 나머지만 score에 가산하며 전체 최대 ±4점, 미검증 모델 목표 최대 ±2점이다. 한 리뷰 revision에 따른 고정 후보의 score 변화는 최대 0.5점이다.
+5. 탐색 당시 모델 recipe 참조·요청·전체 후보·샘플·선택 순서를 immutable private trace에 저장한다. entry는 이 순서에서 finalize한다.
 
-피드백 신호는 다음 우선순위를 지킨다.
+별점 5/4/3/2/1은 love/like/neutral/dislike/exclude, reward +3/+1/0/−1/−3이다. 자유 메모는 별점과 독립된 부분 선호를 추출하며, 한 리뷰의 atom 합계 learning budget은 1이다. 해석하지 못한 문장은 unresolved로 남긴다. 전체 번역 선택은 action이며 reward나 모델 성숙도를 올리지 않는다. reason/tag는 제한된 보조 통계와 승인 제안으로만 표시하며 자동으로 hard filter를 변경하지 않는다. 승인 기록 역시 자동 discovery 필터가 아니다.
 
-1. 현재 요청의 `MUST / MUST NOT`
-2. 현재 요청의 기준작 fingerprint와 명시적 `PREFER`
-3. 해당 검색 프로필에서 사용자가 승인한 `learned_preferences`
-4. 누적 피드백의 positive/negative example과 aspect/tag 신호
-5. 탐색 다양성 보정
+동일 작품·context·scope의 두 UI 수정은 하나의 현재 리뷰로 합쳐진다. 서로 다른 entry/profile끼리 pair를 만들지 않는다. 같은 entry의 파생 pair는 하나의 context로 정규화한다. pair feature와 prospective 평가에는 리뷰 전에 저장한 동일 scoring cohort의 trace만 사용한다.
 
-따라서 과거 엔트리나 취향 모델은 **묵시적 hard filter가 아니다.** 누적 취향과 현재 요청이 충돌하면 현재 요청을 따른다.
-
-### Preference feedback의 입력 강도
-
-- `love` +3
-- `like` +1
-- `neutral` 0
-- `dislike` -1
-- `exclude` -3
-- 사용자의 `전체 번역` 선택은 강한 양성 implicit signal로 기록한다.
-
-사용자는 이유 카테고리와 자유 feature tag를 함께 남길 수 있다. 예: `문체`, `전개`, `주인공` + `여성 주인공`, `건조한 문체`, `규칙 추론`.
-
-같은 방향의 신호가 반복되면 시스템은 soft preference 변경안을 만들 수 있다. **하드 필터나 MUST NOT은 자동 변경하지 않는다.** 변경안은 콘솔에서 사용자가 승인해야 `learned_preferences`에 들어간다.
+5편을 실제 리뷰할 때 frontier 내 적격 후보가 있으면 1편을 explore로 전달한다. cutoff보다 base score가 5점 이상 낮은 후보는 explore 대상이 아니다. seed로 재현 가능한 균등 비복원 추출을 사용하고 실제 inclusion probability를 기록한다. novelty와 uncertainty는 별도 관측값이며 현재 추출 확률을 결정하지 않는다. 이 확률로 전체 웹 후보 recall이 교정된다고 주장하지 않는다.
 
 ## 14. cheap features를 이용해 본문 읽기 순서를 최적화한다
 

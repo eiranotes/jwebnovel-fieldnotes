@@ -17,6 +17,9 @@ from xml.sax.saxutils import escape as xml_escape
 
 from automation_log import log_event
 from artifact_naming import alternating_translation_filename
+from preference_atoms import ATOMIZER_VERSION, extract_note_atoms
+from preference_feedback import review_id
+from preference_state import state_lock, save, digest
 from rebuild_work_index import canonical
 
 
@@ -30,6 +33,7 @@ ROTATION = ROOT / "data" / "profile-rotation-state.json"
 REGISTRY = ROOT / "data" / "work-registry.json"
 PREFERENCE_FEEDBACK = ROOT / "workspace" / "preference-feedback.json"
 PREFERENCE_MODEL = ROOT / "workspace" / "preference-model.json"
+PREFERENCE_HISTORY = ROOT / "workspace" / "preference-learning-history.json"
 DAILY_TASTE = ROOT / "workspace" / "daily-taste-state.json"
 ENTRIES = ROOT / "data" / "entries"
 SAFE_STATIC_FILES = {"/", "/index.html", "/taste.html", "/taste.js", "/console.html", "/styles.css", "/archive.js", "/console.js", "/.nojekyll"}
@@ -41,9 +45,36 @@ def load(path: Path, fallback):
 
 
 def atomic_write(path: Path, data) -> None:
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    save(path,data)
+
+
+def profile_document() -> dict:
+    data=load(PROFILES,{})
+    return {**data,'_revision':digest(data)}
+
+
+def save_profiles(body: dict) -> dict:
+    with state_lock(ROOT/'workspace'):
+        incoming=dict(body);expected=incoming.pop('_revision',None)
+        if expected!=digest(load(PROFILES,{})):
+            raise ValueError('Profiles changed since this page loaded; reload before saving')
+        save(PROFILES,validate_profiles(incoming))
+        return profile_document()
+
+
+def update_selection(body: dict) -> dict:
+    with state_lock(ROOT/'workspace'):
+        data=load(PROFILES,{})
+        if body.get('profile_revision')!=digest(data):
+            raise ValueError('Profiles changed since this page loaded; reload before saving selection')
+        selection=data.setdefault('selection',{})
+        valid={p.get('profile_id') for p in data.get('profiles',[]) if p.get('enabled')}
+        selection['selected_profile_ids']=[x for x in body.get('selected_profile_ids',[]) if x in valid]
+        if body.get('explicit_selection_mode') in {'once','sticky'}:selection['explicit_selection_mode']=body['explicit_selection_mode']
+        if body.get('when_none') in {'round_robin','least_recently_run','random_daily','all_enabled'}:selection['when_none']=body['when_none']
+        if body.get('rotation_batch_size') is not None:selection['rotation_batch_size']=max(1,int(body['rotation_batch_size']))
+        save(PROFILES,data)
+        return {**selection,'_profiles_revision':digest(data)}
 
 
 def json_response(handler, status: int, payload) -> None:
@@ -139,8 +170,13 @@ def artifact_inventory() -> list[dict]:
 
 
 def state_payload() -> dict:
+    with state_lock(ROOT / "workspace"):
+        return _state_payload()
+
+
+def _state_payload() -> dict:
     return {
-        "profiles": load(PROFILES, {}),
+        "profiles": profile_document(),
         "automation": load(AUTOMATION, {}),
         "work_index": load(WORK_INDEX, {"works": []}),
         "full_translation": load(FULL_QUEUE, {"requests": []}),
@@ -149,6 +185,7 @@ def state_payload() -> dict:
         "artifacts": artifact_inventory(),
         "preference_feedback": load(PREFERENCE_FEEDBACK, {"events": []}),
         "preference_model": load(PREFERENCE_MODEL, {"profiles": {}}),
+        "preference_history": load(PREFERENCE_HISTORY, {"snapshots": []}),
         "console": {"writable": True, "root": str(ROOT)},
     }
 
@@ -180,7 +217,7 @@ def taste_deck(date: str | None = None) -> dict:
     if not date:
         return {"date": None, "available_dates": [], "items": [], "completed_count": 0, "pool_count": 0}
     state = taste_state()
-    responses = {(x.get("date"), x.get("canonical_key")): x for x in state.get("responses", [])}
+    responses = {(x.get("entry_id"), x.get("canonical_key"), x.get("profile_id")): x for x in state.get("responses", [])}
     registry = load(REGISTRY, {"works": []})
     registry_by_key = {canonical(w): w for w in registry.get("works", []) if w.get("title")}
     by_key: dict[str, dict] = {}
@@ -197,11 +234,12 @@ def taste_deck(date: str | None = None) -> dict:
                     continue
                 pool_count += 1
                 key = canonical(item)
-                row = by_key.setdefault(key, {
+                row = by_key.setdefault((entry.get("entry_id") or path.stem, key), {
+                    "review_key": review_id(key, profile_id, entry.get("entry_id") or path.stem),
                     "canonical_key": key,
                     "title": item.get("title"), "author": item.get("author"), "platform": item.get("platform"),
                     "url": item.get("url"), "length_chars": item.get("length_chars"), "episodes": item.get("episodes"),
-                    "rank": item.get("rank"), "why": item.get("why"), "difference": item.get("difference"),
+                    "rank": item.get("rank"), "preference_rank": item.get("preference_rank"), "why": item.get("why"), "difference": item.get("difference"),
                     "entry_id": entry.get("entry_id") or path.stem, "entry_ids": [], "entry_title": entry.get("title"),
                     "profile_id": profile_id, "bucket": bucket,
                 })
@@ -222,10 +260,16 @@ def taste_deck(date: str | None = None) -> dict:
             sample_available = alternating.is_file() and alternating.is_relative_to(workspace) and alternating.stat().st_size > 0
             row["work_id"] = reg.get("work_id")
         row["sample_available"] = sample_available
-        row["response"] = responses.get((date, row["canonical_key"]))
+        response = responses.get((row["entry_id"], row["canonical_key"], row["profile_id"]))
+        if response and response.get("atomizer_version") != ATOMIZER_VERSION and response.get("note"):
+            response = dict(response)
+            response["atoms"] = extract_note_atoms(str(response.get("note") or ""))
+            response["atomizer_version"] = ATOMIZER_VERSION
+        row["response"] = response
         if sample_available:
             items.append(row)
     def rank_key(row: dict):
+        if row.get('preference_rank') is not None:return (0,0,row['preference_rank'],row['entry_id'])
         rank = str(row.get("rank") or "Z")
         group = 0 if rank.startswith("A") else 1 if rank.startswith("B") else 2
         exception = 1 if "-LE" in rank else 0
@@ -242,9 +286,10 @@ def taste_deck(date: str | None = None) -> dict:
 
 
 def taste_sample(date: str, canonical_key: str, start: int = 0, limit: int = 6500) -> dict:
-    item = next((x for x in taste_deck(date).get("items", []) if x.get("canonical_key") == canonical_key), None)
+    item = next((x for x in taste_deck(date).get("items", []) if canonical_key in (x.get("canonical_key"), x.get("review_key"))), None)
     if not item:
         raise ValueError("work is not in the selected daily taste deck")
+    canonical_key = item["canonical_key"]
     registry = load(REGISTRY, {"works": []})
     reg = next((w for w in registry.get("works", []) if w.get("title") and canonical(w) == canonical_key), None)
     if not reg or not reg.get("workspace"):
@@ -425,28 +470,25 @@ def save_taste_response(body: dict) -> dict:
     if not date or not key or verdict not in {"love", "like", "neutral", "dislike", "exclude"}:
         raise ValueError("date, canonical_key and a valid verdict are required")
     deck = taste_deck(date)
-    item = next((x for x in deck.get("items", []) if x.get("canonical_key") == key), None)
+    item = next((x for x in deck.get("items", []) if x.get("canonical_key") == key and x.get("entry_id") == body.get("entry_id")), None)
     if not item:
         raise ValueError("work is not in the selected daily taste deck")
     reasons = [str(x).strip() for x in body.get("reasons") or [] if str(x).strip()]
     tags = [str(x).strip()[:80] for x in body.get("tags") or [] if str(x).strip()]
     note = str(body.get("note") or "").strip()
-    profile_id = str(body.get("profile_id") or item.get("profile_id") or "").strip() or None
+    profile_id = str(body.get("profile_id", item.get("profile_id")) or "").strip() or None
     stamp = datetime.now(timezone.utc).isoformat()
     response = {
         "date": date, "canonical_key": key, "entry_id": body.get("entry_id") or item.get("entry_id"),
         "profile_id": profile_id, "verdict": verdict, "reasons": reasons, "tags": tags, "note": note,
+        "atoms": extract_note_atoms(note), "atomizer_version": ATOMIZER_VERSION,
         "read_chars": max(0, int(body.get("read_chars") or 0)), "updated_at": stamp,
     }
-    state = taste_state()
-    state["responses"] = [x for x in state.get("responses", []) if not (x.get("date") == date and x.get("canonical_key") == key)]
-    state["responses"].append(response)
-    state["updated_at"] = stamp
-    atomic_write(DAILY_TASTE, state)
     cmd = [
         sys.executable, str(ROOT / "scripts" / "preference_feedback.py"), "record",
         "--key", key, "--verdict", verdict, "--reasons", ",".join(reasons), "--tags", ",".join(tags),
-        "--note", note, "--source", "daily_taste", "--external-id", f"daily_taste:{date}:{key}",
+        "--note", note, "--read-chars", str(response["read_chars"]), "--source", "daily_taste", "--external-id", f"daily_taste:{date}:{key}",
+        "--context", str(response.get("entry_id") or ""), "--recommended-rank", str(item.get("rank") or ""),
     ]
     if profile_id:
         cmd += ["--profile", profile_id]
@@ -454,7 +496,7 @@ def save_taste_response(body: dict) -> dict:
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
     log_event(task="daily_taste", action="respond", status="done", message=f"Taste response: {verdict}", public_details={"date": date, "verdict": verdict})
-    return response
+    return {**json.loads(proc.stdout), "date": date, "entry_id": item["entry_id"]}
 
 
 def safe_static_request_path(path: str) -> str | None:
@@ -610,6 +652,10 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("DAV", "1")
             self.end_headers()
             return
+        safe_path = safe_static_request_path(path)
+        if not safe_path:
+            self.send_response(404); self.end_headers(); return
+        self.path = safe_path
         return super().do_HEAD()
 
     def do_POST(self):
@@ -617,23 +663,11 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             body = self._body()
             if path == "/api/profiles":
-                data = validate_profiles(body)
-                atomic_write(PROFILES, data)
+                data = save_profiles(body)
                 log_event(task="private_console", action="save_profiles", status="done", message=f"Saved {len(data.get('profiles', []))} profiles", public_details={"profiles": len(data.get("profiles", []))})
                 return json_response(self, 200, data)
             if path == "/api/selection":
-                data = load(PROFILES, {})
-                selection = data.setdefault("selection", {})
-                selected = body.get("selected_profile_ids") or []
-                valid = {p.get("profile_id") for p in data.get("profiles", []) if p.get("enabled")}
-                selection["selected_profile_ids"] = [x for x in selected if x in valid]
-                if body.get("explicit_selection_mode") in {"once", "sticky"}:
-                    selection["explicit_selection_mode"] = body["explicit_selection_mode"]
-                if body.get("when_none") in {"round_robin", "least_recently_run", "random_daily", "all_enabled"}:
-                    selection["when_none"] = body["when_none"]
-                if body.get("rotation_batch_size") is not None:
-                    selection["rotation_batch_size"] = max(1, int(body["rotation_batch_size"]))
-                atomic_write(PROFILES, data)
+                selection = update_selection(body)
                 log_event(task="private_console", action="save_selection", status="done", message="Search profile selection updated", public_details={"selected": len(selection["selected_profile_ids"]), "fallback": selection.get("when_none")})
                 return json_response(self, 200, selection)
             if path == "/api/taste/respond":
@@ -642,9 +676,12 @@ class Handler(SimpleHTTPRequestHandler):
                 key = str(body.get("canonical_key") or "").strip()
                 verdict = str(body.get("verdict") or "").strip()
                 reasons = [str(x).strip() for x in (body.get("reasons") or []) if str(x).strip()]
-                tags = [str(x).strip() for x in (body.get("tags") or []) if str(x).strip()]
+                tags = [str(x).strip() for x in (body.get("tags") or []) if str(x).strip()] if "tags" in body else None
                 profile_id = str(body.get("profile_id") or "").strip() or None
                 note = str(body.get("note") or "")
+                context_id = str(body.get("entry_id") or "").strip()
+                recommended_rank = str(body.get("recommended_rank") or "").strip()
+                external_id = f"private_console:{profile_id or '__global__'}:{key}"
                 cmd = [
                     sys.executable,
                     str(ROOT / "scripts" / "preference_feedback.py"),
@@ -652,10 +689,14 @@ class Handler(SimpleHTTPRequestHandler):
                     "--key", key,
                     "--verdict", verdict,
                     "--reasons", ",".join(reasons),
-                    "--tags", ",".join(tags),
                     "--note", note,
                     "--source", "private_console",
+                    "--external-id", external_id,
+                    "--context", context_id,
+                    "--recommended-rank", recommended_rank,
                 ]
+                if tags is not None:
+                    cmd += ["--tags", ",".join(tags)]
                 if profile_id:
                     cmd += ["--profile", profile_id]
                 proc = subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)

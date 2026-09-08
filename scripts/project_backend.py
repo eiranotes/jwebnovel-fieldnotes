@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 import urllib.error
@@ -156,6 +157,7 @@ class ProjectBackend:
             with path.open("x", encoding="utf-8") as output:
                 output.write(data)
                 output.flush()
+                os.fsync(output.fileno())
         except FileExistsError:
             existing = ProjectBackend._read_result_receipt(path, operation_id, work_id)
             if existing is None or digest(existing) != digest(payload):

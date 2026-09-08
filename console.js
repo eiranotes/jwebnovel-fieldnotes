@@ -17,6 +17,33 @@ const feedbackReasons = [
 const ratingToVerdict = {1:'exclude', 2:'dislike', 3:'neutral', 4:'like', 5:'love'};
 const verdictToRating = {exclude:1, dislike:2, neutral:3, like:4, love:5};
 
+function atomChip(atom) {
+  const positive = Number(atom?.polarity || 0) > 0;
+  return `<span class="preference-atom ${positive?'positive':'negative'}" title="${esc(atom?.evidence||'')}">${esc(atom?.label || atom?.key || '')}<b>${positive?'+':'−'}</b></span>`;
+}
+
+const atomStageLabel = {tentative:'잠정', reinforced:'강화', stable:'안정', mixed:'혼합', legacy:'이전'};
+
+function signalLabel(signal, model) {
+  const value = String(signal || '');
+  if (value.startsWith('atom:')) {
+    const key = value.slice(5);
+    return (model?.atom_signals || []).find(x=>x.atom===key)?.label || key;
+  }
+  const parts = value.split(':',2);
+  const known = Object.fromEntries(feedbackReasons);
+  if (parts[0] === 'aspect') return known[parts[1]] || parts[1];
+  if (parts[0] === 'tag') return `태그 · ${parts[1]}`;
+  return value;
+}
+
+function workFeedbackContext(work) {
+  const classifications = work?.classifications || [];
+  const preferredEntry = work?.last_seen_entry || work?.first_seen_entry || '';
+  const classification = classifications.find(x=>x.entry_id===preferredEntry) || classifications[classifications.length-1] || {};
+  return {entryId:classification.entry_id || preferredEntry || '', rank:classification.rank || ''};
+}
+
 function toast(message, error=false) {
   const el = $('#toast');
   el.textContent = message;
@@ -159,10 +186,13 @@ async function persistProfileState({saveSelection=false, silent=false}={}) {
   if (saveSelection) {
     const selection = await api('api/selection',{method:'POST',body:JSON.stringify({
       selected_profile_ids:selected,
+      profile_revision:state.profiles._revision,
       explicit_selection_mode:$('#explicit-mode').value,
       when_none:$('#fallback-mode').value,
       rotation_batch_size:Number($('#rotation-batch').value||1)
     })});
+    state.profiles._revision = selection._profiles_revision;
+    delete selection._profiles_revision;
     state.profiles.selection = {...(state.profiles.selection||{}), ...selection};
   }
   if (!silent) toast(saveSelection ? `다음 탐색 선택 저장: ${selected.length?selected.length+'개':'fallback'}` : '탐색 조건 저장됨');
@@ -198,7 +228,10 @@ function renderWorks() {
 function renderFeedback() {
   const events = state.preference_feedback?.events || [];
   const feedbackKeys = new Set(events.map(event=>event.canonical_key));
-  const works = (state.work_index?.works || []).filter(work =>
+  const works = (state.work_index?.works || []).flatMap(work => {
+    const contexts = [...new Set([...(work.classifications || []).map(x=>x.entry_id), ...events.filter(x=>x.canonical_key===work.canonical_key).map(x=>x.context_id)].filter(Boolean))];
+    return (contexts.length ? contexts : [work.last_seen_entry]).map(entry=>({...work,last_seen_entry:entry,classifications:(work.classifications||[]).filter(x=>x.entry_id===entry)}));
+  }).filter(work =>
     feedbackKeys.has(work.canonical_key) || (work.classifications || []).some(item=>['shortlist','length_exceptions'].includes(item.bucket))
   );
   const profiles = state.profiles?.profiles || [];
@@ -207,8 +240,8 @@ function renderFeedback() {
   if (![...profileSelect.options].some(o=>o.value===feedbackScope)) feedbackScope='__global__';
   profileSelect.value = feedbackScope;
 
-  const latestFeedback = key => events
-    .filter(event => event.canonical_key === key && (feedbackScope === '__global__' ? !event.profile_id : event.profile_id === feedbackScope))
+  const latestFeedback = (key, context) => events
+    .filter(event => event.canonical_key === key && event.context_id === context && (feedbackScope === '__global__' ? !event.profile_id : event.profile_id === feedbackScope))
     .sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')))[0] || null;
   const dateFor = work => {
     const value = String(work.last_seen_entry || work.first_seen_entry || '');
@@ -232,32 +265,61 @@ function renderFeedback() {
     return `<details class="feedback-day" ${open?'open':''}>
       <summary><span>${esc(date)}</span><b>${rows.length}편</b></summary>
       <div class="feedback-day-works">${rows.map(work=>{
-        const response = latestFeedback(work.canonical_key);
+        const response = latestFeedback(work.canonical_key, workFeedbackContext(work).entryId);
         const rating = verdictToRating[response?.verdict] || 0;
         const selectedReasons = new Set(response?.reasons || []);
         const focused = work.canonical_key === feedbackTargetKey;
-        return `<article class="feedback-work-card ${focused?'focused':''}" data-feedback-key="${esc(work.canonical_key)}" data-rating="${rating}">
+        const context = workFeedbackContext(work);
+        const atoms = response?.atoms || [];
+        return `<article class="feedback-work-card ${focused?'focused':''}" data-feedback-key="${esc(work.canonical_key)}" data-entry-id="${esc(context.entryId)}" data-recommended-rank="${esc(context.rank)}" data-rating="${rating}">
           <header>
             <div class="feedback-work-title"><small>${esc(work.platform||'플랫폼 미상')}${work.author?` · ${esc(work.author)}`:''}</small><h3>${esc(work.title)}</h3></div>
             <div class="feedback-stars" role="radiogroup" aria-label="${esc(work.title)} 별점">${[1,2,3,4,5].map(value=>`<button type="button" data-feedback-rating="${value}" class="${value<=rating?'selected':''}" aria-label="${value}점" aria-pressed="${value===rating?'true':'false'}" ${!writable?'disabled':''}>★</button>`).join('')}</div>
           </header>
-          <fieldset class="feedback-card-reasons"><legend>좋았거나 싫었던 이유</legend>${feedbackReasons.map(([value,label])=>`<label><input type="checkbox" data-feedback-reason value="${value}" ${selectedReasons.has(value)?'checked':''} ${!writable?'disabled':''}><span>${label}</span></label>`).join('')}</fieldset>
           <div class="feedback-card-foot">
-            <label><span>자유 메모</span><textarea data-feedback-note placeholder="왜 좋았는지/싫었는지 자유롭게 메모" ${!writable?'disabled':''}>${esc(response?.note||'')}</textarea></label>
+            <label><span>자유 메모 · 핵심 학습 입력</span><textarea data-feedback-note placeholder="예: 빠르고 다음 화가 궁금함. 캐릭터는 경파해서 좋음 / 묘사는 그럴듯한데 주인공 설득력이 약함" ${!writable?'disabled':''}>${esc(response?.note||'')}</textarea></label>
             <button type="button" class="control-button compact" data-save-feedback ${!writable?'disabled':''}>${response?'평가 수정':'평가 저장'}</button>
           </div>
+          ${atoms.length?`<div class="feedback-atom-preview"><span>현재 학습됨</span><div>${atoms.map(atomChip).join('')}</div></div>`:''}
+          <details class="feedback-optional"><summary>세부 이유 태그 · 선택</summary><fieldset class="feedback-card-reasons">${feedbackReasons.map(([value,label])=>`<label><input type="checkbox" data-feedback-reason value="${value}" ${selectedReasons.has(value)?'checked':''} ${!writable?'disabled':''}><span>${label}</span></label>`).join('')}</fieldset></details>
         </article>`;
       }).join('')}</div>
     </details>`;
   }).join('') || '<div class="archive-state">평가할 작품이 없다.</div>';
 
-  const model = state.preference_model?.profiles?.[feedbackScope] || {event_count:0,signals:[],suggestions:[],positive_examples:[],negative_examples:[]};
+  const model = state.preference_model?.profiles?.[feedbackScope] || {event_count:0,signals:[],atom_signals:[],suggestions:[],positive_examples:[],negative_examples:[],metrics:{}};
   $('#learning-scope-title').textContent = `${feedbackScope==='__global__'?'전체 취향':profileSelect.selectedOptions[0]?.textContent || feedbackScope} · ${model.event_count||0}개 평가`;
-  $('#learning-signals').innerHTML = (model.signals||[]).map(x=>`<article class="signal-row"><b>${esc(x.reason)}</b><span>${Number(x.score||0)>0?'+':''}${esc(x.score||0)}</span><small>${esc(x.count||0)}회 · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</small></article>`).join('') || '<div class="archive-state">아직 학습 신호가 없다.</div>';
+  const metrics = model.metrics || {};
+  const gate = model.quality_gate || {};
+  const pct = value => value==null ? '—' : `${Math.round(Number(value)*100)}%`;
+  $('#learning-metrics').innerHTML = [
+    ['평균 별점', metrics.mean_rating==null?'—':Number(metrics.mean_rating).toFixed(2)],
+    ['학습 게이트', gate.status || '—'],
+    ['순위 보정 한도', `±${Number(metrics.applied_score_budget||0).toFixed(2)}점`],
+    ['실전 조사 수', metrics.prospective_context_count ?? 0],
+    ['해석 보류', metrics.unresolved_clause_count ?? 0],
+    ['안정 신호', metrics.stable_atom_count ?? 0],
+    ['강화 신호', metrics.reinforced_atom_count ?? 0],
+    ['4–5점', pct(metrics.high_rating_rate)],
+    ['1–2점', pct(metrics.low_rating_rate)],
+    ['PAIR', metrics.pairwise_count ?? 0],
+    ['실전 BASE', pct(metrics.prospective_base_pair_accuracy)],
+    ['실전 RERANK', pct(metrics.prospective_rerank_pair_accuracy)],
+    ['PAIR 적중', pct(metrics.pairwise_accuracy)],
+    ['NDCG@5', metrics.ndcg_at_5==null?'—':Number(metrics.ndcg_at_5).toFixed(3)]
+  ].map(([label,value])=>`<div><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');
+  $('#learning-atoms').innerHTML = (model.atom_signals||[]).map(x=>{
+    const weight = Number(x.effective_weight ?? x.score ?? 0);
+    return `<article class="atom-signal-row"><div><b>${esc(x.label)}</b><small>${esc(x.atom)} · ${esc(atomStageLabel[x.stage]||x.stage||'')}</small></div><span class="${weight>=0?'positive':'negative'}">${weight>0?'+':''}${weight.toFixed(3)}</span><p>${esc(x.positive_count||0)}+ / ${esc(x.negative_count||0)}− · ${esc(x.count||0)}회 · 신뢰 ${Math.round(Number(x.confidence||0)*100)}%</p></article>`;
+  }).join('') || '<div class="archive-state">자유 메모에서 추출된 신호가 아직 없다.</div>';
+  if ((model.unresolved_clauses||[]).length) {
+    $('#learning-atoms').innerHTML += `<details><summary>해석을 보류한 메모 · ${model.unresolved_clauses.length}개</summary>${model.unresolved_clauses.map(x=>`<p>${esc(x.text)}</p>`).join('')}<p>뜻이 불분명한 표현은 자동으로 취향에 반영하지 않습니다.</p></details>`;
+  }
+  $('#learning-signals').innerHTML = (model.signals||[]).filter(x=>x.kind!=='atom').map(x=>`<article class="signal-row"><b>${esc(signalLabel(x.reason, model))}</b><span>${Number(x.score||0)>0?'+':''}${esc(x.score||0)}</span><small>${esc(x.count||0)}회 · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</small></article>`).join('') || '<div class="archive-state">명시적 이유/태그 신호가 없다.</div>';
   if (feedbackScope === '__global__') {
     $('#learning-suggestions').innerHTML = '<div class="archive-state">조건 반영은 특정 프로필을 선택하면 표시된다. 전체 취향 신호는 모든 프로필 랭킹에 기본 반영된다.</div>';
   } else {
-    $('#learning-suggestions').innerHTML = (model.suggestions||[]).map(x=>`<article class="suggestion-row"><div><small>조건 반영 제안 · ${esc(x.direction)}</small><b>${esc(x.reason)}</b><p>${esc(x.evidence_count)}개 근거 · 평균 ${esc(x.average_score)} · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</p></div><button class="control-button secondary compact" data-apply-signal="${esc(x.reason)}" data-direction="${esc(x.direction)}" ${!writable?'disabled':''}>조건에 반영</button></article>`).join('') || '<div class="archive-state">승인 대기 변경안이 없다.</div>';
+    $('#learning-suggestions').innerHTML = (model.suggestions||[]).map(x=>`<article class="suggestion-row"><div><small>조건 반영 제안 · ${esc(x.direction)}</small><b>${esc(signalLabel(x.reason, model))}</b><p>${esc(x.evidence_count)}개 근거 · 평균 ${esc(x.average_score)} · 신뢰도 ${Math.round(Number(x.confidence||0)*100)}%</p></div><button class="control-button secondary compact" data-apply-signal="${esc(x.reason)}" data-direction="${esc(x.direction)}" ${!writable?'disabled':''}>조건에 반영</button></article>`).join('') || '<div class="archive-state">승인 대기 변경안이 없다.</div>';
   }
   profileSelect.disabled = !writable;
 }
@@ -386,7 +448,9 @@ $('#feedback-list').addEventListener('click',async event=>{
     await api('api/feedback',{method:'POST',body:JSON.stringify({
       canonical_key:feedbackTargetKey,
       profile_id:feedbackScope==='__global__'?null:feedbackScope,
-      verdict:ratingToVerdict[rating], reasons, tags:[], note
+      entry_id:card.dataset.entryId || null,
+      recommended_rank:card.dataset.recommendedRank || null,
+      verdict:ratingToVerdict[rating], reasons, note
     })});
     toast(`${rating}점 평가 저장됨`);
     await loadState();

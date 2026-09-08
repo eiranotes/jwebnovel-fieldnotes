@@ -1,10 +1,13 @@
 import importlib.util
 import json
+import sys
 import tempfile
 import time
 import unittest
 from pathlib import Path
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 
 def load_module():
     path = Path(__file__).resolve().parents[1] / "scripts" / "runtime_sync.py"
@@ -76,3 +79,25 @@ class RuntimeSyncTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class PreferenceStateSyncTests(unittest.TestCase):
+    def test_all_private_evidence_participates_in_preservation_and_conflicts(self):
+        mod=load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/'canonical';runtime=Path(tmp)/'runtime'
+            root.mkdir();runtime.mkdir();mod.ROOT=root;mod.RUNTIME=runtime
+            names=list(mod.PRIVATE_STATE_FILES)
+            self.assertIn('workspace/preference-ranking-traces.json',names)
+            self.assertIn('workspace/preference-learning-history.json',names)
+            for rel in names:
+                (root/rel).parent.mkdir(parents=True,exist_ok=True)
+                (root/rel).write_text('{"value":"base"}')
+            self.assertEqual(mod.push()['status'],'pushed')
+            for rel in names:(runtime/rel).write_text('{"value":"phone"}')
+            self.assertEqual(mod.push()['status'],'pushed')
+            for rel in names:self.assertEqual(json.loads((root/rel).read_text())['value'],'phone')
+            rel='workspace/preference-ranking-traces.json'
+            (root/rel).write_text('{"value":"canonical change"}')
+            (runtime/rel).write_text('{"value":"runtime change"}')
+            self.assertEqual(mod.push()['status'],'conflict')
+            self.assertEqual(json.loads((runtime/rel).read_text())['value'],'runtime change')

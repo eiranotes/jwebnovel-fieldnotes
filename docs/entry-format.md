@@ -52,6 +52,61 @@ YYYY-MM-DD-NN
 
 취향 모델의 raw event나 private lesson 본문을 엔트리에 복사하지 않는다. 엔트리는 어떤 검증된 lesson이 영향을 줬는지 id만 남겨 재현 가능하게 한다.
 
+본문에서 측정한 feature는 private 후보 JSON과 trace에만 저장한다. 아래는 **형식 설명용 fixture**이며 실제 작품 평가가 아니다. sample 파일 내용은 `彼はすぐに扉を開いた。`(끝 개행 없음)이다. 실제 작업에서는 취득한 본문·출처와 그 SHA-256, frozen request hash, `canonical(candidate)`를 사용한다. 현재 요청의 모든 hard filter에 대응하는 receipt를 추가해야 한다.
+
+```json
+{
+  "title": "Example (format fixture)",
+  "url": "https://example.test/work",
+  "length_chars": 300000,
+  "base_score": 80,
+  "eligible": true,
+  "eligibility_receipt": {
+    "request_hash": "<frozen request SHA-256>",
+    "candidate_key": "<canonical(candidate)>",
+    "checks": {
+      "min_chars": {
+        "status": "pass",
+        "evidence": "metadata: 300000 chars",
+        "source_url": "https://example.test/work"
+      }
+    }
+  },
+  "samples": [
+    {
+      "sample_id": "s0",
+      "path": "workspace/review-samples/demo.txt",
+      "sha256": "d35beb12cb93486200a9ddb2d8d514b466dfa8f5debaace40553f543c63f585c",
+      "source_url": "https://example.test/work/1"
+    }
+  ],
+  "preference_features": [
+    {
+      "atom": "pacing:fast",
+      "value": 0.9,
+      "confidence": 0.8,
+      "sample_id": "s0",
+      "start": 0,
+      "end": 11,
+      "evidence": "彼はすぐに扉を開いた。"
+    }
+  ]
+}
+```
+
+`value`는 −1..1, `confidence`는 0..1, offset은 UTF-8 decode한 문자열의 문자 인덱스다. 인용은 본문의 exact substring이어야 한다. 요청·모델 점수·private feature는 공개 entry로 복사하지 않는다.
+
+```bash
+python3 scripts/preference_rank.py --profile PROFILE --context ENTRY_ID --request REQUEST.json --input CANDIDATES.json --count 5 --seed DATE:PROFILE:ENTRY_ID
+python3 scripts/new_entry.py --finalize ENTRY_ID
+```
+
+점수는 `base_score + bounded additive shift`이며 72/28 혼합이 아니다. 현재 요청 차원을 mask하고 전체 적용 shift≤4, 단일 review 변경≤.5점을 강제한다. trace는 최초 생성만 가능하다. 새로운 결과를 원하면 새 context를 만든다.
+
+기본 최소 분량은 요청에서 생략해도 300,000자다. 기본값의 예외만 `length_exception:{enabled:true,explicit_minimum:false}`로 허용하며, 후보의 `length_exception:true`, 정직한 `min_chars.status:fail` 및 출처를 가진 `length_exception_fit.status:pass`가 모두 필요하다. 사용자가 명시한 별도 최소값을 예외로 완화하지 않는다.
+
+v2 공개 entry는 `shortlist`와 `length_exceptions`를 구분하되 두 버킷의 `preference_rank`가 하나의 frozen 순서를 나타낸다. downstream은 `selected_candidates(entry)`로 합친 뒤 top-N을 선택한다. 버킷 연결 순서로 top-N을 잘라서는 안 된다.
+
 ## Result fields
 
 각 후보는 다음을 분리한다.
@@ -90,3 +145,16 @@ python3 scripts/new_entry.py --date 2026-09-06 --title "조사 제목"
 ```
 
 `--continuation-of 2026-09-06-01`을 주면 이전 조사 연장임을 기록한다.
+
+
+## Schema 2 — preference evidence completion boundary (2026-09-08)
+
+New entries have `status:draft`, a `profile_id`, and `preference_policy.required_trace:true`.
+Freeze the analyzed request before discovery using `new_entry.py --freeze-request`; rank with the
+v2 request/candidate/sample contract; then `new_entry.py --finalize` copies only safe metadata
+from the frozen selected slate. Validators reject missing trace, changed request or reordered
+shortlist. The four legacy entry IDs in `config/preference-policy.json` are excluded from this
+new completion requirement and never receive fabricated prospective evidence.
+
+Private trace/model/features/sample contents must not appear in public entry JSON. Public
+`ranking_trace_hash` is an opaque content receipt, not the private trace itself.

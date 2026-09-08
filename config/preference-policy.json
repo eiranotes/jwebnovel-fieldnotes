@@ -1,0 +1,5 @@
+{
+  "schema_version": "2.0",
+  "legacy_entry_ids": ["2026-09-06-01", "2026-09-06-02", "2026-09-07-01", "2026-09-08-01"],
+  "legacy_policy": "No prospective backfill; all new completed entries require schema 2 and frozen ranking evidence"
+}

@@ -4,13 +4,8 @@ let deck = null;
 let selectedKey = null;
 let sampleState = new Map();
 
-const verdicts = [
-  ['love','훨씬 더 보고 싶음','+3'],
-  ['like','좋음','+1'],
-  ['neutral','애매함','0'],
-  ['dislike','별로','−1'],
-  ['exclude','다시 추천하지 마','−3']
-];
+const ratingToVerdict = {1:'exclude',2:'dislike',3:'neutral',4:'like',5:'love'};
+const verdictToRating = {exclude:1,dislike:2,neutral:3,like:4,love:5};
 
 const reasons = [
   ['premise','소재'],['tone','톤'],['prose','문체'],['pacing','전개'],['protagonist','주인공'],
@@ -28,6 +23,11 @@ function toast(message, error=false) {
   toast.timer = setTimeout(() => { el.hidden = true; }, 2600);
 }
 
+function atomChip(atom) {
+  const positive = Number(atom?.polarity || 0) > 0;
+  return `<span class="preference-atom ${positive?'positive':'negative'}" title="${esc(atom?.evidence||'')}">${esc(atom?.label || atom?.key || '')}<b>${positive?'+':'−'}</b></span>`;
+}
+
 async function api(path, options={}) {
   const response = await fetch(path, {cache:'no-store', headers:{'Content-Type':'application/json'}, ...options});
   if (!response.ok) {
@@ -39,7 +39,7 @@ async function api(path, options={}) {
 }
 
 function currentItem() {
-  return (deck?.items || []).find(x => x.canonical_key === selectedKey) || null;
+  return (deck?.items || []).find(x => x.review_key === selectedKey) || null;
 }
 
 function renderDateOptions() {
@@ -74,8 +74,8 @@ function renderQueue() {
   }
   list.innerHTML = deck.items.map((item, index) => {
     const response = item.response;
-    const active = item.canonical_key === selectedKey;
-    return `<button class="taste-queue-item ${active?'active':''} ${response?'answered':''}" data-key="${esc(item.canonical_key)}">
+    const active = item.review_key === selectedKey;
+    return `<button class="taste-queue-item ${active?'active':''} ${response?'answered':''}" data-key="${esc(item.review_key)}">
       <span>${String(index+1).padStart(2,'0')}</span>
       <div><small>${esc(item.rank || item.platform || '')}</small><b>${esc(item.title)}</b><em>${esc(item.author || '')}</em></div>
       <i>${response ? esc(response.verdict).toUpperCase() : 'READ'}</i>
@@ -84,7 +84,7 @@ function renderQueue() {
 }
 
 function sampleView(item) {
-  const state = sampleState.get(item.canonical_key);
+  const state = sampleState.get(item.review_key);
   if (!item.sample_available) {
     return `<div class="taste-sample-unavailable"><b>교차 번역 준비 중</b><p>번역 완료 뒤 이 목록에 표시된다.</p></div>`;
   }
@@ -131,15 +131,17 @@ function renderAnswer() {
   }
   const hasResponse = Boolean(item.response);
   const response = item.response || {};
+  const rating = verdictToRating[response.verdict] || 0;
   const selectedReasons = new Set(response.reasons || []);
+  const atoms = response.atoms || [];
   $('#taste-answer').innerHTML = `<div class="taste-answer-sticky">
     <header><span>YOUR ANSWER</span><b>${esc(item.title)}</b></header>
-    <fieldset class="taste-verdicts"><legend>읽은 느낌</legend>${verdicts.map(([value,label,score])=>`<label class="verdict-${value}"><input type="radio" name="taste-verdict" value="${value}" ${response.verdict===value?'checked':''}><span><b>${label}</b><small>${score}</small></span></label>`).join('')}</fieldset>
-    <fieldset class="taste-reason-grid"><legend>어떤 점 때문인가</legend>${reasons.map(([value,label])=>`<label><input type="checkbox" value="${value}" ${selectedReasons.has(value)?'checked':''}><span>${label}</span></label>`).join('')}</fieldset>
-    <label class="taste-note"><span>한 줄 메모 · 선택</span><textarea id="taste-note" placeholder="예: 소재는 좋은데 주인공 말투가 너무 가벼움">${esc(response.note || '')}</textarea></label>
-    <label class="taste-tags"><span>직접 태그 · 선택</span><input id="taste-tags" value="${esc((response.tags || []).join(', '))}" placeholder="건조한 문체, 여성 주인공"></label>
+    <div class="taste-star-rating" data-rating="${rating}"><span>탐색 적중도</span><div role="radiogroup" aria-label="${esc(item.title)} 별점">${[1,2,3,4,5].map(value=>`<button type="button" data-taste-rating="${value}" class="${value<=rating?'selected':''}" aria-label="${value}점" aria-pressed="${value===rating?'true':'false'}">★</button>`).join('')}</div><small>1 다시 추천하지 않음 · 3 애매 · 5 정확히 맞음</small></div>
+    <label class="taste-note"><span>자유 메모 · 핵심 학습 입력</span><textarea id="taste-note" placeholder="예: 빠르고 다음 화가 궁금함. 캐릭터는 경파해서 좋음 / 묘사는 그럴듯한데 주인공 설득력이 약함">${esc(response.note || '')}</textarea></label>
+    ${atoms.length?`<div class="taste-atom-preview"><span>현재 학습됨</span><div>${atoms.map(atomChip).join('')}</div></div>`:''}
+    <details class="taste-optional-feedback"><summary>세부 이유 / 직접 태그 · 선택</summary><fieldset class="taste-reason-grid"><legend>어떤 점 때문인가</legend>${reasons.map(([value,label])=>`<label><input type="checkbox" value="${value}" ${selectedReasons.has(value)?'checked':''}><span>${label}</span></label>`).join('')}</fieldset><label class="taste-tags"><span>직접 태그</span><input id="taste-tags" value="${esc((response.tags || []).join(', '))}" placeholder="건조한 문체, 여성 주인공"></label></details>
     <button class="control-button taste-save" id="taste-save">${hasResponse?'답변 수정':'답변 저장 · 다음 작품'}</button>
-    <p class="taste-answer-note">이 답변은 취향 랭킹 신호로 쓰인다. MUST / MUST NOT은 자동 변경하지 않는다.</p>
+    <p class="taste-answer-note">별점은 작품 보상, 메모는 세부 취향 신호로 저장된다. 같은 조사 안의 별점 차이는 pairwise 학습에 추가된다.</p>
   </div>`;
 }
 
@@ -168,21 +170,22 @@ function selectWork(key) {
 
 function nextUnanswered(afterKey) {
   const items = deck?.items || [];
-  const start = Math.max(0, items.findIndex(x=>x.canonical_key===afterKey));
+  const start = Math.max(0, items.findIndex(x=>x.review_key===afterKey));
   for (let offset=1; offset<=items.length; offset++) {
     const item = items[(start + offset) % items.length];
-    if (!item.response) return item.canonical_key;
+    if (!item.response) return item.review_key;
   }
   return afterKey;
 }
 
 async function saveAnswer() {
   const item = currentItem();
-  const verdict = document.querySelector('input[name="taste-verdict"]:checked')?.value;
-  if (!verdict) return toast('먼저 읽은 느낌을 하나 골라야 한다.', true);
+  const rating = Number(document.querySelector('.taste-star-rating')?.dataset.rating || 0);
+  const verdict = ratingToVerdict[rating];
+  if (!verdict) return toast('먼저 별점을 골라야 한다.', true);
   const checked = [...document.querySelectorAll('.taste-reason-grid input:checked')].map(x=>x.value);
   const tags = String($('#taste-tags')?.value || '').split(',').map(x=>x.trim()).filter(Boolean);
-  const sample = sampleState.get(item.canonical_key);
+  const sample = sampleState.get(item.review_key);
   await api('api/taste/respond', {method:'POST', body:JSON.stringify({
     date:deck.date, canonical_key:item.canonical_key, entry_id:item.entry_id, profile_id:item.profile_id || null,
     verdict, reasons:checked, tags, note:$('#taste-note')?.value || '', read_chars:sample?.end || 0
@@ -199,8 +202,8 @@ async function loadDeck(date=null, autoSelect=true) {
   renderDateOptions();
   renderTransferLinks();
   renderProgress();
-  if (autoSelect || !deck.items.some(x=>x.canonical_key===selectedKey)) {
-    selectedKey = (deck.items.find(x=>!x.response) || deck.items[0] || {}).canonical_key || null;
+  if (autoSelect || !deck.items.some(x=>x.review_key===selectedKey)) {
+    selectedKey = (deck.items.find(x=>!x.response) || deck.items[0] || {}).review_key || null;
   }
   renderQueue(); renderReader(); renderAnswer();
   if (selectedKey) {
@@ -230,7 +233,21 @@ $('#taste-queue-list').addEventListener('click', event=>{
 });
 $('#taste-date').addEventListener('change', event=>{ sampleState.clear(); selectedKey=null; loadDeck(event.target.value).catch(error=>toast(error.message,true)); });
 $('#taste-reader').addEventListener('click', event=>{ if (event.target.dataset.action==='more') loadSample(selectedKey,true).catch(error=>toast(error.message,true)); });
-$('#taste-answer').addEventListener('click', event=>{ if (event.target.id==='taste-save') saveAnswer().catch(error=>toast(error.message,true)); });
+$('#taste-answer').addEventListener('click', event=>{
+  const star = event.target.closest('[data-taste-rating]');
+  if (star) {
+    const rating = Number(star.dataset.tasteRating || 0);
+    const box = star.closest('.taste-star-rating');
+    box.dataset.rating = String(rating);
+    box.querySelectorAll('[data-taste-rating]').forEach(button=>{
+      const value = Number(button.dataset.tasteRating || 0);
+      button.classList.toggle('selected', value <= rating);
+      button.setAttribute('aria-pressed', value === rating ? 'true' : 'false');
+    });
+    return;
+  }
+  if (event.target.id==='taste-save') saveAnswer().catch(error=>toast(error.message,true));
+});
 $('#taste-share').addEventListener('click', ()=>shareToday().catch(error=>{
   if (error?.name !== 'AbortError') toast(error.message,true);
 }));

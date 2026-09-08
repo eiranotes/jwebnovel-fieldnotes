@@ -80,3 +80,56 @@ A waiter timeout never authorizes resubmission. Recovery may retry the same oper
 
 ### D025 — Worker tabs live through result capture, not merely send acceptance
 A Project worker tab may be closed only after the final model answer has been captured and the trusted local result/commit path has succeeded. Conversation bind or send acceptance alone is not the cleanup boundary because local Core calls and final transcript capture still depend on the page lifetime. Finished worker tabs are closed by exact conversation identity; arbitrary ChatGPT tabs are never bulk-closed.
+
+
+### D026 — Shared transactional review journal and conservative atom semantics
+Daily Taste and Console share `(context, canonical work, scope)` identity. Ordered raw revisions
+are authoritative; latest events and Daily state are derived. Same-content retries are no-ops.
+A process lock covers raw commit and deterministic projection repair. Conflicting/unmapped
+language abstains visibly. Direct evidence deduplicates works and requires independent contexts.
+Implicit translation requests do not become five-star ratings.
+
+### D027 — Frozen request and body evidence before secondary ranking
+Discovery/base scoring receives request-only output. Ranking requires source-backed condition
+receipts, exact hashed body spans and unique features. Explicit request dimensions are masked
+from learned contributions. A create-only trace freezes the request, model, full candidate pool,
+probabilities and selected order. Only its safe projection may finalize a new entry. Historical
+entries remain unvalidated rather than receiving hindsight traces. Private evidence and code/
+model recipes participate in runtime reconciliation and public exclusion.
+
+### D028 — Context evaluation and bounded applied-model transitions
+A review's direct support budget is one; a shared denominator makes atom splitting invariant.
+Pair gradients normalize contexts and apply L2 per batch. Base/rerank share a pair population,
+credit ties .5, and compare independently averaged contexts within the same code revision.
+Promotion needs 20 contexts/60 pairs plus five-context confirmation and a positive bootstrap
+lower bound; no one-entry pair explosion can promote. Raw-journal replay caps applied coefficient
+L1 change to .5 per review including calibration changes. This is an online-policy evaluation,
+not an unchanging-model A/B claim. Actual recall and user-quality improvement remain field gates.
+
+## D029 — Quality deficit feature direction and rollout (2026-09-08)
+
+A negative assessment of missing quality uses a separate deficit-presence feature (for example protagonist:implausible), never a negative weight for the positive quality itself. Atomizer 2.1 re-extracts raw notes. Migration preserves nine actual reviews; all eleven derived atoms remain tentative. Current runtime has no prospective validation data, so implementation verification does not promote the quality verdict. The revision was rolled out to the existing private launchd service without changing deployment configuration.
+
+### D030 — Incremental scoring checkpoints without evidence loss
+
+The current model is a reusable derived checkpoint only when its content digest, operation-prefix
+digest, profile config, source revision and relevant historical trace hashes match. Appends and
+corrections replay new revisions only; deleting or invalidating it performs the same full replay.
+Trace JSON references a compact immutable recipe; sources/config/operations are content-addressed
+once. Full replay is a maintenance/recovery operation and still costs ~76s at 640 reviewed works.
+
+### D031 — Explicit scoring cohort, independent of source provenance
+
+SCORING_COHORT_ID is a semantic policy version. A score/feature incompatibility requires a deliberate
+bump; source hashes remain provenance and checkpoint invalidation only. Other cohorts remain in
+coverage metrics and raw traces; they are not silently relabeled or deleted. Gate confirmation uses
+trace creation-time order, not context-id lexical order.
+
+### D032 — Honest length exceptions and coordinated state writers
+
+Omitted minimum length means 300k. Only an authorized exception to that global default accepts a
+truthful failed minimum plus a sourced passing fit receipt. Exceptions retain their public bucket
+and merge by frozen preference_rank for top-N acquisition. Profile writers share locks/atomic
+saves, and browser edits use revision CAS. Immutable runtime trees merge by union; coupled mutable
+state still stops as a group on conflict. Exact-path resolution requires inspected hashes and
+backs up both versions. No automatic conflict winner or destructive archive retention was added.

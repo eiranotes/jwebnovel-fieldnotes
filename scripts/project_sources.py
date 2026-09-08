@@ -10,6 +10,7 @@ from automation_store import AutomationError, atomic_json, digest, locked, now, 
 from project_backend import BridgeClient
 from project_context import build_common_packs, public_pack
 ROOT=Path(__file__).resolve().parent.parent
+PROJECT_INSTRUCTIONS_STATE=Path('workspace/project-context/provider-project-instructions.json')
 
 
 def historically_listed(directory: Path, target: dict, files: list[dict]) -> list[dict] | None:
@@ -54,7 +55,19 @@ def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='field
     if len(files)>8 or len({f['filename'] for f in files})!=len(files):raise AutomationError('INVALID_CONTEXT_BATCH')
     body={'name':target['name'],'projectAlias':alias,'sourceFiles':files}
     if instructions:
-        body['projectInstructions']=(root/'templates/project-context/PROJECT_INSTRUCTIONS.md').read_text(encoding='utf-8')
+        desired=(root/'templates/project-context/PROJECT_INSTRUCTIONS.md').read_text(encoding='utf-8')
+        body['projectInstructions']=desired
+        # Project Instructions are mutable provider state, unlike immutable source files. A
+        # non-empty provider value may be replaced only by compare-and-swap against the exact
+        # last provider-verified value. The baseline exists solely to migrate deployments that
+        # predate this local receipt; after the first successful CAS the private state below is
+        # authoritative for subsequent instruction revisions.
+        instruction_state=read_json(root/PROJECT_INSTRUCTIONS_STATE,{})
+        previous=instruction_state.get('text') if instruction_state.get('verified') is True else None
+        if not isinstance(previous,str):
+            baseline=root/'templates/project-context/PROJECT_INSTRUCTIONS_BASELINE.md'
+            previous=baseline.read_text(encoding='utf-8') if baseline.exists() else None
+        if isinstance(previous,str): body['expectedProjectInstructions']=previous
     fingerprint=digest({'target':target['url'],'body':body})
     directory=root/'workspace/project-context/sync'/alias
     state_path=directory/f'{fingerprint}.json'
@@ -106,6 +119,12 @@ def synchronize(packs: list[dict], *, root: Path=ROOT, bridge=None, alias='field
                     raise AutomationError('PROJECT_INSTRUCTIONS_NOT_SAVED')
                 state.update(state='complete',ended_at=now(),ui_receipt=sync,source_retrieval_verified=False)
                 atomic_json(state_path,state)
+                if instructions:
+                    atomic_json(root/PROJECT_INSTRUCTIONS_STATE,{
+                        'version':1,'verified':True,'project_alias':alias,
+                        'sha256':digest(body['projectInstructions'].encode('utf-8')),
+                        'text':body['projectInstructions'],'command_id':state.get('command_id'),'verified_at':now()
+                    })
                 # A list receipt proves UI handoff only. translate_project separately requires
                 # the model to retrieve source-only random probes before accepting translation.
                 return state

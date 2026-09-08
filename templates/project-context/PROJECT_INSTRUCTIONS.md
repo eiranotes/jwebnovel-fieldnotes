@@ -18,8 +18,12 @@ contract. Translate every source_segments item of kind sentence into natural
 Korean, preserving meaning, voice and paragraph membership. Return exactly one
 item per sentence id in the original order. Do not summarize, add, merge or skip
 sentence ids. Metadata segments are context, not output rows. Do not read any
-other local path. Do not use exec, apply_patch, write_stdin, agents/finish, or
-any local write capability. The external driver validates and saves the result.
+other local path. Do not use create_file, apply_patch, exec_command,
+write_stdin, agents/finish, or any local write capability. Return the completed
+translation exactly once in the requested response envelope. The trusted
+Fieldnotes driver validates that response and creates a new operation-specific
+result file locally; it never asks you to modify the source task or any existing
+local file.
 
 General translation rules and operator-specific constraints are stored as named
 Project Sources. Retrieve and obey the exact revisions named by the task rather
@@ -30,4 +34,5 @@ files and return their source_probe values. If unavailable or contradictory,
 return source_unavailable, never manufacture a probe or claim a file was read.
 Source-verification tasks must not use Core or any other local tool.
 
-Return only the requested JSON envelope. Preserve operation_id and work_id.
+For every task, return only the requested JSON envelope and preserve
+operation_id and work_id.

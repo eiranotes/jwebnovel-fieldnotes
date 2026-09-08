@@ -119,9 +119,119 @@ class ProjectBackend:
         return (
             base
             + " For this translate_chunk task only, use Chat On Steroids Core `read` to read exactly task.local_source_task.path before translating."
-            + " Do not read any other local path and do not use any other local tool, including exec, apply_patch, write_stdin, or agents."
-            + " Never modify local files."
+            + " Do not read any other local path and do not use any local write capability, including create_file, apply_patch, exec_command, write_stdin, or agents."
+            + " Return the completed translation exactly once in the response envelope. The trusted local driver will create a new operation-specific transport receipt after validating the response envelope; never modify the source task or any existing local file."
         )
+
+    def _result_receipt_path(self, directory: Path, operation_id: str, payload: dict) -> Path | None:
+        if payload.get("kind") != "translate_chunk":
+            return None
+        return directory / f"{operation_id}.worker-result.json"
+
+    @staticmethod
+    def _read_result_receipt(path: Path | None, operation_id: str, work_id: str):
+        if path is None or not path.exists():
+            return None
+        try:
+            if not path.is_file() or path.stat().st_size > 32 * 1024 * 1024:
+                raise AutomationError("LOCAL_RESULT_INVALID")
+            return parse_envelope(path.read_text(encoding="utf-8"), operation_id, work_id)
+        except UnicodeError as error:
+            raise AutomationError("LOCAL_RESULT_INVALID") from error
+
+    @staticmethod
+    def _capture_result_create_only(path: Path | None, operation_id: str, work_id: str, payload) -> None:
+        """Persist one transport-validated worker envelope as a new local receipt, never an overwrite.
+
+        The browser/model does not need filesystem write permission.  The trusted Fieldnotes
+        driver already owns the operation id and target directory, so after validating operation/work envelope identity it materializes exactly one audit/result file locally.  An existing
+        identical file is an idempotent recovery; a different one is a hard conflict.
+        """
+        if path is None:
+            return
+        envelope = {"operation_id": operation_id, "work_id": work_id, "payload": payload}
+        data = json.dumps(envelope, ensure_ascii=False, indent=2) + "\n"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with path.open("x", encoding="utf-8") as output:
+                output.write(data)
+                output.flush()
+        except FileExistsError:
+            existing = ProjectBackend._read_result_receipt(path, operation_id, work_id)
+            if existing is None or digest(existing) != digest(payload):
+                raise AutomationError("LOCAL_RESULT_CONFLICT")
+
+    def mark_remote_interrupted(
+        self,
+        work_id: str,
+        role: str,
+        operation_id: str,
+        request_id: str,
+    ) -> dict:
+        """Turn one timed-out accepted operation into a safe same-chat retry.
+
+        A timeout alone is never retry authority: the provider may still be working.  This
+        method first asks Steroids recovery to stop the exact worker generation and accepts
+        only its durable `remoteStopped:true` receipt.  Only then is the local operation marked
+        `interrupted`, which `execute()` may resubmit to the same sleeping conversation.
+        """
+        if role not in ("translator", "reviewer", "discovery"):
+            raise AutomationError("INVALID_WORKER_ROLE")
+        if not isinstance(work_id, str) or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,79}", work_id):
+            raise AutomationError("INVALID_WORK_ID")
+        if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", operation_id):
+            raise AutomationError("INVALID_OPERATION_ID")
+        if not re.fullmatch(r"[A-Za-z0-9_-]{12,120}", request_id):
+            raise AutomationError("INVALID_RECOVERY_REQUEST_ID")
+        directory = self.root / "workspace" / "automation-runs" / "backend" / work_id / role
+        state_path = directory / f"{operation_id}.json"
+        with locked(directory / ".lock"):
+            before = read_json(state_path, {})
+            if before.get("state") == "interrupted" and before.get("remote_interrupt_request_id") == request_id:
+                return before
+            if before.get("state") != "accepted" or before.get("last_error") != "WORKER_RESULT_TIMEOUT":
+                raise AutomationError("REMOTE_INTERRUPT_NOT_APPLICABLE")
+            worker_id = before.get("worker_id")
+            created_at = before.get("created_at")
+            if not worker_id or not created_at:
+                raise AutomationError("WORKER_TARGET_NOT_VERIFIED")
+        proof = self.bridge.request(
+            "/automation-agents/control",
+            {
+                "action": "interrupt",
+                "workerId": worker_id,
+                "expectedCreatedAt": created_at,
+                "requestId": request_id,
+            },
+            method="POST",
+        )
+        if proof.get("remoteStopped") is not True or proof.get("workerId") != worker_id:
+            raise AutomationError("REMOTE_INTERRUPT_UNCONFIRMED")
+        with locked(directory / ".lock"):
+            current = read_json(state_path, {})
+            if (
+                current.get("state") != "accepted"
+                or current.get("worker_id") != worker_id
+                or current.get("created_at") != created_at
+            ):
+                raise AutomationError("OPERATION_STATE_CHANGED_DURING_RECOVERY")
+            current.update(
+                state="interrupted",
+                remote_interrupt_request_id=request_id,
+                remote_interrupt_conversation_id=proof.get("conversationId"),
+                remote_interrupted_at=now(),
+                last_error="REMOTE_INTERRUPT_CONFIRMED",
+            )
+            atomic_json(state_path, current)
+            safe_observe(
+                "translation",
+                "remote_worker_interrupt",
+                "confirmed",
+                scope="browser_transport",
+                note="exact provider worker turn stopped before same-operation retry",
+                root=self.root,
+            )
+            return current
 
     def execute(self, work_id: str, role: str, payload: dict, *, alias="fieldnotes", operation_id: str | None = None):
         if role not in ("translator", "reviewer", "discovery"):
@@ -134,13 +244,14 @@ class ProjectBackend:
             len(conversation_title)>200 or any(ord(ch)<32 for ch in conversation_title)
         ):
             raise AutomationError('INVALID_CONVERSATION_TITLE')
-        worker_instructions = self._worker_instructions(work_id, payload)
         operation_id = operation_id or digest({"work":work_id,"role":role,"alias":alias,"payload":payload})
         if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", operation_id):
             raise AutomationError("INVALID_OPERATION_ID")
         directory = self.root / "workspace" / "automation-runs" / "backend" / work_id / role
         state_path = directory / f"{operation_id}.json"
         mapping_path = directory / "worker.json"
+        result_receipt_path = self._result_receipt_path(directory, operation_id, payload)
+        worker_instructions = self._worker_instructions(work_id, payload)
         with locked(directory / ".lock"):
             previous = read_json(state_path, {})
             fingerprint = digest({"work":work_id,"role":role,"alias":alias,"payload":payload})
@@ -154,6 +265,26 @@ class ProjectBackend:
                 return result
             project = self._project(alias)
             target = {**project, "workId":work_id,"role":role}
+            result_receipt = self._read_result_receipt(result_receipt_path, operation_id, work_id)
+            if result_receipt is not None:
+                result_file = f"{operation_id}.result.json"
+                atomic_json(directory / result_file, result_receipt)
+                recovered = {
+                    **previous,
+                    "version": 1,
+                    "operation_id": operation_id,
+                    "fingerprint": fingerprint,
+                    "target": target,
+                    "conversation_title": conversation_title,
+                    "state": "complete",
+                    "result_file": result_file,
+                    "result_sha256": digest(result_receipt),
+                    "result_source": "result_receipt_recovery",
+                    "result_receipt_file": result_receipt_path.name if result_receipt_path else None,
+                    "ended_at": now(),
+                }
+                atomic_json(state_path, recovered)
+                return result_receipt
             if previous.get("state") == "submitting":
                 raise AutomationError("OPERATION_SUBMISSION_UNCERTAIN", "inspect the accepted worker before retrying")
             if previous.get("state") == "uncertain":
@@ -209,6 +340,12 @@ class ProjectBackend:
                     previous = {}
                 else:
                     raise AutomationError(previous.get("error", "WORKER_FAILED"))
+            if previous.get("state") == "interrupted":
+                # Reaching this state requires mark_remote_interrupted() to have obtained a
+                # durable exact-worker remote Stop receipt. Keep the same worker mapping so the
+                # next block revives that conversation; only the operation submission state is
+                # restarted.
+                previous = {}
             if previous.get("state") == "accepted":
                 if previous.get("target") != target:
                     raise AutomationError("PROJECT_TARGET_CHANGED")
@@ -246,8 +383,16 @@ class ProjectBackend:
                             "to":worker["id"],"expectedCreatedAt":worker["createdAt"],"text":prompt},method="POST")
                         selected = worker
                     else:
+                        broker_label = conversation_title or f"{work_id[:40]}-{role}"
+                        # Steroids broker labels are compact UI metadata (60 chars max), not the
+                        # provider conversation title. Long Japanese work titles are common and
+                        # must never block a spawn merely because the internal label is shorter.
+                        # The full conversation_title remains in the task/mapping and is still
+                        # the value used for provider-side title attempts.
+                        if len(broker_label) > 60:
+                            broker_label = broker_label[:59] + "…"
                         response = self.bridge.request("/automation-agents/spawn", {"workers":[{
-                            "label":conversation_title or f"{work_id[:40]}-{role}","task":prompt,
+                            "label":broker_label,"task":prompt,
                             "target":{"type":"chatgpt_project","project":alias,"workId":work_id,"role":role}}]}, method="POST")
                         selected = response["workers"][0]
                     if not selected.get("createdAt") or selected.get("projectTarget") != target:
@@ -264,6 +409,16 @@ class ProjectBackend:
                     raise
             deadline = time.monotonic() + self.timeout
             while time.monotonic() < deadline:
+                result_receipt = self._read_result_receipt(result_receipt_path, operation_id, work_id)
+                if result_receipt is not None:
+                    result_file = f"{operation_id}.result.json"
+                    atomic_json(directory / result_file,result_receipt)
+                    state.update(state="complete",result_file=result_file,result_sha256=digest(result_receipt),
+                                 result_source="result_receipt_recovery",
+                                 result_receipt_file=result_receipt_path.name if result_receipt_path else None,
+                                 ended_at=now())
+                    atomic_json(state_path,state)
+                    return result_receipt
                 status = self.bridge.request("/automation-agents/status")
                 worker = next((w for w in status.get("workers",[]) if w.get("id") == state["worker_id"] and w.get("createdAt") == state["created_at"]), None)
                 if not worker or worker.get("projectTarget") != target:
@@ -312,12 +467,12 @@ class ProjectBackend:
                     state.update(state="failed",error=error_code,ended_at=now())
                     atomic_json(state_path,state)
                     raise AutomationError(error_code)
-                if worker.get("state") in ("sleeping","finished") and worker.get("complete") is True and isinstance(worker.get("answer"),str):
+                if worker.get("complete") is True and isinstance(worker.get("answer"),str):
                     answer = worker["answer"]
-                    # A reused sleeping Project worker still exposes its previous completed answer
-                    # until the browser has actually delivered and completed the newly queued turn.
-                    # Treat that exact pre-submit answer as "not new yet", not as a malformed reply.
-                    # Persisting the hash makes the same fence survive a driver restart.
+                    # A reused sleeping Project worker continues to expose the previous turn's
+                    # final answer until the newly queued turn produces its own final message.
+                    # Fence that exact answer before *any* delivery-path interpretation,
+                    # including the operation-result receipt path below.
                     previous_hash = state.get("answer_before_submit_sha256")
                     if state.get("reused") and previous_hash and digest(answer) == previous_hash:
                         time.sleep(self.poll_interval)
@@ -381,9 +536,13 @@ class ProjectBackend:
                             time.sleep(self.poll_interval)
                             continue
                         raise
+                    if result_receipt_path is not None:
+                        self._capture_result_create_only(result_receipt_path, operation_id, work_id, result)
                     result_file = f"{operation_id}.result.json"
                     atomic_json(directory / result_file,result)
                     state.update(state="complete",result_file=result_file,result_sha256=digest(result),
+                                 result_source="driver_capture" if result_receipt_path is not None else "chat",
+                                 result_receipt_file=result_receipt_path.name if result_receipt_path is not None else None,
                                  conversation_id=worker.get("conversationId"),ended_at=now())
                     atomic_json(state_path,state)
                     if state.get("json_repair_state") == "accepted":

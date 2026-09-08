@@ -69,3 +69,14 @@ Recurring translation/runtime failures and discovery-process mistakes are stored
 
 ### D022 — Runtime refresh preserves phone edits before deployment
 `runtime_sync.py` uses a last-synchronized content-hash ledger for mutable files/trees. Runtime-only edits are imported, canonical-only edits are pushed, and two-sided divergence becomes an explicit conflict instead of an mtime winner. `workspace/learning/` is included in the mutable private sync set. The private search console autosaves profile edits/selection and checking `다음 탐색` automatically enables that profile; GitHub Pages remains read-only.
+
+## 2026-09-08
+
+### D023 — Translation result files are driver-created, create-only receipts
+The Project worker is read-only with respect to the local filesystem. It reads only the exact hash-validated local translation task and returns the requested result envelope exactly once. After operation/work envelope identity is validated, the trusted Fieldnotes backend creates `workspace/automation-runs/backend/<work>/<role>/<operation>.worker-result.json` with exclusive-create semantics as a transport receipt. The translation driver still performs Project Source proof, local proof, sentence-alignment and glossary validation before canonical chunk commit. Existing identical receipt content is idempotent recovery; conflicting existing content is a hard failure. The model never edits the task or creates/overwrites a local result file.
+
+### D024 — Timeout retry requires exact remote-Stop proof
+A waiter timeout never authorizes resubmission. Recovery may retry the same operation only after Steroids targets the exact worker id, creation generation and bound Project conversation, uses ChatGPT's own Stop control, and durably proves the turn ended. Fieldnotes then records the operation as `interrupted` and revives that same conversation. If Stop cannot be proved, both worker state and operation state remain blocked rather than guessing.
+
+### D025 — Worker tabs live through result capture, not merely send acceptance
+A Project worker tab may be closed only after the final model answer has been captured and the trusted local result/commit path has succeeded. Conversation bind or send acceptance alone is not the cleanup boundary because local Core calls and final transcript capture still depend on the page lifetime. Finished worker tabs are closed by exact conversation identity; arbitrary ChatGPT tabs are never bulk-closed.

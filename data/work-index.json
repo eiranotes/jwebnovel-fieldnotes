@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T22:07:49.401247+00:00",
+  "updated_at": "2026-09-08T01:01:42.507699+00:00",
   "works": [
     {
       "canonical_key": "kakuyomu:16818622172225120257",
@@ -338,8 +338,8 @@
       ],
       "work_id": "narou-n6584ll",
       "workspace": "workspace/2026-09-08/2026-09-08-01/narou-n6584ll",
-      "pipeline_status": "translation_pending",
-      "chunks_done": 0,
+      "pipeline_status": "translation_complete",
+      "chunks_done": 3,
       "chunks_total": 3,
       "full_translation": null
     },

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T22:06:03.865855+00:00",
+  "updated_at": "2026-09-08T01:01:42.407899+00:00",
   "works": [
     {
       "schema_version": "1.0",
@@ -686,7 +686,7 @@
       "length_chars": 392918,
       "source_policy": "public_reader_first_n_private_local",
       "workspace": "workspace/2026-09-08/2026-09-08-01/narou-n6584ll",
-      "status": "translation_pending",
+      "status": "translation_complete",
       "latest_entry_id": "2026-09-08-01",
       "latest_rank": "B1",
       "paths": {
@@ -702,9 +702,9 @@
       "acquisition_manifest": "workspace/2026-09-08/2026-09-08-01/narou-n6584ll/source_inbox/acquisition_manifest.json",
       "acquisition_updated_at": "2026-09-07T21:06:49.085984+00:00",
       "prepared_at": "2026-09-07T21:06:49.245341+00:00",
-      "chunks_done": 0,
+      "chunks_done": 3,
       "chunks_total": 3,
-      "translation_updated_at": "2026-09-07T21:06:49.239393+00:00"
+      "translation_updated_at": "2026-09-08T01:01:41.798028+00:00"
     }
   ]
 }

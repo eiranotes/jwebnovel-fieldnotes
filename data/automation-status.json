@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-07T22:07:44.942725+00:00",
+  "updated_at": "2026-09-08T01:01:42.425679+00:00",
   "phase": "scheduled",
   "schedule": {
     "cadence": "daily",
@@ -28,8 +28,8 @@
   "translation": {
     "mode": "resumable_chunk_queue",
     "target_chunk_chars": 9000,
-    "pending_chunks": 12,
-    "completed_chunks": 43,
+    "pending_chunks": 9,
+    "completed_chunks": 46,
     "works_waiting_for_source": 0,
     "works_ready": 22,
     "full_requests": {

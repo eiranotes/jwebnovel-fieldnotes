@@ -1,8 +1,27 @@
 {
   "schema_version": "1.0",
-  "people": {},
-  "places": {},
-  "terms": {},
+  "people": {
+    "黒瀬功": "쿠로세 이사오",
+    "ナノ": "나노",
+    "ジグ": "지그",
+    "ポヨ": "포요",
+    "ロク": "로쿠",
+    "カイ": "카이",
+    "レオ": "레오",
+    "ミナ": "미나",
+    "セラ": "세라",
+    "リアナ": "리아나"
+  },
+  "places": {
+    "アルケイン・テラ": "아케인 테라"
+  },
+  "terms": {
+    "野良迷宮": "야생 미궁",
+    "古の理": "고대의 이치",
+    "魔導スクリプト": "마도 스크립트",
+    "回復部屋": "회복실",
+    "夜明けの芽": "여명의 싹"
+  },
   "ruby_notes": {
     "迷宮主": "ダンジョンマスター",
     "迷宮核": "ダンジョンコア",
@@ -13,6 +32,97 @@
       "type": "ruby_scan",
       "count": 3,
       "source": "source_inbox/acquisition_manifest.json"
+    },
+    {
+      "type": "proper_name_reading",
+      "source": "current_task",
+      "ja": "黒瀬功",
+      "ko": "쿠로세 이사오",
+      "note": "원문 및 태스크 메타데이터에 루비가 없어 功의 독음을 이사오로 잠정 처리함."
+    },
+    {
+      "type": "ruby_application",
+      "source": "current_task_glossary",
+      "ja": "迷宮主",
+      "ko": "미궁주《던전 마스터》",
+      "note": "태스크의 명시적 ruby 迷宮主=ダンジョンマスター를 적용함."
+    },
+    {
+      "type": "ruby_application",
+      "source": "current_task_glossary",
+      "ja": "迷宮核",
+      "ko": "미궁핵《던전 코어》",
+      "note": "태스크의 명시적 ruby 迷宮核=ダンジョンコア를 적용함."
+    },
+    {
+      "type": "ruby_application",
+      "source": "current_task_glossary",
+      "ja": "自動詠唱回路",
+      "ko": "자동영창회로《오토캐스트 룬》",
+      "note": "태스크의 명시적 ruby 自動詠唱回路=オートキャスト・ルーン를 적용함."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "ジグ",
+      "ko": "지그",
+      "note": "작중에서 주인공이 고블린에게 직접 붙인 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "ポヨ",
+      "ko": "포요",
+      "note": "작중에서 슬라임에게 즉흥적으로 붙인 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "ロク",
+      "ko": "로쿠",
+      "note": "제조번호 No.06에서 따서 스톤 골렘에게 붙인 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "カイ",
+      "ko": "카이",
+      "note": "신규 파티 시점의 인물명."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "レオ",
+      "ko": "레오",
+      "note": "신규 파티 구성원 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "ミナ",
+      "ko": "미나",
+      "note": "신규 파티 구성원 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "セラ",
+      "ko": "세라",
+      "note": "신규 파티 구성원 이름."
+    },
+    {
+      "type": "proper_name",
+      "source": "current_source",
+      "ja": "リアナ",
+      "ko": "리아나",
+      "note": "길드 접수 담당자 이름."
+    },
+    {
+      "type": "party_name",
+      "source": "current_source",
+      "ja": "夜明けの芽",
+      "ko": "여명의 싹",
+      "note": "카이·레오·미나·세라의 파티명."
     }
   ]
 }

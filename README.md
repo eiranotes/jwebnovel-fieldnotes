@@ -79,6 +79,12 @@ https://ncode.syosetu.com/n2066cv/
 
 현재 프로토콜은 `docs/search-protocol.md`의 **v0.4**를 따른다. 과거 엔트리에 기록된 점수·판정은 당시 조사 기록이므로 소급 변경하지 않는다.
 
+## 무인 실행 건강 상태
+
+읽기 전용 번역 큐·워커 상태 감시는 [AUTOMATION_HEALTH_OPERATIONS](docs/AUTOMATION_HEALTH_OPERATIONS.md)에 정의한다.
+`python3 scripts/automation_health.py`는 모델 번역 capability·heartbeat·청크 정체를
+구분하며 새 번역 요청이나 결과 파일 쓰기를 절대 수행하지 않는다.
+
 ## Daily automation
 
 Daily discovery/translation automation scaffolding lives in:

@@ -1,0 +1,23 @@
+name: Fieldnotes health regressions
+on:
+  push:
+    branches: [feat/automation-reliability-20261009]
+  pull_request:
+    paths:
+      - 'scripts/automation_health.py'
+      - 'tests/test_automation_health.py'
+      - '.github/workflows/reliability.yml'
+permissions:
+  contents: read
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify read-only queue health and worker capability
+        run: |
+          python -m py_compile scripts/automation_health.py
+          python -m unittest discover -s tests -p 'test_automation_health.py' -v
